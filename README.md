@@ -1,13 +1,22 @@
 prerequests installed:
 1.python:pip+flask+virtualenv
-2.flutter
 3.postgress (sql shell)
-4.emulator (install android studio
+4.emulator (install android studio)
 
-instalation:
-1.download:
-      $ git clone https://github.com/melihcolpan/flask-restful-login
-      $ cd flask-restful-login
+installation:
+0.create local DB:
+       on  sql shell :
+                  CREATE DATABASE t_h;
+                  \c t_h
+            	CREATE TABLE user1 (
+            	id  uuid, 
+            	password  char(20),
+            	email char(20)
+            	);
+            	INSERT INTO user1 VALUES (1, 'Cheese', 'bla');
+1.download from CMD:
+      git clone <this repo url>
+     
       
 2. Run below command inside project directory to setup environment
       ```console
@@ -25,12 +34,9 @@ instalation:
       ```
 
 5. Run below command to start the app:
-      ```python
-      python app.py
+     flask run
       ```
 
-6. All Done!! [Click Here](http://localhost:5000/) to interact with your app:
+6. All Done!! [Click Here](http://localhost:5000/) to interact with your app:u will get all user1 table content
 
-> _**Assumptions**: Python and Postgres DB have been setup and is running prior to starting with this project._
 
-> _**References**: For Complete details, please refer [`Sending data from a Flask app to PostgreSQL database`](https://towardsdatascience.com/sending-data-from-a-flask-app-to-postgresql-database-889304964bf2) for source article for this Repo._

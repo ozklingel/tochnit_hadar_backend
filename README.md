@@ -1,7 +1,14 @@
-## Sample Flask Project Using Postgres DB | ![Visitor Count](https://visitor-badge.glitch.me/badge?page_id=0xStryK3R.Sample-Flask-Postgres-Project)
+prerequests installed:
+1.python:pip+flask+virtualenv
+2.flutter
+3.postgress (sql shell)
+4.emulator (install android studio
 
-1. Rename _`sample_config.py`_ to _`config.py`_, and update with your own _`SQLALCHEMY_DATABASE_URI`_ and desired _`SECRET_KEY`_.
-
+instalation:
+1.download:
+      $ git clone https://github.com/melihcolpan/flask-restful-login
+      $ cd flask-restful-login
+      
 2. Run below command inside project directory to setup environment
       ```console
       python -m venv venv

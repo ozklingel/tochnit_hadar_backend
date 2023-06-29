@@ -2,9 +2,10 @@ prerequests installed:
 
 1.python:pip+flask+virtualenv
 
-2.postgress (sql shell)
+2.postgress (sql shell) -set password to postgress as "TH"!!!
 
 3.emulator (install android studio)
+
 
 installation:
 
@@ -21,6 +22,7 @@ installation:
             	);
              
             	INSERT INTO user1 VALUES (1, 'Cheese', 'bla');
+       
 1.download from CMD:
       git clone <this repo url>
      

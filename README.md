@@ -1,7 +1,10 @@
 prerequests installed:
+
 1.python:pip+flask+virtualenv
-3.postgress (sql shell)
-4.emulator (install android studio)
+
+2.postgress (sql shell)
+
+3.emulator (install android studio)
 
 installation:
 0.create local DB:

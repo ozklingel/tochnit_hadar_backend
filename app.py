@@ -3,7 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 
+# Create a flask app.
 app = Flask(__name__)
+# Set database url and passward.
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = SECRET_KEY

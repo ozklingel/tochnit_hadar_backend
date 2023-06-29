@@ -7,15 +7,19 @@ prerequests installed:
 3.emulator (install android studio)
 
 installation:
+
 0.create local DB:
-       on  sql shell :\n
-                  CREATE DATABASE t_h;
-                  \c t_h;
+       on  sql shell :
+       
+              CREATE DATABASE t_h;
+              \c t_h;
+                  
             	CREATE TABLE user1 (
             	id  uuid, 
             	password  char(20),
             	email char(20)
             	);
+             
             	INSERT INTO user1 VALUES (1, 'Cheese', 'bla');
 1.download from CMD:
       git clone <this repo url>

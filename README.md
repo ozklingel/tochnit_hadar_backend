@@ -5,9 +5,9 @@ prerequests installed:
 
 installation:
 0.create local DB:
-       on  sql shell :
+       on  sql shell :\n
                   CREATE DATABASE t_h;
-                  \c t_h
+                  \c t_h;
             	CREATE TABLE user1 (
             	id  uuid, 
             	password  char(20),

@@ -18,4 +18,5 @@ import route.routes, model.models
 if __name__ == '__main__':
     #create the tables and database
     db.create_all()
+    #run the app from __init__.py file
     app.run()

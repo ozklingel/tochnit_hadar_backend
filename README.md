@@ -1,6 +1,6 @@
 prerequests installed:
 
-1.python:pip+flask+virtualenv
+1.python:pip+flask+virtualenv (be able to run hhelo world app like in  https://pythonbasics.org/flask-tutorial-hello-world/
 
 2.postgress (sql shell) -set password to postgress as "TH"!!!
 

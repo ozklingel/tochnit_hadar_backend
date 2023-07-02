@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,Blueprint
 from app import app, db
 from model.models import user1
 import time
+views = Blueprint('views', __name__)
 
 @app.route('/')
 def index():

@@ -10,6 +10,8 @@ class user1(db.Model):
     email = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
+
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

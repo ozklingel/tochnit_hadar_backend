@@ -18,5 +18,9 @@ import route.routes, model.models
 if __name__ == '__main__':
     #create the tables and database
     db.create_all()
-    #run the app from __init__.py file
-    app.run()
+    # Database initialize with app.
+    db.init_app(app)
+    from route.routes import views
+    #blueprints for making application components and supporting common patterns
+    app.register_blueprint(views)
+    #now app is running and route.routes.py you need to create the APIs

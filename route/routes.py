@@ -2,15 +2,14 @@ from flask import Flask, request, jsonify,Blueprint
 from app import app, db
 from model.models import user1
 import time
-views = Blueprint('views', __name__)
+views = Blueprint('app', __name__)
 
 @app.route('/')
+#jsut print all contant of user1 table
 def index():
     try:
         socks = db.session.execute(db.select(user1)
-
             .order_by(user1.email)).scalars()
-
         sock_text = '<ul>'
         for sock in socks:
             sock_text += '<li>' + sock.email + ', ' + sock.password + '</li>'
@@ -26,27 +25,20 @@ def index():
 @app.route('/register', methods=['POST'])
 def register():
     d = {}
-
     if request.method == "POST":
         mail = request.form["email"]
         password = request.form["password"]
         print(mail)
         print(password)
-
         email = user1.query.filter_by(email=mail).first()
-
         if email is None:
-
             register = user1(email=mail, password=password)
             print(register)
-
             db.session.add(register)
             db.session.commit()
-
             return jsonify(["Register success"])
         else:
             # already exist
-
             return jsonify(["user alredy exist"])
 
 ######################not in use from here but u can take inspair#########################

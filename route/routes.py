@@ -1,18 +1,19 @@
 from flask import Flask, request, jsonify,Blueprint
 from app import app, db
-from model.models import user1
+from model.models import user1,Apprentice
 import time
+from sqlalchemy import select
 views = Blueprint('app', __name__)
 
 @app.route('/')
 #jsut print all contant of user1 table
 def index():
     try:
-        socks = db.session.execute(db.select(user1)
-            .order_by(user1.email)).scalars()
+        query1=db.select(Apprentice.birthday).where(Apprentice.melavename=="3")
+        socks = db.session.execute(query1).scalars()
         sock_text = '<ul>'
         for sock in socks:
-            sock_text += '<li>' + sock.email + ', ' + sock.password + '</li>'
+                sock_text += '<li>' + sock+ '</li>'
         sock_text += '</ul>'
         return sock_text
     except Exception as e:
@@ -40,6 +41,32 @@ def register():
         else:
             # already exist
             return jsonify(["user alredy exist"])
+
+@app.route('/getBirthDays/<int:id>', methods=['GET'])
+def getBirthDays(id):
+    if not validate_string(str(id)):
+        status = False
+        message = "Invalid data"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    birthdays = select(Apprentice.birthday).where(Apprentice.melavename==str(id))
+    result = db.session.execute(birthdays).scalars()
+    if result is None :
+        status = False
+        message = "birthdays  incorrect"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    else:
+        fordata=""
+        for sock in result:
+            fordata=fordata+","+str(sock)
+        print(fordata)
+        # Increase login count by 1
+        status = True
+        message = "birthdays valid"
+        data = {"token" : str(fordata)}
+        response = construct_response(status=status, message=message, data=data)
+        return jsonify(response)
 
 ######################not in use from here but u can take inspair#########################
 @app.route('/API/test')

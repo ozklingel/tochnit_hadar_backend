@@ -23,4 +23,4 @@ if __name__ == '__main__':
     from route.routes import views
     #blueprints for making application components and supporting common patterns
     app.register_blueprint(views)
-    #now app is running and route.routes.py you need to create the APIs
+    #now app is running ,in route.routes.py you need to create the APIs

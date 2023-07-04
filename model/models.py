@@ -9,14 +9,55 @@ class user1(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(100), nullable=False)
+    privatename= db.Column(db.String(100), nullable=False)
+    familyname= db.Column(db.String(100), nullable=False)
+    image= db.Column(db.String(100), nullable=False)
+    phone= db.Column(db.String(100), nullable=False)
+    birthday= db.Column(db.String(100), nullable=False)
+    eshcol= db.Column(db.String(100), nullable=False)
+    apprentice= db.Column(db.String(100), nullable=False)
+    mosad= db.Column(db.String(100), nullable=False)
+    address= db.Column(db.String(100), nullable=False)
+    creationdate= db.Column(db.String(100), nullable=False)
 
+class Apprentice(db.Model):
+    id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    PrivateName= db.Column(db.String(100), nullable=False)
+    familyName= db.Column(db.String(100), nullable=False)
+    image= db.Column(db.String(100), nullable=False)
+    phone= db.Column(db.String(100), nullable=False)
+    mail= db.Column(db.String(100), nullable=False)
+    birthday= db.Column(db.String(100), nullable=False)
+    eshcol= db.Column(db.String(100), nullable=False)
+    HighschoolName= db.Column(db.String(100), nullable=False)
+    YeshivaName= db.Column(db.String(100), nullable=False)
+    HomeAddress= db.Column(db.String(100), nullable=False)
+    BasisAddress= db.Column(db.String(100), nullable=False)
+    startArmyDate= db.Column(db.String(100), nullable=False)
+    Yehida= db.Column(db.String(100), nullable=False)
+    LastVisitDate= db.Column(db.String(100), nullable=False)
+    LastConatctDate= db.Column(db.String(100), nullable=False)
+    FamilyStatus= db.Column(db.String(100), nullable=False)
+    fatherName= db.Column(db.String(100), nullable=False)
+    fatherphone= db.Column(db.String(100), nullable=False)
+    fatherMail= db.Column(db.String(100), nullable=False)
+    motherName= db.Column(db.String(100), nullable=False)
+    motherPhone= db.Column(db.String(100), nullable=False)
+    mothermail= db.Column(db.String(100), nullable=False)
+    YeshivaMahzore= db.Column(db.String(100), nullable=False)
+    RamName= db.Column(db.String(100), nullable=False)
+    RamPhone= db.Column(db.String(100), nullable=False)
+    melavename= db.Column(db.String(100), nullable=False)
+    creationDate= db.Column(db.String(100), nullable=False)
+    wedding= db.Column(db.String(100), nullable=False)
 
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password, password)
+class Interaction(db.Model):
+    ID= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    apprenticeId= db.Column(db.String(100), nullable=False)
+    userId= db.Column(db.String(100), nullable=False)
+    type= db.Column(db.String(100), nullable=False)
+    creationDate= db.Column(db.String(100), nullable=False)
 
     def get_json_data(self):
         return {

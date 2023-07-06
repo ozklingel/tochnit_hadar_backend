@@ -49,3 +49,5 @@ installation:
 6. All Done!! [Click Here](http://localhost:5000/) to interact with your app:u will get all user1 table content
 
 
+#post installation 
+for developing ,keep an eye to follow the correct architecture like in https://realpython.com/flask-blueprint/

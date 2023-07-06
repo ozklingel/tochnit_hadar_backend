@@ -4,6 +4,8 @@ from model.models import user1,Apprentice
 import time
 from sqlalchemy import select,or_,and_,insert
 views = Blueprint('app', __name__)
+import datetime
+from sqlalchemy.sql.expression import cast
 
 @app.route('/')
 #jsut print all contant of user1 table
@@ -46,7 +48,7 @@ def register():
 def getBirthDays(id):
     if not validate_string(str(id)):
         status = False
-        message = "Invalid data"
+        message = "Invalid id"
         response = construct_response(status=status, message=message)
         return jsonify(response)
     birthdays = select(Apprentice.birthday).where(Apprentice.melavename==str(id))
@@ -74,22 +76,18 @@ def getApprentice(id):
         message = "Invalid data"
         response = construct_response(status=status, message=message)
         return jsonify(response)
-    apprentice  = select(user1.apprentice).where(user1.id==str(id))
-    result = db.session.execute(apprentice).scalars()
-    if result is None :
+    query = db.session.query(user1.apprentice).filter(and_(user1.id == str(id),user1.apprentice!="None")).all()
+    print(query)
+    if query is None :
         status = False
         message = "apprentice  incorrect"
         response = construct_response(status=status, message=message)
         return jsonify(response)
     else:
-        fordata=""
-        for sock in result:
-            fordata=fordata+","+str(sock)
-        print(fordata)
         # Increase login count by 1
         status = True
         message = "apprentice valid"
-        data = {"token" : str(fordata)}
+        data = {"token" : str(query).replace(" ","")}
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 
@@ -100,22 +98,22 @@ def callstodo(id):
         message = "Invalid data"
         response = construct_response(status=status, message=message)
         return jsonify(response)
-    result = db.session.query(Apprentice.id).filter(Apprentice.melavename==str(id), Apprentice.lastconatctdate=="5")
+
+    current_time = datetime.datetime.utcnow()
+    ten_weeks_ago = current_time - datetime.timedelta(days=3)
+
+    result = db.session.query(Apprentice.id).filter(Apprentice.melavename == str(id),
+                                                    Apprentice.lastconatctdate < ten_weeks_ago).all()
     if result is None :
         status = False
         message = "callstodo  incorrect"
         response = construct_response(status=status, message=message)
         return jsonify(response)
     else:
-        print(result)
-        fordata=""
-        for sock in result:
-            fordata=fordata+","+str(sock.id)
-        print(fordata)
         # Increase login count by 1
         status = True
         message = "callstodo valid"
-        data = {"token" : str(fordata)}
+        data = {"token" : str(result)}
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 
@@ -126,23 +124,22 @@ def meetingstodo(id):
             message = "Invalid data"
             response = construct_response(status=status, message=message)
             return jsonify(response)
+        current_time = datetime.datetime.utcnow()
+        ten_weeks_ago = current_time - datetime.timedelta(days=3)
         result = db.session.query(Apprentice.id).filter(Apprentice.melavename == str(id),
-                                                        Apprentice.lastvisitdate == "bla")
+            Apprentice.lastvisitdate < ten_weeks_ago).all()
+
         if result is None:
             status = False
             message = "callstodo  incorrect"
             response = construct_response(status=status, message=message)
             return jsonify(response)
         else:
-            print(result)
-            fordata = ""
-            for sock in result:
-                fordata = fordata + "," + str(sock.id)
-            print(fordata)
+
             # Increase login count by 1
             status = True
             message = "callstodo valid"
-            data = {"token": str(fordata)}
+            data = {"token": str(result)}
             response = construct_response(status=status, message=message, data=data)
             return jsonify(response)
 
@@ -155,20 +152,24 @@ def Interaction(ApprenticeId,type):
         message = "Invalid data"
         response = construct_response(status=status, message=message)
         return jsonify(response)
+    if type==1:
+        db.session.query(Apprentice). \
+            filter(Apprentice.id == ApprenticeId). \
+            update({'lastvisitdate': "now"})
+        db.session.commit()
+        return jsonify(["Register success"])
 
-    print(ApprenticeId)
+    if type == 2:
+        db.session.query(Apprentice). \
+            filter(Apprentice.id == ApprenticeId). \
+            update({'lastconatctdate': "now"})
+        db.session.commit()
+        status = True
+        message = "Interaction valid for ApprenticeId: "+str(ApprenticeId)
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
 
-    db.session.query(Apprentice). \
-        filter(Apprentice.id == ApprenticeId). \
-        update({'lastvisitdate': "now"})
-    db.session.commit()
-    return jsonify(["Register success"])
-    if result is None:
-            logger.error(e.args)
-            db.session.rollback()
-            return jsonify(["fail insert"])
-
-    db.session.close()
+    return jsonify(["fail insert"])
 
 
 ######################not in use from here but u can take inspair#########################

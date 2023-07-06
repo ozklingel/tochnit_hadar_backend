@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify,Blueprint
 from app import app, db
 from model.models import user1,Apprentice
 import time
-from sqlalchemy import select
+from sqlalchemy import select,or_,and_,insert
 views = Blueprint('app', __name__)
 
 @app.route('/')
@@ -67,6 +67,110 @@ def getBirthDays(id):
         data = {"token" : str(fordata)}
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
+@app.route('/getApprentice/<int:id>', methods=['GET'])
+def getApprentice(id):
+    if not validate_string(str(id)):
+        status = False
+        message = "Invalid data"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    apprentice  = select(user1.apprentice).where(user1.id==str(id))
+    result = db.session.execute(apprentice).scalars()
+    if result is None :
+        status = False
+        message = "apprentice  incorrect"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    else:
+        fordata=""
+        for sock in result:
+            fordata=fordata+","+str(sock)
+        print(fordata)
+        # Increase login count by 1
+        status = True
+        message = "apprentice valid"
+        data = {"token" : str(fordata)}
+        response = construct_response(status=status, message=message, data=data)
+        return jsonify(response)
+
+@app.route('/callstodo/<int:id>', methods=['GET'])
+def callstodo(id):
+    if not validate_string(str(id)):
+        status = False
+        message = "Invalid data"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    result = db.session.query(Apprentice.id).filter(Apprentice.melavename==str(id), Apprentice.lastconatctdate=="5")
+    if result is None :
+        status = False
+        message = "callstodo  incorrect"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    else:
+        print(result)
+        fordata=""
+        for sock in result:
+            fordata=fordata+","+str(sock.id)
+        print(fordata)
+        # Increase login count by 1
+        status = True
+        message = "callstodo valid"
+        data = {"token" : str(fordata)}
+        response = construct_response(status=status, message=message, data=data)
+        return jsonify(response)
+
+@app.route('/meetingstodo/<int:id>', methods=['GET'])
+def meetingstodo(id):
+        if not validate_string(str(id)):
+            status = False
+            message = "Invalid data"
+            response = construct_response(status=status, message=message)
+            return jsonify(response)
+        result = db.session.query(Apprentice.id).filter(Apprentice.melavename == str(id),
+                                                        Apprentice.lastvisitdate == "bla")
+        if result is None:
+            status = False
+            message = "callstodo  incorrect"
+            response = construct_response(status=status, message=message)
+            return jsonify(response)
+        else:
+            print(result)
+            fordata = ""
+            for sock in result:
+                fordata = fordata + "," + str(sock.id)
+            print(fordata)
+            # Increase login count by 1
+            status = True
+            message = "callstodo valid"
+            data = {"token": str(fordata)}
+            response = construct_response(status=status, message=message, data=data)
+            return jsonify(response)
+
+
+@app.route('/Interaction', methods=['POST'])
+def Interaction():
+    d = {}
+    if request.method == "POST":
+        type = request.form["type"]
+        userId = request.form["userId"]
+        ApprenticeId = request.form["ApprenticeId"]
+        print(ApprenticeId)
+        print(userId)
+        try:
+            newInteraction = user1(
+                         apprenticeId=ApprenticeId,
+                         userId=userId
+            )
+            db.session.add(newInteraction)
+            db.session.commit()
+            return jsonify(["Register success"])
+        except SQLAlchemyError as e:
+            logger.error(e.args)
+            db.session.rollback()
+            return jsonify(["fail inser"])
+        finally:
+            db.session.close()
+
 
 ######################not in use from here but u can take inspair#########################
 @app.route('/API/test')

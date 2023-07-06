@@ -51,22 +51,17 @@ def getBirthDays(id):
         message = "Invalid id"
         response = construct_response(status=status, message=message)
         return jsonify(response)
-    birthdays = select(Apprentice.birthday).where(Apprentice.melavename==str(id))
-    result = db.session.execute(birthdays).scalars()
-    if result is None :
+    birthdays = db.session.query(Apprentice.birthday).filter(Apprentice.melavename==str(id)).all()
+    if birthdays is None :
         status = False
         message = "birthdays  incorrect"
         response = construct_response(status=status, message=message)
         return jsonify(response)
     else:
-        fordata=""
-        for sock in result:
-            fordata=fordata+","+str(sock)
-        print(fordata)
         # Increase login count by 1
         status = True
         message = "birthdays valid"
-        data = {"token" : str(fordata)}
+        data = {"token" : str(birthdays)}
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 @app.route('/getApprentice/<int:id>', methods=['GET'])

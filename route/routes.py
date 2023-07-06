@@ -147,29 +147,28 @@ def meetingstodo(id):
             return jsonify(response)
 
 
-@app.route('/Interaction', methods=['POST'])
-def Interaction():
-    d = {}
-    if request.method == "POST":
-        type = request.form["type"]
-        userId = request.form["userId"]
-        ApprenticeId = request.form["ApprenticeId"]
-        print(ApprenticeId)
-        print(userId)
-        try:
-            newInteraction = user1(
-                         apprenticeId=ApprenticeId,
-                         userId=userId
-            )
-            db.session.add(newInteraction)
-            db.session.commit()
-            return jsonify(["Register success"])
-        except SQLAlchemyError as e:
+@app.route('/Interaction/<int:ApprenticeId>/<int:type>', methods=['get'])
+def Interaction(ApprenticeId,type):
+    print(ApprenticeId)
+    if not validate_string(str(ApprenticeId)):
+        status = False
+        message = "Invalid data"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+
+    print(ApprenticeId)
+
+    db.session.query(Apprentice). \
+        filter(Apprentice.id == ApprenticeId). \
+        update({'lastvisitdate': "now"})
+    db.session.commit()
+    return jsonify(["Register success"])
+    if result is None:
             logger.error(e.args)
             db.session.rollback()
-            return jsonify(["fail inser"])
-        finally:
-            db.session.close()
+            return jsonify(["fail insert"])
+
+    db.session.close()
 
 
 ######################not in use from here but u can take inspair#########################

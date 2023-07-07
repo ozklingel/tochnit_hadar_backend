@@ -12,9 +12,9 @@
 0.create local DB:
        on  sql shell :
        
-              CREATE DATABASE t_h;
-              \c t_h;
-	      CREATE TABLE user1(
+        CREATE DATABASE t_h;
+        \c t_h;
+	CREATE TABLE user1(
 	ID int,
 	Role char(20),	
 	PrivateName char(20),
@@ -32,7 +32,7 @@
 	);
 
 	
-CREATE TABLE Apprentice(
+	CREATE TABLE Apprentice(
 	ID int, 
 	PrivateName char(20),
 	familyName char(20),

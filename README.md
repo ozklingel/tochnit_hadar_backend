@@ -14,9 +14,7 @@
        
               CREATE DATABASE t_h;
               \c t_h;
-                  
-
-CREATE TABLE user1(
+	      CREATE TABLE user1(
 	ID int,
 	Role char(20),	
 	PrivateName char(20),
@@ -67,6 +65,9 @@ CREATE TABLE Apprentice(
 
 
 	);
+                  
+
+
        
 1.download from CMD:
       git clone <this repo url>

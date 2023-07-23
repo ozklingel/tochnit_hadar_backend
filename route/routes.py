@@ -3,56 +3,71 @@ from app import app, db
 from model.models import user1,Apprentice
 import time
 from sqlalchemy import select,or_,and_,insert
-views = Blueprint('app', __name__)
-import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import cast
 
-@app.route('/')
-#jsut print all contant of user1 table
-def index():
-    try:
-        query1=db.select(Apprentice.birthday).where(Apprentice.melavename=="3")
-        socks = db.session.execute(query1).scalars()
-        sock_text = '<ul>'
-        for sock in socks:
-                sock_text += '<li>' + sock+ '</li>'
-        sock_text += '</ul>'
-        return sock_text
-    except Exception as e:
-        # e holds description of the error
-        error_text = "<p>The error:<br>" + str(e) + "</p>"
-        hed = '<h1>Something is broken.</h1>'
-        return hed + error_text
+views = Blueprint('app', __name__)
 
 
-@app.route('/register', methods=['POST'])
-def register():
-    d = {}
-    if request.method == "POST":
-        mail = request.form["email"]
-        password = request.form["password"]
-        print(mail)
-        print(password)
-        email = user1.query.filter_by(email=mail).first()
-        if email is None:
-            register = user1(email=mail, password=password)
-            print(register)
-            db.session.add(register)
-            db.session.commit()
-            return jsonify(["Register success"])
-        else:
-            # already exist
-            return jsonify(["user alredy exist"])
 
-@app.route('/getBirthDays/<int:id>', methods=['GET'])
-def getBirthDays(id):
+@app.route('/getApprenticeProfile/<int:id>', methods=['GET'])
+def getProfile(id):
+#currently return family and private name only
     if not validate_string(str(id)):
         status = False
         message = "Invalid id"
         response = construct_response(status=status, message=message)
         return jsonify(response)
-    birthdays = db.session.query(Apprentice.birthday).filter(Apprentice.melavename==str(id)).all()
-    if birthdays is None :
+    profile = db.session.query(Apprentice.privatename,Apprentice.familyname).filter(Apprentice.id==str(id)).all()
+    if profile is None :
+        status = False
+        message = "profile  incorrect"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    else:
+        # Increase login count by 1
+        status = True
+        message = "profile valid"
+        data = {"token" : str(profile)}
+        response = construct_response(status=status, message=message, data=data)
+        return jsonify(response)
+
+@app.route('/getUser1Profile/<int:id>', methods=['GET'])
+def getUser1Profile(id):
+# currently return family and private name only
+    if not validate_string(str(id)):
+        status = False
+        message = "Invalid id"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    profile = db.session.query(user1.familyname,user1.privatename).filter(user1.id==str(id)).all()
+    if profile is None :
+        status = False
+        message = "profile  incorrect"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    else:
+        # Increase login count by 1
+        status = True
+        message = "profile valid"
+        data = {"token" : str(profile)}
+        response = construct_response(status=status, message=message, data=data)
+        return jsonify(response)
+@app.route('/getBirthDays/<int:id>', methods=['GET'])
+def getBirthDays(id):
+# currently return family and private name and birthady in that their date is following 30 days
+    if not validate_string(str(id)):
+        status = False
+        message = "Invalid id"
+        response = construct_response(status=status, message=message)
+        return jsonify(response)
+    now = datetime.now()
+    now_date = now.strftime('%Y-%m-%d')
+    yesterday_datetime = datetime.now() + timedelta(days=30)
+    yesterday_date = yesterday_datetime.strftime('%Y-%m-%d')
+    qry = db.session.query(Apprentice.birthday,Apprentice.privatename,Apprentice.familyname).filter(and_(Apprentice.birthday.between(str(yesterday_date), str(now_date))),Apprentice.id==str(id)).all()
+    #birthdays = db.session.query(Apprentice.birthday,Apprentice.privatename,Apprentice.familyname).filter(Apprentice.id==str(id)).all()
+    if qry is None :
         status = False
         message = "birthdays  incorrect"
         response = construct_response(status=status, message=message)
@@ -61,7 +76,7 @@ def getBirthDays(id):
         # Increase login count by 1
         status = True
         message = "birthdays valid"
-        data = {"token" : str(birthdays)}
+        data = {"token" : str(qry)}
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 @app.route('/getApprentice/<int:id>', methods=['GET'])
@@ -86,8 +101,8 @@ def getApprentice(id):
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 
-@app.route('/callstodo/<int:id>', methods=['GET'])
-def callstodo(id):
+@app.route('/callsTodo/<int:id>', methods=['GET'])
+def callsTodo(id):
     if not validate_string(str(id)):
         status = False
         message = "Invalid data"
@@ -112,8 +127,8 @@ def callstodo(id):
         response = construct_response(status=status, message=message, data=data)
         return jsonify(response)
 
-@app.route('/meetingstodo/<int:id>', methods=['GET'])
-def meetingstodo(id):
+@app.route('/meetingsTodo/<int:id>', methods=['GET'])
+def meetingsTodo(id):
         if not validate_string(str(id)):
             status = False
             message = "Invalid data"
@@ -139,8 +154,8 @@ def meetingstodo(id):
             return jsonify(response)
 
 
-@app.route('/Interaction/<int:ApprenticeId>/<int:type>', methods=['get'])
-def Interaction(ApprenticeId,type):
+@app.route('/interaction/<int:ApprenticeId>/<int:type>', methods=['get'])
+def interaction(ApprenticeId,type):
     print(ApprenticeId)
     if not validate_string(str(ApprenticeId)):
         status = False
@@ -251,3 +266,41 @@ def construct_response(status, message, data=None):
             "message": message,
         "data": data
     }
+
+
+@app.route('/')
+#jsut print all contant of user1 table
+def index():
+    try:
+        query1=db.select(Apprentice.birthday).where(Apprentice.melavename=="3")
+        socks = db.session.execute(query1).scalars()
+        sock_text = '<ul>'
+        for sock in socks:
+                sock_text += '<li>' + sock+ '</li>'
+        sock_text += '</ul>'
+        return sock_text
+    except Exception as e:
+        # e holds description of the error
+        error_text = "<p>The error:<br>" + str(e) + "</p>"
+        hed = '<h1>Something is broken.</h1>'
+        return hed + error_text
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    d = {}
+    if request.method == "POST":
+        mail = request.form["email"]
+        password = request.form["password"]
+        print(mail)
+        print(password)
+        email = user1.query.filter_by(email=mail).first()
+        if email is None:
+            register = user1(email=mail, password=password)
+            print(register)
+            db.session.add(register)
+            db.session.commit()
+            return jsonify(["Register success"])
+        else:
+            # already exist
+            return jsonify(["user alredy exist"])

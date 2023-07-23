@@ -23,8 +23,8 @@ class user1(db.Model):
 
 class Apprentice(db.Model):
     id= db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    PrivateName= db.Column(db.String(100), nullable=False)
-    familyName= db.Column(db.String(100), nullable=False)
+    privatename= db.Column(db.String(100), nullable=False)
+    familyname= db.Column(db.String(100), nullable=False)
     image= db.Column(db.String(100), nullable=False)
     phone= db.Column(db.String(100), nullable=False)
     mail= db.Column(db.String(100), nullable=False)

@@ -4,7 +4,9 @@ from app import db
 from sqlalchemy.dialects.postgresql import UUID
 
 
-class apprentices(db.Model):
+class Apprentice(db.Model):
+    __tablename__ = 'apprentices'
+
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     PrivateName = db.Column(db.String(100), nullable=False)
     familyName = db.Column(db.String(100), nullable=False)

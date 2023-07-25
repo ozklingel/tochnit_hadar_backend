@@ -4,7 +4,9 @@ from app import db
 from sqlalchemy.dialects.postgresql import UUID
 
 
-class interactions(db.Model):
+class Interaction(db.Model):
+    __tablename__ = 'interactions'
+
     ID = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     apprenticeId = db.Column(db.String(100), nullable=False)
     userId = db.Column(db.String(100), nullable=False)

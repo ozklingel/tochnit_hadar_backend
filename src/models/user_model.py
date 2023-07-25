@@ -4,7 +4,9 @@ from app import db
 from sqlalchemy.dialects.postgresql import UUID
 
 
-class users(db.Model):
+class User(db.Model):
+    __tablename__ = 'users'
+
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(100), nullable=False)

@@ -17,7 +17,9 @@ from src.routes.reports_routes import reports_form_blueprint
 from src.routes.onboarding_form_routes import onboarding_form_blueprint
 from src.routes.notification_form_routes import notification_form_blueprint
 from src.routes.setEntityDetails_form_routes import setEntityDetails_form_blueprint
+from src.routes.userProfile_routes import userProfile_form_blueprint
 
+app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
 app.register_blueprint(notification_form_blueprint)
 

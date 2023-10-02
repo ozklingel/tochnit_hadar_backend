@@ -40,7 +40,7 @@ ROLE_ID_COL = "role_id"
 PHOTO_PATH_COL = "photo_path"
 
 ### Students Table ###
-APPRENTICES_TBL = "apprentices"
+APPRENTICES_TBL = "apprentice"
 ACCOMPANY_ID_COL = "accompany_id"
 MARRIAGE_STATUS_COL = "marriage_status"
 MARRIAGE_DATE_COL = "marriage_date"

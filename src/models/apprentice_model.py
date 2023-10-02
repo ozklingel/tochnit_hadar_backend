@@ -3,7 +3,7 @@ from . import *
 class Apprentice(db.Model):
     __tablename__ = APPRENTICES_TBL
 
-    id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    id = db.Column(APPRENTICE_ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     accompany_id = db.Column(ACCOMPANY_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(USERS_TBL, ID_COL)), nullable=False)
     name = db.Column(NAME_COL, db.String(50), nullable=False)
     last_name = db.Column(LAST_NAME_COL, db.String(50), nullable=False)

@@ -15,6 +15,7 @@ SUBJECT_COL = "subject"
 CONTENT_COL = "content"
 CREATED_AT_COL = "created_at"
 CREATED_BY_ID_COL = "created_by_id"
+WAS_READ_COL = "allreadyread"
 
 ### Clusters Table ###
 CLUSTERS_TBL = "clusters"
@@ -77,3 +78,4 @@ VISIT_DATE_COL = "visit_date"
 USER_ID_COL = "user_id"
 VISIT_IN_ARMY_COL = "visit_in_army"
 NOTE_COL = "note"
+ALLREADYREAD="allreadyread"

@@ -34,7 +34,7 @@ LOGO_PATH_COL = "logo_path"
 OWNER_ID_COL = "owner_id"
 
 ### Users Table ###
-USERS_TBL = "user"
+USERS_TBL = "user1"
 LAST_NAME_COL = "last_name"
 ROLE_ID_COL = "role_id"
 PHOTO_PATH_COL = "photo_path"

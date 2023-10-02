@@ -1,5 +1,11 @@
-from . import *
+from sqlalchemy import ForeignKey
 
+from . import *
+from os import sys, path
+
+pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+sys.path.append(pth)
+from app import db
 class Role(db.Model):
     __tablename__ = ROLES_TBL
 
@@ -9,4 +15,3 @@ class Role(db.Model):
     def __init__(self, id, name):
         self.id = id
         self.name = name
-

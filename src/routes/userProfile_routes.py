@@ -27,7 +27,6 @@ def uploadPhoto_form():
 
 @userProfile_form_blueprint.route('/myApprentices', methods=['GET'])
 def getmyApprentices_form():
-    print("created_by_id")
     created_by_id = request.args.get('created_by_id')
     print(created_by_id)
 
@@ -106,7 +105,7 @@ def getmyApprentice_form():
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
-        return jsonify(my_dict), HTTPStatus.OK
+        return jsonify({"Apparentice_atrr":my_dict[0]}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 

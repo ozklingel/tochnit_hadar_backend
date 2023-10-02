@@ -25,28 +25,6 @@ def uploadPhoto_form():
         return jsonify({'result': 'success', 'image form': request.form}), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
-def getProfileAtributes_form():
-    print("created_by_id")
-    created_by_id = request.args.get('userId')
-    print(created_by_id)
-    userEnt = user1.query.get(created_by_id)
-    print(userEnt)
-
-    if userEnt:
-        print(f' created_by_id      : {created_by_id}]')
-        # TODO: get Noti form to DB
-
-        list = {"apprenticeId":"11", "Pname":userEnt.name, "Fname":userEnt.last_name, "birthDay":userEnt.birthday, "email":userEnt.email,
-                       "town":userEnt.address, "area":userEnt.cluster_id, "userRole":userEnt.role_id, "Mosad":userEnt.institution_id, "Eshcol":userEnt.cluster_id,
-                       "apprenticeList":"אלה,נחשון,נינה", "phone":userEnt.phone}
-        return jsonify(results=list), HTTPStatus.OK
-    else:
-        return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
-
-
-
-
 @userProfile_form_blueprint.route('/myApprentices', methods=['GET'])
 def getmyApprentices_form():
     print("created_by_id")
@@ -69,6 +47,41 @@ def getmyApprentices_form():
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
         return jsonify(my_dict), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+
+
+@userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
+def getProfileAtributes_form():
+    created_by_id = request.args.get('userId')
+    userEnt = user1.query.get(created_by_id)
+
+    if userEnt:
+#apprentice to id
+        myApprenticesNamesList=getmyApprenticesNames(created_by_id)
+        list = {"id":userEnt.id, "Pname":userEnt.name, "Fname":userEnt.last_name, "birthDay":userEnt.birthday, "email":userEnt.email,
+                       "town":userEnt.address, "area":userEnt.cluster_id, "userRole":userEnt.role_id, "Mosad":userEnt.institution_id, "Eshcol":userEnt.cluster_id,
+                       "apprenticeList":str(myApprenticesNamesList), "phone":userEnt.phone}
+        return jsonify(results=list), HTTPStatus.OK
+    else:
+        return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
+
+
+
+def getmyApprenticesNames(created_by_id):
+
+    reportList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
+    names=""
+    for noti in reportList:
+        if noti.name.replace(" ", "")!="":
+            names+=str(noti.name)
+            names+=str(noti.last_name)
+            names+=","
+
+        '''
+        my_dict.append(
+            {"id": str(noti.id), "FName": str(noti.name), "PName": str(noti.last_name)})
+'''
+    return names.replace(" ", "")[:-1]
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 

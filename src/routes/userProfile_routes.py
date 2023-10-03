@@ -95,9 +95,20 @@ def getmyApprentice_form():
     my_dict = []
     for noti in reportList:
         my_dict.append(
-            {"id": str(noti.id), "FName": str(noti.name), "PName": str(noti.last_name),
-             "institution_id": noti.institution_id, "hadar_plan_session ": str(noti.hadar_plan_session), "serve_type": noti.serve_type,
-             "family_status": str(noti.marriage_status), "base_address": str(noti.base_address)})
+            {"id": noti.id, "PName": noti.name, "last_name": noti.last_name,
+             "institution_id": noti.institution_id, "hadar_plan_session ": noti.hadar_plan_session, "serve_type": noti.serve_type,
+             "family_status": noti.marriage_status, "base_address": noti.base_address
+             , "phone": noti.phone, "birthday": noti.birthday, "email": noti.email
+             , "marriage_status": noti.marriage_status, "marriage_date": noti.marriage_date, "wife_name": noti.wife_name
+             , "wife_phone": noti.wife_phone, "city_id": noti.city_id, "address": noti.address
+             , "father_name": noti.father_name, "father_phone": noti.father_phone, "mother_name": noti.mother_name
+             , "mother_phone": noti.mother_phone, "mother_email": noti.mother_email, "high_school_name": noti.high_school_name
+             , "high_school_teacher": noti.high_school_teacher, "high_school_teacher_phone": noti.high_school_teacher_phone, "pre_army_institution": noti.pre_army_institution
+                , "teacher_grade_a": noti.teacher_grade_a, "teacher_grade_a_phone": noti.teacher_grade_a_phone, "base_address": noti.base_address
+                , "teacher_grade_b": noti.teacher_grade_b, "recruitment_date": noti.recruitment_date, "release_date": noti.release_date
+                , "teacher_grade_b_phone": noti.teacher_grade_b_phone, "unit_name": noti.unit_name, "paying": noti.paying
+                , "accompany_connect_status": noti.accompany_connect_status, "army_role": noti.army_role, "spirit_status": noti.spirit_status
+             })
 
     if reportList is None or len(my_dict) == 0:
         # acount not found

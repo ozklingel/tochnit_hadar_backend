@@ -48,26 +48,13 @@ def add_notification_form():
 def getAll_notification_form():
     user = request.args.get('created_by_id')
     print(user)
-    ''' 
-    newToner = notifications(
-                    userid=user,
-                    apprenticeid = 'עוז',
-                    event='חזי',
-                    date='עוז',
-                    timefromnow='עוז',
-                    allreadyread='true',
-                   )
-    print(newToner)
 
-    db.session.add(newToner)   
-    db.session.commit()
-    '''
     notiList = db.session.query(notifications).filter(notifications.userid == user).all()
     my_dict = []
     for noti in notiList:
         my_dict.append(
-            {"id": str(noti.id), "result": "success", "apprenticeId": str(noti.apprenticeid), "date": str(noti.date),
-             "timeFromNow": str(noti.timefromnow), "event": str(noti.event), "allreadyread": str(noti.allreadyread)})
+            {"id": noti.id, "apprenticeId": noti.apprenticeid, "date": noti.date,
+             "timeFromNow": noti.timefromnow, "event": noti.event, "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})
 
     if not notiList :
         # acount not found

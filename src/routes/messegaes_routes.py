@@ -45,7 +45,7 @@ def add_contact_form():
 
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
-    user = request.args.get('created_by_id')
+    user = request.args.get('userId')
     print(user)
     reportList = db.session.query(ContactForm).filter(ContactForm.created_for_id == user).all()
     print(reportList)

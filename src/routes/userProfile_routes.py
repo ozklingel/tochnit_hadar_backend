@@ -27,7 +27,7 @@ def uploadPhoto_form():
 
 @userProfile_form_blueprint.route('/myApprentices', methods=['GET'])
 def getmyApprentices_form():
-    created_by_id = request.args.get('created_by_id')
+    created_by_id = request.args.get('userId')
     print(created_by_id)
 
     reportList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
@@ -86,8 +86,7 @@ def getmyApprenticesNames(created_by_id):
 
 @userProfile_form_blueprint.route('/myApprentice', methods=['GET'])
 def getmyApprentice_form():
-    print("created_by_id")
-    created_by_id = request.args.get('created_by_id')
+    created_by_id = request.args.get('userId')
     apprenticeId = request.args.get('apprenticeId')
     print(created_by_id)
     reportList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).all()

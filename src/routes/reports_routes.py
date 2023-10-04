@@ -46,9 +46,9 @@ def add_reports_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@reports_form_blueprint.route('/getAll', methods=['post'])
+@reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
-    user = request.args.get('created_by_id')
+    user = request.args.get('userId')
     print(user)
     reportList = db.session.query(Visit).filter(Visit.user_id == user).all()
     print(reportList)

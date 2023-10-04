@@ -46,7 +46,7 @@ def add_notification_form():
 
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
-    user = request.args.get('created_by_id')
+    user = request.args.get('userId')
     print(user)
 
     notiList = db.session.query(notifications).filter(notifications.userid == user).all()

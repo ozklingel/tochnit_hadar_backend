@@ -1,3 +1,4 @@
+import redis
 from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
@@ -7,6 +8,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = SECRET_KEY
 db = SQLAlchemy()
 db.init_app(app)
+red = redis.Redis(host="127.0.0.1",port=6379)
+
 # register blueprints
 from src.routes.messegaes_routes import messegaes_form_blueprint
 from src.routes.reports_routes import reports_form_blueprint

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
-from app import db
+from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
@@ -117,5 +117,63 @@ def getmyApprentice_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
+@userProfile_form_blueprint.route("/save", methods=['POST'])
+def save():
+    id = str(request.form['id']).lower()
+
+
+    # check if data of the username already exists in the redis
+    if red.hgetall(id).keys():
+        print("hget id:", red.hgetall(id))
+        # return a msg , saying the user already exists(from redis)
+        return jsonify({'result': 'already exists(from redis)'}), HTTPStatus.OK
+
+    # if not in redis, then check in db
+    elif len(list(red.hgetall(id))) == 0:
+        record = user1.query.filter_by(id=id).first()
+        print("Records fecthed from db:", record)
+
+        if record:
+
+            # return a msg to the template, saying the user already exists(from database)
+            return jsonify({'result': 'already exists(from db)'}), HTTPStatus.OK
+
+    # if data of the username doesnot exist anywhere, create a new record in DataBase and store in Redis also
+    # create a new record in DataBase
+    new_record = user1(username=id)
+    db.session.add(new_record)
+    db.session.commit()
+
+    # store in Redis also
+    #red.hset(username, "place", place)
+
+
+    # cross-checking if the record insertion was successful into database
+    record = user1.query.filter_by(id=id).first()
+    print("Records fetched from db after insert:", record)
+
+    # cross-checking if the insertion was successful into redis
+    print("key-values from redis after insert:", red.hgetall(id))
+
+    # return a success message upon saving
+    return jsonify({'result': 'id was inserted'}), HTTPStatus.OK
+
+@userProfile_form_blueprint.route("/get", methods=['GET'])
+def get():
+    userId = request.args.get("userId")
+    print("Username:", userId)
+    user_data = red.hgetall(userId)
+    print("GET Redis:", user_data)
+
+    if not user_data:
+        record = user1.query.filter_by(id=userId).first()
+        print("GET Record:", record)
+        if not record:
+            print("No data in redis or db")
+            return jsonify({'result': f"Record not yet defined for {userId}"}), HTTPStatus.OK
+        print("in db")
+        red.hset(userId, "idd", record.id)
+        return jsonify({'result': 'from db'}), HTTPStatus.OK
+    return jsonify({'result': 'from Redis'}), HTTPStatus.OK
 
 

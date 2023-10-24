@@ -3,12 +3,10 @@ import datetime
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
-
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import app, db
 import uuid
-
 from ..models.visit_model import Visit
 
 reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/reports_form')

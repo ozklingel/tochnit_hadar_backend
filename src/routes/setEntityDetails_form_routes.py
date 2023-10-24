@@ -5,7 +5,6 @@ from flask import Blueprint, request, jsonify, redirect
 import boto3, botocore
 
 from werkzeug.utils import secure_filename
-
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import db, app

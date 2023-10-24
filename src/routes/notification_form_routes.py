@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
-
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import app, db
 import uuid
-
 from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')

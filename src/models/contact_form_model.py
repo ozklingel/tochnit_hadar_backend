@@ -1,6 +1,5 @@
 from . import *
 from datetime import datetime
-
 from .user_model import user1
 
 

@@ -1,11 +1,7 @@
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from twilio.rest import Client
-
-
-
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
-
 @onboarding_form_blueprint.route('/getOTP', methods=['GET'])
 def getOTP_form():
     created_by_phone = request.args.get('created_by_phone')

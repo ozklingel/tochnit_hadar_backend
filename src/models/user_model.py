@@ -1,13 +1,10 @@
 from sqlalchemy import ForeignKey
-
 from . import *
 from os import sys, path
-
 from .city_model import City
 from .cluster_model import Cluster
 from .institution_model import Institution
 from .role_model import Role
-
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import db

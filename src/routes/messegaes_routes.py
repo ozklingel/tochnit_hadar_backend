@@ -1,11 +1,8 @@
 import datetime
-
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
-
 from ..models.contact_form_model import ContactForm
-
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import app, db

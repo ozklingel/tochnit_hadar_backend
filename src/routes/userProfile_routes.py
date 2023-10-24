@@ -4,9 +4,7 @@ from http import HTTPStatus
 from app import db
 from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
-
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
-
 
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():

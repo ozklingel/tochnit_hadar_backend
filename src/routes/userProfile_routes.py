@@ -159,14 +159,14 @@ def save():
     # return a success message upon saving
     return jsonify({'result': 'id was inserted'}), HTTPStatus.OK
 
-@userProfile_form_blueprint.route("/getuserId", methods=['GET'])
-def getUser():
+@userProfile_form_blueprint.route("/homepage", methods=['GET'])
+def homepage():
     userId = request.args.get("userId")
     print("Userid:", str(userId))
-    user_data = red.hget(userId,"id")
-    print("GET Redis:", user_data)
+    user_id = red.hget(userId,"id")
+    print("GET Redis:", user_id)
 
-    if not user_data:
+    if not user_id:
         record = user1.query.filter_by(id=userId).first()
         print("GET db Record:", record)
         if not record:
@@ -181,6 +181,10 @@ def getUser():
 
         print("User stored in cache.")
         return jsonify({'result': 'from db','user':record.id}), HTTPStatus.OK
-    return jsonify({'result': 'from Redis','user':user_data.decode("utf-8")}), HTTPStatus.OK
+    user_name = red.hget(userId,"name")
+    user_lastname = red.hget(userId,"lastname")
+    return jsonify({'userid':user_id.decode("utf-8"),
+                    'user_lastname':user_lastname.decode("utf-8"),
+                    'user_name':user_name.decode("utf-8")}), HTTPStatus.OK
 
 

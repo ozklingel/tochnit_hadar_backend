@@ -8,7 +8,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = SECRET_KEY
 db = SQLAlchemy()
 db.init_app(app)
-red = redis.Redis(host="127.0.0.1",port=6379)
+red = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 # register blueprints
 from src.routes.messegaes_routes import messegaes_form_blueprint

@@ -1,6 +1,11 @@
+import uuid
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from twilio.rest import Client
+
+from app import red
+
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
 @onboarding_form_blueprint.route('/getOTP', methods=['GET'])
 def getOTP_form():
@@ -18,9 +23,9 @@ def getOTP_form():
                          .verifications \
                          .create(to=created_by_phone, channel='sms')
     if verification.sid is None:
-        return jsonify("error"),HTTPStatus.OK
+        return jsonify({"result": "error"}), HTTPStatus.OK
     print(verification.sid)
-    return jsonify("success"),HTTPStatus.OK
+    return jsonify({"result":"success"}),HTTPStatus.OK
 
 @onboarding_form_blueprint.route('/verifyOTP', methods=['GET'])
 def verifyOTP_form():
@@ -39,5 +44,8 @@ def verifyOTP_form():
 
     print(verification_check.status)
     if verification_check.status is None:
-        return jsonify("error")
-    return jsonify({"result":"success"}),HTTPStatus.OK
+        return jsonify({"result": "error"}), HTTPStatus.OK
+    accessToken=int(str(uuid.uuid4().int)[:5])
+    userId=int(str(uuid.uuid4().int)[:5])
+    red.hset(userId, "accessToken", accessToken)
+    return jsonify({"result":accessToken}),HTTPStatus.OK

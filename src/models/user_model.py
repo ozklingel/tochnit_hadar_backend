@@ -37,3 +37,6 @@ class user1(db.Model):
         self.institution_id = institution_id
         self.cluster_id = cluster_id
         self.photo_path = photo_path
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

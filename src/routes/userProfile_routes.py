@@ -1,3 +1,5 @@
+import pickle
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
@@ -47,13 +49,12 @@ def getmyApprentices_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
+@userProfile_form_blueprint.route('/getProfileAtributesOLD', methods=['GET'])
 def getProfileAtributes_form():
     created_by_id = request.args.get('userId')
     userEnt = user1.query.get(created_by_id)
 
     if userEnt:
-#apprentice to id
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         list = {"id":userEnt.id, "Pname":userEnt.name, "Fname":userEnt.last_name, "birthDay":userEnt.birthday, "email":userEnt.email,
                        "town":userEnt.address, "area":userEnt.cluster_id, "userRole":userEnt.role_id, "Mosad":userEnt.institution_id, "Eshcol":userEnt.cluster_id,
@@ -158,22 +159,23 @@ def save():
     # return a success message upon saving
     return jsonify({'result': 'id was inserted'}), HTTPStatus.OK
 
-@userProfile_form_blueprint.route("/get", methods=['GET'])
-def get():
+@userProfile_form_blueprint.route("/getProfileAtributes", methods=['GET'])
+def getUser():
     userId = request.args.get("userId")
-    print("Username:", userId)
-    user_data = red.hgetall(userId)
+    print("Userid:", str(userId))
+    user_data = red.get(str(userId))
     print("GET Redis:", user_data)
 
     if not user_data:
         record = user1.query.filter_by(id=userId).first()
-        print("GET Record:", record)
+        print("GET db Record:", record)
         if not record:
             print("No data in redis or db")
             return jsonify({'result': f"Record not yet defined for {userId}"}), HTTPStatus.OK
         print("in db")
-        red.hset(userId, "idd", record.id)
-        return jsonify({'result': 'from db'}), HTTPStatus.OK
-    return jsonify({'result': 'from Redis'}), HTTPStatus.OK
+        red.set(userId, record.id)
+        print("User stored in cache.")
+        return jsonify({'result': 'from db','user':record.id}), HTTPStatus.OK
+    return jsonify({'result': 'from Redis','user':user_data.decode("utf-8")}), HTTPStatus.OK
 
 

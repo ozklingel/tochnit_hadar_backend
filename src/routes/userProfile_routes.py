@@ -8,6 +8,8 @@ from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
 from src.models.user_model import user1
+from src.models.visit_model import Visit
+
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
@@ -144,7 +146,6 @@ def homepage():
                     'user_name':user_name.decode("utf-8")}), HTTPStatus.OK
 
 @userProfile_form_blueprint.route("/homepage2", methods=['GET'])
-
 def getcloseEvents():
     userId = request.args.get("userId")
     too_old = datetime.datetime.today() - datetime.timedelta(days=3)
@@ -167,3 +168,26 @@ def getcloseEvents():
         return jsonify(my_dict), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
+@userProfile_form_blueprint.route("/homepage3", methods=['GET'])
+def getMytasks():
+    userId = request.args.get("userId")
+    reportList = db.session.query(Visit.apprentice_id, Visit.title,Visit.visit_date). \
+        filter(Visit.user_id == userId).limit(3).all()
+    print(reportList)
+    my_dict = []
+    for noti in reportList:
+        daysfromnow="0"
+        if noti.visit_date:
+            daysfromnow=str(datetime.date.today() - noti.visit_date)
+        my_dict.append(
+            {"apprenticeid": str(noti.apprentice_id),
+             "title": str(noti.title),
+             "daysfromnow": daysfromnow})
+
+    if reportList is None:
+        # acount not found
+        return jsonify(["Wrong id"])
+    else:
+        # print(f' notifications: {my_dict}]')
+        # TODO: get Noti form to DB
+        return jsonify(my_dict), HTTPStatus.OK

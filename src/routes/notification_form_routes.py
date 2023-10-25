@@ -46,10 +46,10 @@ def add_notification_form():
 def getAll_notification_form():
     user = request.args.get('userId')
     print(user)
-
     notiList = db.session.query(notifications).filter(notifications.userid == user).all()
     my_dict = []
     for noti in notiList:
+        #   daysFromNow = str(datetime.date.today() - noti.visit_date) if noti.visit_date is not None else None
         my_dict.append(
             {"id": noti.id, "apprenticeId": noti.apprenticeid, "date": noti.date,
              "timeFromNow": noti.timefromnow, "event": noti.event, "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})

@@ -1,10 +1,12 @@
 import pickle
+import datetime
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
 from app import db, red
 from src.models.apprentice_model import Apprentice
+from src.models.notification_model import notifications
 from src.models.user_model import user1
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
@@ -74,11 +76,6 @@ def getmyApprenticesNames(created_by_id):
             names+=str(noti.name)
             names+=str(noti.last_name)
             names+=","
-
-        '''
-        my_dict.append(
-            {"id": str(noti.id), "FName": str(noti.name), "PName": str(noti.last_name)})
-'''
     return names.replace(" ", "")[:-1]
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
@@ -118,47 +115,6 @@ def getmyApprentice_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route("/save", methods=['POST'])
-def save():
-    id = str(request.form['id']).lower()
-
-
-    # check if data of the username already exists in the redis
-    if red.hgetall(id).keys():
-        print("hget id:", red.hgetall(id))
-        # return a msg , saying the user already exists(from redis)
-        return jsonify({'result': 'already exists(from redis)'}), HTTPStatus.OK
-
-    # if not in redis, then check in db
-    elif len(list(red.hgetall(id))) == 0:
-        record = user1.query.filter_by(id=id).first()
-        print("Records fecthed from db:", record)
-
-        if record:
-
-            # return a msg to the template, saying the user already exists(from database)
-            return jsonify({'result': 'already exists(from db)'}), HTTPStatus.OK
-
-    # if data of the username doesnot exist anywhere, create a new record in DataBase and store in Redis also
-    # create a new record in DataBase
-    new_record = user1(username=id)
-    db.session.add(new_record)
-    db.session.commit()
-
-    # store in Redis also
-    #red.hset(username, "place", place)
-
-
-    # cross-checking if the record insertion was successful into database
-    record = user1.query.filter_by(id=id).first()
-    print("Records fetched from db after insert:", record)
-
-    # cross-checking if the insertion was successful into redis
-    print("key-values from redis after insert:", red.hgetall(id))
-
-    # return a success message upon saving
-    return jsonify({'result': 'id was inserted'}), HTTPStatus.OK
-
 @userProfile_form_blueprint.route("/homepage", methods=['GET'])
 def homepage():
     userId = request.args.get("userId")
@@ -187,4 +143,27 @@ def homepage():
                     'user_lastname':user_lastname.decode("utf-8"),
                     'user_name':user_name.decode("utf-8")}), HTTPStatus.OK
 
+@userProfile_form_blueprint.route("/homepage2", methods=['GET'])
+
+def getcloseEvents():
+    userId = request.args.get("userId")
+    too_old = datetime.datetime.today() - datetime.timedelta(days=3)
+    reportList = db.session.query(notifications.apprenticeid,notifications.event).\
+        filter(notifications.userid == userId,notifications.date>= too_old).all()
+    print(reportList)
+    my_dict = []
+    for noti in reportList:
+        my_dict.append(
+            {"apprenticeid": str(noti.apprenticeid),
+             "event": str(noti.event),
+             "daysfromnow": str(datetime.date.today() - noti.date)})
+
+    if reportList is None:
+        # acount not found
+        return jsonify(["Wrong id"])
+    else:
+        # print(f' notifications: {my_dict}]')
+        # TODO: get Noti form to DB
+        return jsonify(my_dict), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 

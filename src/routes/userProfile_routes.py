@@ -49,7 +49,7 @@ def getmyApprentices_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route('/getProfileAtributesOLD', methods=['GET'])
+@userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     created_by_id = request.args.get('userId')
     userEnt = user1.query.get(created_by_id)
@@ -159,11 +159,11 @@ def save():
     # return a success message upon saving
     return jsonify({'result': 'id was inserted'}), HTTPStatus.OK
 
-@userProfile_form_blueprint.route("/getProfileAtributes", methods=['GET'])
+@userProfile_form_blueprint.route("/getuserId", methods=['GET'])
 def getUser():
     userId = request.args.get("userId")
     print("Userid:", str(userId))
-    user_data = red.get(str(userId))
+    user_data = red.hget(userId,"id")
     print("GET Redis:", user_data)
 
     if not user_data:
@@ -173,7 +173,12 @@ def getUser():
             print("No data in redis or db")
             return jsonify({'result': f"Record not yet defined for {userId}"}), HTTPStatus.OK
         print("in db")
-        red.set(userId, record.id)
+        red.hset(userId,"id", record.id)
+        red.hset(userId,"name", record.name)
+        red.hset(userId,"lastname", record.last_name)
+        red.hset(userId, "email",record.email)
+        red.hset(userId, "role",record.role_id)
+
         print("User stored in cache.")
         return jsonify({'result': 'from db','user':record.id}), HTTPStatus.OK
     return jsonify({'result': 'from Redis','user':user_data.decode("utf-8")}), HTTPStatus.OK

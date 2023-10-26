@@ -45,15 +45,6 @@ def verifyOTP_form():
     print(verification_check.status)
     if verification_check.status is None:
         return jsonify({"result": "error"}), HTTPStatus.OK
-    accessToken=int(str(uuid.uuid4().int)[:5])
-    userId=int(str(uuid.uuid4().int)[:5])
-    red.hset(userId, "accessToken", accessToken)
-    return jsonify({"result":accessToken}),HTTPStatus.OK
+    return jsonify({"result":"success"}),HTTPStatus.OK
 
-@onboarding_form_blueprint.route('/getAccessTocken', methods=['GET'])
-def getAccessTocken():
-    userId = request.args.get("userId")
-    accessToken=int(str(uuid.uuid4().int)[:5])
-    print(accessToken)
-    red.hset(userId, "accessToken", accessToken)
-    return jsonify({"result":accessToken}),HTTPStatus.OK
+

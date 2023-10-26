@@ -78,4 +78,6 @@ VISIT_DATE_COL = "visit_date"
 USER_ID_COL = "user_id"
 VISIT_IN_ARMY_COL = "visit_in_army"
 NOTE_COL = "note"
+TITLE_COL = "title"
+
 ALLREADYREAD="allreadyread"

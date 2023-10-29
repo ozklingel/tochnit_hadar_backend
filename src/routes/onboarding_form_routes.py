@@ -45,6 +45,8 @@ def verifyOTP_form():
     print(verification_check.status)
     if verification_check.status is None:
         return jsonify({"result": "error"}), HTTPStatus.OK
-    return jsonify({"result":"success"}),HTTPStatus.OK
+    accessToken=int(str(uuid.uuid4().int)[:5])
+    red.hset(created_by_phone, "accessToken", accessToken)
+    return jsonify({"result":accessToken}),HTTPStatus.OK
 
 

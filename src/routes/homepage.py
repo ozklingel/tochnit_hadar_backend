@@ -15,12 +15,17 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 
 @homepage_form_blueprint.route("/init", methods=['GET'])
 def homepage():
+    accessToken = request.args.get("accessToken")
     userId = request.args.get("userId")
     print("Userid:", str(userId))
-    user_id = red.hget(userId,"id")
+    if not red.hget(userId,"accessToken")==accessToken:
+        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+    user_id = red.hget(userId)
     print("GET Redis:", user_id)
 
     if not user_id:
+        return jsonify({'result': f"wrong userid {userId}"}), HTTPStatus.OK
+        '''
         record = user1.query.filter_by(id=userId).first()
         print("GET db Record:", record)
         if not record:
@@ -33,21 +38,23 @@ def homepage():
         red.hset(userId, "email",record.email)
         red.hset(userId, "role",record.role_id)
         print("User stored in cache.")
-        accessToken = int(str(uuid.uuid4().int)[:5])
-        red.hset(userId, "accessToken", accessToken)
-        return jsonify({"accessToken": accessToken,
+        return jsonify({
                         'user_lastname': record.last_name,
                         'user_name': record.name,
                         "tasks": getMytasks(user_id.decode("utf-8")),
                         "closeEvents": getcloseEvents(user_id.decode("utf-8"))}), HTTPStatus.OK
-        return jsonify({'result': 'from db','user':record.id}), HTTPStatus.OK
-    user_name = red.hget(userId,"name")
-    user_lastname = red.hget(userId,"lastname")
-    accessToken=int(str(uuid.uuid4().int)[:5])
-    red.hset(userId, "accessToken", accessToken)
-    return jsonify({ "accessToken":accessToken,
-                    'user_lastname':user_lastname.decode("utf-8"),
-                    'user_name':user_name.decode("utf-8"),
+        '''
+    record = user1.query.filter_by(id=userId).first()
+    red.hset(userId, "id", record.id)
+    red.hset(userId, "name", record.name)
+    red.hset(userId, "lastname", record.last_name)
+    red.hset(userId, "email", record.email)
+    red.hset(userId, "role", record.role_id)
+
+
+    return jsonify({
+                    'user_lastname':record.last_name,
+                    'user_name':record.name,
                     "tasks":getMytasks(user_id.decode("utf-8")),
                     "closeEvents":getcloseEvents(user_id.decode("utf-8"))}), HTTPStatus.OK
 

@@ -15,11 +15,17 @@ messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/me
 
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():
+    print("in")
     data = request.json
+    print(data)
     subject = data['subject']
     content = data['content']
     created_by_id = data['created_by_id']
-    created_for_id = data['created_for_id']
+    created_for_id=None
+    try:
+        created_for_id = data['created_for_id']
+    except:
+        print("no created_for_id")
     print(type(created_by_id))
     newToner = ContactForm(
         id=str(uuid.uuid1().int)[:5],
@@ -37,8 +43,8 @@ def add_contact_form():
     if newToner:
         print(f'add contact form: subject: [{subject}, content: {content}, created_by_id: {created_by_id}]')
         # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'contact_form': request.form}), HTTPStatus.OK
-    return jsonify({'result': 'error', 'contact_form': request.form}), HTTPStatus.OK
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    return jsonify({'result': 'error while inserting'}), HTTPStatus.OK
 
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():

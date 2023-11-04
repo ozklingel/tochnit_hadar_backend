@@ -57,13 +57,13 @@ def getmyApprentices_form():
 def getProfileAtributes_form():
     created_by_id = request.args.get('userId')
     userEnt = user1.query.get(created_by_id)
-
+    print(created_by_id)
     if userEnt:
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
-        list = {"id":userEnt.id, "Pname":userEnt.name, "Fname":userEnt.last_name, "birthDay":userEnt.birthday, "email":userEnt.email,
-                       "town":userEnt.address, "area":userEnt.cluster_id, "userRole":userEnt.role_id, "Mosad":userEnt.institution_id, "Eshcol":userEnt.cluster_id,
-                       "apprenticeList":str(myApprenticesNamesList), "phone":userEnt.phone}
-        return jsonify(results=list), HTTPStatus.OK
+        list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch":userEnt.birthday, "email":userEnt.email,
+                       "city":userEnt.address, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                       "apprentices":str(myApprenticesNamesList), "phone":userEnt.phone}
+        return jsonify(results="success",attributes=list), HTTPStatus.OK
     else:
         return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
 

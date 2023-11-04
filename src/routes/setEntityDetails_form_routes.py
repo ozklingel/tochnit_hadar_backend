@@ -1,10 +1,15 @@
+import json
 from http import HTTPStatus
+from itertools import product
 from os import sys, path
 
 from flask import Blueprint, request, jsonify, redirect
 import boto3, botocore
 
 from werkzeug.utils import secure_filename
+
+from ..models.apprentice_model import Apprentice
+
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
 from app import db, app
@@ -26,16 +31,19 @@ def setEntityDetailsByType():
 
        if typeOfSet == "userProfile":
                entityId =data['entityId']
+               print(entityId);
                atrrToBeSet = data['atrrToBeSet']
+               print(atrrToBeSet);
                updatedEnt = user1.query.get(entityId)
-               for key in atrrToBeSet:
-                   setattr(updatedEnt, key, atrrToBeSet[key])
+               atrrToBeSetJson=json.loads(atrrToBeSet)
+               for key in atrrToBeSetJson:
+                   setattr(updatedEnt, key, atrrToBeSetJson[key])
                db.session.commit()
 
        if typeOfSet ==  "apprenticeProflie":
                entityId =data['entityId']
                atrrToBeSet = data['atrrToBeSet']
-               updatedEnt = user1.query.get(entityId)
+               updatedEnt = Apprentice.query.get(entityId)
                for key in atrrToBeSet:
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()

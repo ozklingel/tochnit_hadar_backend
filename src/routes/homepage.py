@@ -1,6 +1,4 @@
-import pickle
 import datetime
-import uuid
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -18,32 +16,11 @@ def homepage():
     accessToken = request.args.get("accessToken")
     userId = request.args.get("userId")
     print("Userid:", str(userId))
-    if not red.hget(userId,"accessToken")==accessToken:
+    print(red.hget(userId,"accessToken"))
+    print(accessToken)
+    if not red.hget(userId,"accessToken").decode("utf-8")==accessToken:
         return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
-    user_id = red.hget(userId)
-    print("GET Redis:", user_id)
 
-    if not user_id:
-        return jsonify({'result': f"wrong userid {userId}"}), HTTPStatus.OK
-        '''
-        record = user1.query.filter_by(id=userId).first()
-        print("GET db Record:", record)
-        if not record:
-            print("No data in redis or db")
-            return jsonify({'result': f"Record not yet defined for {userId}"}), HTTPStatus.OK
-        print("in db")
-        red.hset(userId,"id", record.id)
-        red.hset(userId,"name", record.name)
-        red.hset(userId,"lastname", record.last_name)
-        red.hset(userId, "email",record.email)
-        red.hset(userId, "role",record.role_id)
-        print("User stored in cache.")
-        return jsonify({
-                        'user_lastname': record.last_name,
-                        'user_name': record.name,
-                        "tasks": getMytasks(user_id.decode("utf-8")),
-                        "closeEvents": getcloseEvents(user_id.decode("utf-8"))}), HTTPStatus.OK
-        '''
     record = user1.query.filter_by(id=userId).first()
     red.hset(userId, "id", record.id)
     red.hset(userId, "name", record.name)
@@ -55,8 +32,8 @@ def homepage():
     return jsonify({
                     'user_lastname':record.last_name,
                     'user_name':record.name,
-                    "tasks":getMytasks(user_id.decode("utf-8")),
-                    "closeEvents":getcloseEvents(user_id.decode("utf-8"))}), HTTPStatus.OK
+                    "tasks":getMytasks(record.id),
+                    "closeEvents":getcloseEvents(record.id)}), HTTPStatus.OK
 
 def getcloseEvents(userId):
     too_old = datetime.datetime.today() - datetime.timedelta(days=3)

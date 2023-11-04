@@ -76,32 +76,3 @@ def setWasRead_notification_form():
         # TODO: add contact form to DB
         return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
 
-
-@notification_form_blueprint.route('/uploadPhoto', methods=['post'])
-def uploadPhoto_form():
-    raw_images = []
-    images = request.files.getlist("file")
-    image_names = []
-    for image in images:
-        image_name = image.filename
-        image_names.append(image_name)
-        # img_raw = tf.image.decode_image(
-        #    open(image_name, 'rb').read(), channels=3)
-        # raw_images.append(img_raw)
-    if image_names:
-        print(f'image form: subject: [ image: {image_names}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'image form': request.form}), HTTPStatus.OK
-
-
-@notification_form_blueprint.route('/getProfileAtributes', methods=['post'])
-def getProfileAtributes_form():
-    created_by_id = request.form.get('created_by_id')
-    print(created_by_id)
-
-    if created_by_id:
-        print(f' created_by_id: {created_by_id}]')
-        # TODO: get Noti form to DB
-        return jsonify([{'apprenticeId': '11', 'Pname': 'Oz', "Fname": "Kli", "birthDay": "20.3.2023",
-                         "email": "oz@sd.com ", "town": "Aza", "area": "Dan", "userRole": "Melave", "Mosad": "Dan",
-                         "Eshcol": "Aza", "apprenticeList": "Av,ra,ha"}, ]), HTTPStatus.OK

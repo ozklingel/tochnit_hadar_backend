@@ -36,17 +36,28 @@ def verifyOTP_form():
     created_by_phone = request.args.get('created_by_phone')
     print(otp)
     print(created_by_phone)
-    verification_check = client.verify \
-        .v2 \
-        .services('VA3593d0ca97b77c0c47a1a330b81e2f36') \
-        .verification_checks \
-        .create(to=created_by_phone, code=otp)
+    print(int(str(created_by_phone)[1:]))
 
-    print(verification_check.status)
-    if verification_check.status is None:
+    result="error"
+    try:
+        verification_check = client.verify \
+            .v2 \
+            .services('VA3593d0ca97b77c0c47a1a330b81e2f36') \
+            .verification_checks \
+            .create(to=created_by_phone, code=otp)
+
+        print(verification_check.status)
+        result=verification_check.status
+        if verification_check.status !="approved":
+            return jsonify({"result": "error"}), HTTPStatus.OK
+        accessToken=int(str(uuid.uuid4().int)[:5])
+        red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
+        return jsonify({"result":accessToken}),HTTPStatus.OK
+    except:
+        if result =="approved":
+            accessToken = int(str(uuid.uuid4().int)[:5])
+            red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
+            return jsonify({"result": accessToken}), HTTPStatus.OK
         return jsonify({"result": "error"}), HTTPStatus.OK
-    accessToken=int(str(uuid.uuid4().int)[:5])
-    red.hset(created_by_phone, "accessToken", accessToken)
-    return jsonify({"result":accessToken}),HTTPStatus.OK
 
 

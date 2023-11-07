@@ -75,10 +75,11 @@ def getmyApprenticesNames(created_by_id):
     names=""
     for noti in reportList:
         if noti.name.replace(" ", "")!="":
-            names+=str(noti.name)
-            names+=str(noti.last_name)
+            names+=str(noti.name).replace(" ", "")
+            names +=" "
+            names+=str(noti.last_name).replace(" ", "")
             names+=","
-    return names.replace(" ", "")[:-1]
+    return names[:-1]
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 

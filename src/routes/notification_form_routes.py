@@ -1,3 +1,5 @@
+from datetime import datetime,date
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
@@ -49,10 +51,11 @@ def getAll_notification_form():
     notiList = db.session.query(notifications).filter(notifications.userid == user).all()
     my_dict = []
     for noti in notiList:
-        #   daysFromNow = str(datetime.date.today() - noti.visit_date) if noti.visit_date is not None else None
+        daysFromNow = str((date.today() - noti.date).days) if noti.date is not None else "None"
+        print(daysFromNow)
         my_dict.append(
             {"id": noti.id, "apprenticeId": noti.apprenticeid, "date": noti.date,
-             "timeFromNow": noti.timefromnow, "event": noti.event, "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})
+             "timeFromNow": daysFromNow, "event": noti.event, "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})
 
     if not notiList :
         # acount not found
@@ -69,7 +72,7 @@ def setWasRead_notification_form():
     notiId = request.form.get('noti_id')
     print(notiId)
     noti = notifications.query.get(notiId)
-    noti.allreadyread = 'true'
+    noti.allreadyread = True
     db.session.commit()
     if notiId:
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

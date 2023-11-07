@@ -29,4 +29,4 @@ app.register_blueprint(homepage_form_blueprint)
 
 if __name__ == '__main__':
 
-    app.run()
+    app.run(debug=True)

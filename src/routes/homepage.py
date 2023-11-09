@@ -13,12 +13,12 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 
 @homepage_form_blueprint.route("/init", methods=['GET'])
 def homepage():
-    accessToken = request.args.get("accessToken")
+    accessToken =request.headers.get('Authorization')
     userId = request.args.get("userId")
     print("Userid:", str(userId))
     print(red.hget(userId,"accessToken"))
-    print(accessToken)
-    if not red.hget(userId,"accessToken").decode("utf-8")==accessToken:
+    print(accessToken[7:])
+    if not red.hget(userId,"accessToken").decode("utf-8")==accessToken[7:]:
         return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
 
     record = user1.query.filter_by(id=userId).first()

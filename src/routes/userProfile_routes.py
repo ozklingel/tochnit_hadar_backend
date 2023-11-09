@@ -55,9 +55,10 @@ def getmyApprentices_form():
 
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
+    print(request.headers.get('Authorization'))
+
     created_by_id = request.args.get('userId')
     userEnt = user1.query.get(created_by_id)
-    print(created_by_id)
     if userEnt:
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch":userEnt.birthday, "email":userEnt.email,

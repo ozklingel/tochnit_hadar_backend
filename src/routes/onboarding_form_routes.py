@@ -5,11 +5,16 @@ from http import HTTPStatus
 from twilio.rest import Client
 
 from app import red
+from src.models.user_model import user1
 
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
 @onboarding_form_blueprint.route('/getOTP', methods=['GET'])
 def getOTP_form():
     created_by_phone = request.args.get('created_by_phone')
+    userEnt = user1.query.get(created_by_phone[4:])
+    if userEnt is None:
+        return jsonify({"result": "not in system"}), HTTPStatus.OK
+
     print(created_by_phone)
     # Find your Account SID and Auth Token at twilio.com/console
     # and set the environment variables. See http://twil.io/secure
@@ -36,7 +41,6 @@ def verifyOTP_form():
     created_by_phone = request.args.get('created_by_phone')
     print(otp)
     print(created_by_phone)
-    print(int(str(created_by_phone)[1:]))
 
     result="error"
     try:
@@ -50,14 +54,34 @@ def verifyOTP_form():
         result=verification_check.status
         if verification_check.status !="approved":
             return jsonify({"result": "error"}), HTTPStatus.OK
-        accessToken=int(str(uuid.uuid4().int)[:5])
-        red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
-        return jsonify({"result":accessToken}),HTTPStatus.OK
-    except:
-        if result =="approved":
+        userEnt = user1.query.get(created_by_phone[4:])
+        if userEnt is None:
+            return jsonify({"result": "not in system"}), HTTPStatus.OK
+        if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
             accessToken = int(str(uuid.uuid4().int)[:5])
             red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
-            return jsonify({"result": accessToken}), HTTPStatus.OK
+            return jsonify({"result": accessToken,"firsOnboarding":False}), HTTPStatus.OK
+
+        accessToken=int(str(uuid.uuid4().int)[:5])
+        red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
+        return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
+    except:
+        if result =="approved":
+            userEnt = user1.query.get(created_by_phone[4:])
+            print("approved")
+            print(userEnt)
+
+            if userEnt is None:
+                return jsonify({"result": "not in system"}), HTTPStatus.OK
+
+
+            if (userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id) and (userEnt.name!='' and userEnt.last_name!='' and userEnt.email!='' and userEnt.birthday!='' and userEnt.cluster_id!=''):
+                accessToken = int(str(uuid.uuid4().int)[:5])
+                #red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
+                return jsonify({"result": accessToken, "firsOnboarding": False}), HTTPStatus.OK
+            accessToken = int(str(uuid.uuid4().int)[:5])
+            red.hset(int(str(created_by_phone)[4:]), "accessToken", accessToken)
+            return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
         return jsonify({"result": "error"}), HTTPStatus.OK
 
 

@@ -1,10 +1,14 @@
 import pickle
 import datetime
+import uuid
+import boto3
 
+import werkzeug
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
 from app import db, red
+from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
 from src.models.user_model import user1
@@ -14,19 +18,33 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
-    raw_images = []
-    images = request.files.getlist("file")
-    image_names = []
-    for image in images:
-        image_name = image.filename
-        image_names.append(image_name)
-        # img_raw = tf.image.decode_image(
-        #    open(image_name, 'rb').read(), channels=3)
-        # raw_images.append(img_raw)
-    if image_names:
-        print(f'image form: subject: [ image: {image_names}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'image form': request.form}), HTTPStatus.OK
+    if request.method == "POST":
+        created_by_id = request.form.get('userId')
+        imagefile = request.files['image']
+        #filename = werkzeug.utils.secure_filename(imagefile.filename)
+        #print("\nReceived image File name : " + imagefile.filename)
+        #imagefile.save( filename)
+        new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
+        bucket_name = "th01-s3"
+        session = boto3.Session()
+        s3_client = session.client('s3',
+                            aws_access_key_id=AWS_access_key_id,
+                            aws_secret_access_key=AWS_secret_access_key)
+        s3 = boto3.resource('s3',
+                            aws_access_key_id=AWS_access_key_id,
+                            aws_secret_access_key=AWS_secret_access_key)
+        print(new_filename)
+        try:
+            s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
+        except:
+            return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+        updatedEnt = user1.query.get(created_by_id)
+        updatedEnt.photo_path=new_filename
+        db.session.commit()
+        #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
+        return jsonify({'result': 'success', 'image path': new_filename}), HTTPStatus.OK
+
+
 
 
 @userProfile_form_blueprint.route('/myApprentices', methods=['GET'])
@@ -39,9 +57,22 @@ def getmyApprentices_form():
     my_dict = []
     for noti in reportList:
         my_dict.append(
-            {"id": str(noti.id), "FName": str(noti.name), "PName": str(noti.last_name),
+            {"id": str(noti.id), "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": noti.institution_id, "hadar_plan_session ": str(noti.hadar_plan_session), "serve_type": noti.serve_type,
-             "family_status": str(noti.marriage_status), "base_address": str(noti.base_address)})
+             "marriage_status": str(noti.marriage_status), "base_address": str(noti.base_address),
+             "phone": noti.phone, "email": noti.email,
+             "birthday": noti.birthday, "wife_phone": noti.wife_phone,
+             "wife_name": noti.wife_name, "marriage_date": noti.marriage_date,
+             "city_id": noti.city_id, "father_phone": noti.father_phone,
+             "father_email": noti.father_email,
+             "father_name": noti.father_name, "mother_email": noti.mother_email,
+             "mother_phone": noti.mother_phone, "mother_name": noti.mother_name,
+             "high_school_teacher_phone": noti.high_school_teacher_phone, "high_school_teacher": noti.high_school_teacher,
+             "teacher_grade_b_phone": noti.teacher_grade_b_phone, "teacher_grade_b": noti.teacher_grade_b, "teacher_grade_a": noti.teacher_grade_a,
+             "pre_army_institution": noti.pre_army_institution, "army_role": noti.army_role, "unit_name": noti.unit_name,
+             "accompany_connect_status": noti.accompany_connect_status, "spirit_status": noti.spirit_status, "paying": noti.paying,
+             "release_date": noti.release_date, "recruitment_date": noti.recruitment_date,
+             })
 
     if reportList is None:
         # acount not found

@@ -4,7 +4,6 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
 from app import db, red
-from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
@@ -14,11 +13,14 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 @homepage_form_blueprint.route("/init", methods=['GET'])
 def homepage():
     accessToken =request.headers.get('Authorization')
-    userId = request.args.get("userId")
+    print("accessToken:",accessToken)
+    userId = request.args.get("userId")[4:]
     print("Userid:", str(userId))
-    print(red.hget(userId,"accessToken"))
-    print(accessToken[7:])
-    if not red.hget(userId,"accessToken").decode("utf-8")==accessToken[7:]:
+    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+    print("redisaccessToken:",redisaccessToken)
+
+
+    if not redisaccessToken==accessToken:
         return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
 
     record = user1.query.filter_by(id=userId).first()

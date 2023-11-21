@@ -38,6 +38,9 @@ USERS_TBL = "user1"
 LAST_NAME_COL = "last_name"
 ROLE_ID_COL = "role_id"
 PHOTO_PATH_COL = "photo_path"
+notifyStartWeek_COL = "notifyStartWeek"
+notifyDayBefore_COL = "notifyDayBefore"
+notifyMorning_COL = "notifyMorning"
 
 ### Students Table ###
 APPRENTICES_TBL = "apprentice"

@@ -23,6 +23,9 @@ class user1(db.Model):
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(Institution.id), nullable=False)
     cluster_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(Cluster.id), nullable=False)
     photo_path = db.Column(PHOTO_PATH_COL, db.String(50), nullable=False)
+    notifyStartWeek = db.Column(notifyStartWeek_COL, db.Boolean, nullable=False)
+    notifyDayBefore = db.Column(notifyDayBefore_COL, db.Boolean, nullable=False)
+    notifyMorning = db.Column(notifyMorning_COL, db.Boolean, nullable=False)
 
     def __init__(self, id, name, last_name, role_id, phone, email, birthday, city_id, address, institution_id, cluster_id, photo_path):
         self.id = id

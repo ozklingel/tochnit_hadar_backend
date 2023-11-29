@@ -1,4 +1,6 @@
 import datetime
+import time
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
@@ -20,45 +22,47 @@ def add_contact_form():
     print(data)
     subject = data['subject']
     content = data['content']
-    created_by_id = data['created_by_id']
+    attachments = data['attachments']
+
+    created_by_id = str(data['created_by_id'])[4:]
     created_for_id=None
     try:
-        created_for_id = data['created_for_id']
+        created_for_id = str(data['created_for_id'])[4:]
     except:
         print("no created_for_id")
-    print(type(created_by_id))
-    newToner = ContactForm(
+    ContactForm1 = ContactForm(
         id=str(uuid.uuid1().int)[:5],
         created_for_id=created_for_id,
         created_by_id=created_by_id,
         content=content,
         subject=subject,
         created_at=None,
-        allreadyread=False
+        allreadyread=False,
+        attachments=attachments
     )
-    print(newToner.created_by_id)
+    print(ContactForm1.created_by_id)
 
-    db.session.add(newToner)
+    db.session.add(ContactForm1)
     db.session.commit()
-    if newToner:
+    if ContactForm1:
         print(f'add contact form: subject: [{subject}, content: {content}, created_by_id: {created_by_id}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
     return jsonify({'result': 'error while inserting'}), HTTPStatus.OK
 
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
-def getAll_reports_form():
-    user = request.args.get('userId')
+def getAll_messegases_form():
+    user = request.args.get('userId')[4:]
     print(user)
-    reportList = db.session.query(ContactForm).filter(ContactForm.created_for_id == user).all()
-    print(reportList)
+    messegasesList = db.session.query(ContactForm).filter(ContactForm.created_for_id == user).all()
+    print(messegasesList)
     my_dict = []
-    for noti in reportList:
+    for mess in messegasesList:
         my_dict.append(
-            {"id": str(noti.id), "from": str(noti.created_by_id), "date": str(noti.created_at),
-             "content": noti.content, "title": str(noti.subject), "allreadyread": str(noti.allreadyread)})
+            {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date": time.mktime(mess.created_at.timetuple()) if mess.created_at is not None else None,
+             "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread)})
 
-    if not reportList :
+    if not messegasesList :
         # acount not found
         return jsonify(["Wrong id or no messages"])
     else:
@@ -70,11 +74,11 @@ def getAll_reports_form():
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():
-    report_id = request.form.get('report_id')
-    noti = Visit.query.get(report_id)
-    noti.allreadyread = 'true'
+    mess_id = request.form.get('report_id')
+    mess = Visit.query.get(mess_id)
+    mess.allreadyread = 'true'
     db.session.commit()
-    if report_id:
+    if mess_id:
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
+        return jsonify({'result': 'success', 'mess form': request.form}), HTTPStatus.OK

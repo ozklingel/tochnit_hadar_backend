@@ -1,5 +1,6 @@
 import pickle
-import datetime
+from datetime import datetime
+import time
 import uuid
 import boto3
 
@@ -19,7 +20,7 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if request.method == "POST":
-        created_by_id = request.form.get('userId')
+        created_by_id = request.form.get('userId')[4:]
         imagefile = request.files['image']
         #filename = werkzeug.utils.secure_filename(imagefile.filename)
         #print("\nReceived image File name : " + imagefile.filename)
@@ -49,19 +50,19 @@ def uploadPhoto_form():
 
 @userProfile_form_blueprint.route('/myApprentices', methods=['GET'])
 def getmyApprentices_form():
-    created_by_id = request.args.get('userId')
+    created_by_id = request.args.get('userId')[4:]
     print(created_by_id)
 
-    reportList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
-    print(reportList)
+    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
+    print(apprenticeList)
     my_dict = []
-    for noti in reportList:
+    for noti in apprenticeList:
         my_dict.append(
             {"id": str(noti.id), "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": noti.institution_id, "hadar_plan_session ": str(noti.hadar_plan_session), "serve_type": noti.serve_type,
              "marriage_status": str(noti.marriage_status), "base_address": str(noti.base_address),
              "phone": noti.phone, "email": noti.email,
-             "birthday": noti.birthday, "wife_phone": noti.wife_phone,
+             "birthday": time.mktime(datetime.strptime(noti.birthday.strip(),'%Y-%m-%d').timetuple()) if noti.birthday is not None else None, "wife_phone": noti.wife_phone,
              "wife_name": noti.wife_name, "marriage_date": noti.marriage_date,
              "city_id": noti.city_id, "father_phone": noti.father_phone,
              "father_email": noti.father_email,
@@ -71,12 +72,20 @@ def getmyApprentices_form():
              "teacher_grade_b_phone": noti.teacher_grade_b_phone, "teacher_grade_b": noti.teacher_grade_b, "teacher_grade_a": noti.teacher_grade_a,
              "pre_army_institution": noti.pre_army_institution, "army_role": noti.army_role, "unit_name": noti.unit_name,
              "accompany_connect_status": noti.accompany_connect_status, "spirit_status": noti.spirit_status, "paying": noti.paying,
-             "release_date": noti.release_date, "recruitment_date": noti.recruitment_date,
+             "release_date": noti.release_date, "recruitment_date": noti.recruitment_date
+                , "militaryUpdatedDateTime": time.mktime(noti.militaryupdateddatetime.timetuple() ) if noti.birthday is not None else None,
+             "militaryPositionOld": noti.militarypositionold,"educationalInstitution": noti.educationalinstitution
+                , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
+             "workType": noti.worktype,"workPlace": noti.workplace, "workStatus": noti.workstatus
+
              })
 
-    if reportList is None:
+    if apprenticeList is None:
         # acount not found
-        return jsonify(["Wrong id"])
+        return jsonify({"result":"Wrong id"})
+    if apprenticeList ==[]:
+        # acount not found
+        return jsonify({"result":"empty"})
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
@@ -87,14 +96,13 @@ def getmyApprentices_form():
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     print(request.headers.get('Authorization'))
-
-    created_by_id = request.args.get('userId')
+    created_by_id = request.args.get('userId')[4:]
     userEnt = user1.query.get(created_by_id)
     if userEnt:
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch":userEnt.birthday, "email":userEnt.email,
                        "city":userEnt.address, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
-                       "apprentices":str(myApprenticesNamesList), "phone":userEnt.phone}
+                       "apprentices":str(myApprenticesNamesList), "phone":userEnt.phone, "photo_path":userEnt.photo_path}
         return jsonify(results="success",attributes=list), HTTPStatus.OK
     else:
         return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
@@ -103,9 +111,9 @@ def getProfileAtributes_form():
 
 def getmyApprenticesNames(created_by_id):
 
-    reportList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
+    apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
     names=""
-    for noti in reportList:
+    for noti in apprenticeList:
         if noti.name.replace(" ", "")!="":
             names+=str(noti.name).replace(" ", "")
             names +=" "
@@ -117,18 +125,19 @@ def getmyApprenticesNames(created_by_id):
 
 @userProfile_form_blueprint.route('/myApprentice', methods=['GET'])
 def getmyApprentice_form():
-    created_by_id = request.args.get('userId')
-    apprenticeId = request.args.get('apprenticeId')
+    created_by_id = request.args.get('userId')[4:]
+    apprenticeId = request.args.get('apprenticeId')[4:]
     print(created_by_id)
-    reportList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).all()
-    print(reportList)
+    print(apprenticeId)
+    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).all()
+    print(apprenticeList)
     my_dict = []
-    for noti in reportList:
+    for noti in apprenticeList:
         my_dict.append(
             {"id": noti.id, "PName": noti.name, "last_name": noti.last_name,
              "institution_id": noti.institution_id, "hadar_plan_session ": noti.hadar_plan_session, "serve_type": noti.serve_type,
              "family_status": noti.marriage_status, "base_address": noti.base_address
-             , "phone": noti.phone, "birthday": noti.birthday, "email": noti.email
+             , "phone": noti.phone, "birthday": time.mktime(datetime.strptime(noti.birthday.strip(),'%Y-%m-%d').timetuple()) if noti.birthday is not None else None, "email": noti.email
              , "marriage_status": noti.marriage_status, "marriage_date": noti.marriage_date, "wife_name": noti.wife_name
              , "wife_phone": noti.wife_phone, "city_id": noti.city_id, "address": noti.address
              , "father_name": noti.father_name, "father_phone": noti.father_phone, "mother_name": noti.mother_name
@@ -138,9 +147,13 @@ def getmyApprentice_form():
                 , "teacher_grade_b": noti.teacher_grade_b, "recruitment_date": noti.recruitment_date, "release_date": noti.release_date
                 , "teacher_grade_b_phone": noti.teacher_grade_b_phone, "unit_name": noti.unit_name, "paying": noti.paying
                 , "accompany_connect_status": noti.accompany_connect_status, "army_role": noti.army_role, "spirit_status": noti.spirit_status
+                , "militaryUpdatedDateTime": time.mktime(noti.militaryupdateddatetime.timetuple()), "militaryPositionOld": noti.militarypositionold,"educationalInstitution": noti.educationalinstitution
+                , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
+             "workType": noti.worktype,"workPlace": noti.workplace, "workStatus": noti.workstatus
+
              })
 
-    if reportList is None or len(my_dict) == 0:
+    if apprenticeList is None or len(my_dict) == 0:
         # acount not found
         return jsonify(["Wrong id"])
     else:

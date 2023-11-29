@@ -42,6 +42,15 @@ class Apprentice(db.Model):
     spirit_status = db.Column(SPIRIT_STATUS_COL, db.Integer, nullable=False)
     accompany_connect_status = db.Column(ACCOMPANY_CONNECT_STATUS_COL, db.Integer, nullable=False)
 
+    workstatus = db.Column(workStatus_COL, db.String(50), nullable=False)
+    workplace = db.Column(workPlace_COL, db.String(50), nullable=False)
+    worktype = db.Column(workType_COL, db.String(50), nullable=False)
+    workoccupation = db.Column(workOccupation_COL, db.String(50), nullable=False)
+    educationfaculty = db.Column(educationFaculty_COL, db.String(50), nullable=False)
+    educationalinstitution = db.Column(educationalInstitution_COL, db.String(50), nullable=False)
+    militarypositionold = db.Column(militaryPositionOld_COL, db.String(50), nullable=False)
+    militaryupdateddatetime=db.Column(militaryUpdatedDateTime_COL, db.DateTime, nullable=False)
+
     def __init__(self, id, accompany_id, name, last_name, phone, email, birthday, marriage_status, marriage_date, wife_name, wife_phone, city_id, address, father_name, father_phone, father_email,
                  mother_name, mother_phone, mother_email, high_school_name, high_school_teacher, high_school_teacher_phone, pre_army_institution, teacher_grade_a, teacher_grade_a_phone, teacher_grade_b,
                  teacher_grade_b_phone, institution_id, hadar_plan_session, base_address, unit_name, army_role, serve_type, recruitment_date, release_date, paying, spirit_status, accompany_connect_status):

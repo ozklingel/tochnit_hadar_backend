@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -14,16 +15,16 @@ reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/report
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
     data = request.json
-    user = data['userId']
+    user = str(data['userId'])[4:]
     print(user)
     updatedEnt = None
     if user:
         List_of_apprentices = data['List_of_apprentices']
         print(data['event_details'])
         for key in List_of_apprentices:
-            newToner = Visit(
+            Visit1 = Visit(
                 user_id=user,
-                apprentice_id=key['id'],
+                apprentice_id=str(key['id'])[4:],
                 note=data['event_details'],
                 visit_in_army=bool(data['event_type']),
                 visit_date=data['date'],
@@ -31,8 +32,8 @@ def add_reports_form():
                 id=int(str(uuid.uuid4().int)[:5]),
                 title=data['event_type']
             )
-            print(newToner)
-            db.session.add(newToner)
+            print(Visit1)
+            db.session.add(Visit1)
     db.session.commit()
     if user is None  :
         # acount not found
@@ -46,7 +47,7 @@ def add_reports_form():
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
-    user = request.args.get('userId')
+    user = request.args.get('userId')[4:]
     print(user)
     reportList = db.session.query(Visit).filter(Visit.user_id == user).all()
     print(reportList)
@@ -54,7 +55,7 @@ def getAll_reports_form():
     for noti in reportList:
         daysFromNow = str(datetime.date.today() - noti.visit_date) if noti.visit_date is not None else None
         my_dict.append(
-            {"id": str(noti.id), "from": str(noti.apprentice_id), "date": str(noti.visit_date),
+            {"id": str(noti.id), "from": str(noti.apprentice_id), "date": time.mktime(noti.visit_date.timetuple()) if noti.visit_date is not None else None,
              "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread)})
 
     if not reportList :
@@ -68,10 +69,10 @@ def getAll_reports_form():
 
 
 @reports_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_notification_form():
+def setWasRead_report_form():
     report_id = request.form.get('report_id')
-    noti = Visit.query.get(report_id)
-    noti.allreadyread = 'true'
+    Visit1 = Visit.query.get(report_id)
+    Visit1.allreadyread = 'true'
     db.session.commit()
     if report_id:
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

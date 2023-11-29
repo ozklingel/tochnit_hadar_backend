@@ -70,6 +70,7 @@ def verifyOTP_form():
         return jsonify({"result": accessToken,"firsOnboarding":False}), HTTPStatus.OK
     print("null")
     accessToken=int(str(uuid.uuid4().int)[:5])
+    print(accessToken)
     red.hset(int(str(created_by_phone)[3:]), "accessToken", accessToken)
     return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
 

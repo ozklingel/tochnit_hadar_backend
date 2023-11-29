@@ -2,7 +2,7 @@ from . import *
 from datetime import datetime
 from .user_model import user1
 
-
+#wil be created by support call and by messages page
 class ContactForm(db.Model):
     __tablename__ = CONTACT_FORMS_TBL
 
@@ -13,6 +13,7 @@ class ContactForm(db.Model):
     created_by_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     created_for_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     allreadyread=db.Column(WAS_READ_COL, db.Boolean, nullable=True)
+    attachments=db.Column(db.String(250), nullable=False)
     def __init__(self, id, subject, content, created_at, created_by_id,created_for_id,allreadyread):
         self.id = id
         self.subject = subject

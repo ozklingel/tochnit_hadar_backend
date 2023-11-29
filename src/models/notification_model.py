@@ -15,7 +15,6 @@ class notifications(db.Model):
     apprenticeid = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     event = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    timefromnow = db.Column(db.String(100), nullable=False)
     allreadyread = db.Column(WAS_READ_COL, db.Boolean, nullable=True)
     numoflinesdisplay=db.Column(db.Integer, nullable=False)
 

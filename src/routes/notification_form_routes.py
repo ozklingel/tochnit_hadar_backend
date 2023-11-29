@@ -1,3 +1,4 @@
+import json
 from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
@@ -14,30 +15,31 @@ from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')
 
-@notification_form_blueprint.route('/add', methods=['POST'])
+@notification_form_blueprint.route('/add1', methods=['POST'])
 def add_notification_form():
-    user = request.form.get('userId')
-    apprenticeid = request.form.get('apprenticeid')
-    event = request.form.get('event')
-    date = request.form.get('date')
+    data=request.data.decode()
+    json_object = json.loads(data)
+    print(json_object)
+    user = json_object["userId"]
+    apprenticeid = json_object["apprenticeid"]
+    event = json_object["event"]
+    date = json_object["date"]
 
     print(user)
 
-    newToner = notifications(
-
-                    userid=user,
-                    apprenticeid = apprenticeid,
+    notification1 = notifications(
+                    userid=user[4:],
+                    apprenticeid = apprenticeid[4:],
                     event=event,
                     date=date,
-                    timefromnow=None,
                     allreadyread=False,
                     id=int(str(uuid.uuid4().int)[:5]),
 
     )
-    print(newToner)
-    db.session.add(newToner)
+    print(notification1.date)
+    db.session.add(notification1)
     db.session.commit()
-    if  newToner is None :
+    if  notification1 is None :
         # acount not found
         return jsonify(["Wrong id"])
     else:
@@ -49,13 +51,12 @@ def add_notification_form():
 
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
-    user = request.args.get('userId')
+    user = request.args.get('userId')[4:]
     print(user)
     notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
     my_dict = []
     for noti in notiList:
         daysFromNow = str((date.today() - noti.date).days) if noti.date is not None else "None"
-        print(daysFromNow)
         my_dict.append(
             {"id": noti.id, "apprenticeId": noti.apprenticeid, "date": noti.date.strftime("%m.%d.%Y"),
              "timeFromNow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})
@@ -84,16 +85,20 @@ def setWasRead_notification_form():
 
 @notification_form_blueprint.route('/setSetting', methods=['post'])
 def setSetting_notification_form():
-    notifyMorningval = request.form.get('notifyMorning')
-    notifyDayBeforeval = request.form.get('notifyDayBefore')
-    notifyStartWeekval = request.form.get('notifyStartWeek')
-    user = request.form.get('userId')
+    print(request.form.to_dict())
+    data = request.form.to_dict()
+    notifyMorningval = data['notifyMorning']
+    notifyDayBeforeval = data['notifyDayBefore']
+    notifyStartWeekval = data['notifyStartWeek']
+    user = data['userId'][4:]
+    print("user:",user)
+    print("notifyMorningval:",bool(notifyMorningval))
+    print("notifyMorningval:",notifyMorningval)
 
-    print(notifyMorningval)
     user = user1.query.get(user)
-    user.notifyStartWeek = notifyMorningval
-    user.notifyDayBefore = notifyDayBeforeval
-    user.notifyMorning = notifyStartWeekval
+    user.notifyStartWeek = notifyMorningval== 'true'
+    user.notifyDayBefore = notifyDayBeforeval== 'true'
+    user.notifyMorning = notifyStartWeekval== 'true'
 
     db.session.commit()
     if user:
@@ -102,18 +107,16 @@ def setSetting_notification_form():
         return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
 
 
-@notification_form_blueprint.route('/getAll', methods=['GET'])
-def getNotificationSetting_notification_form():
-    user = request.args.get('userId')
-
-
-    print(user)
-    notiSettingList = db.session.query(user1.notifyMorning,user1.notifyDayBefore,user1.notifyStartWeek).filter(notifications.userid == user).first()
-
+@notification_form_blueprint.route('/getAllSetting', methods=['GET'])
+def getNotificationSetting_form():
+    user = request.args.get('userId')[4:]
+    notiSettingList = db.session.query(user1.notifyMorning,user1.notifyDayBefore,user1.notifyStartWeek).filter(user1.id == user).first()
     if not notiSettingList :
         # acount not found
         return jsonify(["Wrong id or emty list"])
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
-        return jsonify(notiSettingList), HTTPStatus.OK
+        return jsonify({"notifyMorning":notiSettingList.notifyMorning,
+                        "notifyDayBefore":notiSettingList.notifyDayBefore
+                        ,"notifyStartWeek":notiSettingList.notifyStartWeek}), HTTPStatus.OK

@@ -22,7 +22,7 @@ def setEntityDetailsByType():
        print(typeOfSet)
        updatedEnt=None
        if typeOfSet=="Onboarding":
-           entityId =data['entityId']
+           entityId =str(data['entityId'])[4:]
            atrrToBeSet = data['atrrToBeSet']
            updatedEnt = user1.query.get(entityId)
            for key in atrrToBeSet:
@@ -30,7 +30,7 @@ def setEntityDetailsByType():
            db.session.commit()
 
        if typeOfSet == "userProfile":
-               entityId =data['entityId']
+               entityId =str(data['entityId'])[4:]
                print(entityId);
                atrrToBeSet = data['atrrToBeSet']
                print(atrrToBeSet);
@@ -41,10 +41,13 @@ def setEntityDetailsByType():
                db.session.commit()
 
        if typeOfSet ==  "apprenticeProflie":
-               entityId =data['entityId']
+               entityId =str(data['entityId'])[4:]
                atrrToBeSet = data['atrrToBeSet']
                updatedEnt = Apprentice.query.get(entityId)
                for key in atrrToBeSet:
+                   if key== "accompany_id":
+                       setattr(updatedEnt, key, str(atrrToBeSet[key])[4:])
+                       continue
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
 

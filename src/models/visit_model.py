@@ -15,6 +15,7 @@ class Visit(db.Model):
     title = db.Column(TITLE_COL, db.String(50), nullable=True)
     allreadyread=db.Column(ALLREADYREAD, db.Boolean, nullable=True)
 
+
     def __init__(self, id, apprentice_id, visit_date, user_id, visit_in_army, note,allreadyread,title):
         self.id = id
         self.apprentice_id = apprentice_id

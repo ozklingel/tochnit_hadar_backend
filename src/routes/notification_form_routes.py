@@ -1,11 +1,16 @@
 import json
+
 from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
 
+from sqlalchemy import func
+
+from ..models.apprentice_model import Apprentice
 from ..models.user_model import user1
+from ..models.visit_model import Visit
 
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
@@ -53,6 +58,7 @@ def add_notification_form():
 def getAll_notification_form():
     user = request.args.get('userId')[4:]
     print(user)
+    #get notification created by user.
     notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
     my_dict = []
     for noti in notiList:
@@ -60,8 +66,27 @@ def getAll_notification_form():
         my_dict.append(
             {"id": noti.id, "apprenticeId": noti.apprenticeid, "date": noti.date.strftime("%m.%d.%Y"),
              "timeFromNow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,"numOfLinesDisplay":noti.numoflinesdisplay})
-
-    if not notiList :
+    #get notification created by system=apprentices birthday
+    ApprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == user).order_by(Apprentice.birthday.desc()).all()
+    for noti in ApprenticeList:
+        BD=noti.birthday.strip().split("-")
+        gap = (date.today() - date(date.today().year, int(BD[1]), int(BD[2]))).days
+        print("birthday gap:",gap)
+        if gap<=0 and gap>=-3:
+            my_dict.append(
+                {"id": noti.id, "apprenticeId": "ל"+noti.last_name.strip()+" "+noti.name.strip(), "date": BD[2]+"."+BD[1]+"."+str(date.today().year),
+                 "timeFromNow": gap, "event": "יומהולדת", "allreadyread": False,
+                 "numOfLinesDisplay": "3"})
+        # get notification created by system=apprentices visit
+        visitEvent = db.session.query(Visit).filter(Visit.user_id == user,Visit.apprentice_id == noti.id).first()
+        gap = (date.today() - visitEvent.visit_date).days
+        print("visit gap:",gap)
+        if  gap>30:
+            my_dict.append(
+                {"id": noti.id, "apprenticeId": noti.last_name.strip()+" "+noti.name.strip(), "date": str(date.today().day)+"."+str(date.today().month)+"."+str(date.today().year),
+                 "timeFromNow": gap, "event": visitEvent.title.strip(), "allreadyread": False,
+                 "numOfLinesDisplay": "2"})
+    if not user  :
         # acount not found
         return jsonify(["Wrong id or emty list"])
     else:
@@ -120,3 +145,28 @@ def getNotificationSetting_form():
         return jsonify({"notifyMorning":notiSettingList.notifyMorning,
                         "notifyDayBefore":notiSettingList.notifyDayBefore
                         ,"notifyStartWeek":notiSettingList.notifyStartWeek}), HTTPStatus.OK
+import datetime
+import sqlalchemy as sa
+
+def age_years_at(sa_col, next_days: int = 0):
+    """
+    Generates a postgresql specific statement to return 'age' (in years)'
+    from an provided field either today (next_days == 0) or with the `next_days` offset.
+    """
+    stmt = func.age(
+        (sa_col - sa.func.cast(datetime.timedelta(next_days), sa.Interval))
+        if next_days != 0
+        else sa_col
+    )
+    stmt = func.date_part("year", stmt)
+    return stmt
+
+def has_birthday_next_days(sa_col, next_days: int = 0):
+    """
+    sqlalchemy expression to indicate that an sa_col (such as`User.birthday`)
+    has anniversary within next `next_days` days.
+
+    It is implemented by simply checking if the 'age' of the person (in years)
+    has changed between today and the `next_days` date.
+    """
+    return age_years_at(sa_col, next_days) > age_years_at(sa_col)

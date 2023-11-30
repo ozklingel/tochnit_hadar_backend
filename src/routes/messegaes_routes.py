@@ -1,5 +1,6 @@
 import datetime
 import time
+from datetime import date
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -14,16 +15,18 @@ from ..models.visit_model import Visit
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
-
+#from chat box
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():
-    print("in")
     data = request.json
     print(data)
     subject = data['subject']
     content = data['content']
-    attachments = data['attachments']
-
+    attachments=""
+    try:
+        attachments = data['attachments']
+    except:
+        print("no attachments")
     created_by_id = str(data['created_by_id'])[4:]
     created_for_id=None
     try:
@@ -36,7 +39,7 @@ def add_contact_form():
         created_by_id=created_by_id,
         content=content,
         subject=subject,
-        created_at=None,
+        created_at=date.today(),
         allreadyread=False,
         attachments=attachments
     )

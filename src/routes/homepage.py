@@ -16,21 +16,20 @@ def homepage():
     print("accessToken:",accessToken)
     userId = request.args.get("userId")[4:]
     print("Userid:", str(userId))
+    '''
     redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
     print("redisaccessToken:",redisaccessToken)
-
-
     if not redisaccessToken==accessToken:
         return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
-
+        '''
     record = user1.query.filter_by(id=userId).first()
+    '''
     red.hset(userId, "id", record.id)
     red.hset(userId, "name", record.name)
     red.hset(userId, "lastname", record.last_name)
     red.hset(userId, "email", record.email)
     red.hset(userId, "role", record.role_id)
-
-
+'''
     return jsonify({
                     'user_lastname':record.last_name,
                     'user_name':record.name,

@@ -20,7 +20,10 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if request.method == "POST":
-        created_by_id = request.form.get('userId')[4:]
+        print(request.form.to_dict())
+        data = request.form.to_dict()
+        created_by_id = data['userId'][4:]
+        print(request.files)
         imagefile = request.files['image']
         #filename = werkzeug.utils.secure_filename(imagefile.filename)
         #print("\nReceived image File name : " + imagefile.filename)
@@ -113,6 +116,8 @@ def getmyApprenticesNames(created_by_id):
 
     apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
     names=""
+    print(created_by_id)
+    print(apprenticeList)
     for noti in apprenticeList:
         if noti.name.replace(" ", "")!="":
             names+=str(noti.name).replace(" ", "")

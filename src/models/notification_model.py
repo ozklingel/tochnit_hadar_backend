@@ -17,5 +17,5 @@ class notifications(db.Model):
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     allreadyread = db.Column(WAS_READ_COL, db.Boolean, nullable=True)
     numoflinesdisplay=db.Column(db.Integer, nullable=False)
-
+    details=db.Column(db.String(100), nullable=False);
 

@@ -7,6 +7,7 @@ from app import db, red
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
+from src.routes.notification_form_routes import getAll_notification_form
 
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
@@ -30,51 +31,24 @@ def homepage():
     red.hset(userId, "email", record.email)
     red.hset(userId, "role", record.role_id)
 '''
+    tasksAndEvents=getlists(record.id)
+    print(tasksAndEvents)
     return jsonify({
                     'user_lastname':record.last_name,
                     'user_name':record.name,
-                    "tasks":getMytasks(record.id),
-                    "closeEvents":getcloseEvents(record.id)}), HTTPStatus.OK
+                    "tasks":tasksAndEvents[1],
+                    "closeEvents":tasksAndEvents[0]}), HTTPStatus.OK
 
-def getcloseEvents(userId):
-    too_old = datetime.datetime.today() - datetime.timedelta(days=3)
-    reportList = db.session.query(notifications.apprenticeid,notifications.event).\
-        filter(notifications.userid == userId,notifications.date>= too_old).all()
-    print(reportList)
-    my_dict = []
-    for noti in reportList:
-        my_dict.append(
-            {"apprenticeid": str(noti.apprenticeid),
-             "event": str(noti.event),
-             "daysfromnow": str(datetime.date.today() - noti.date)})
+def getlists(userId):
+    res=getAll_notification_form()
+    event_dict = []
+    task_dict = []
 
-    if reportList is None:
-        # acount not found
-        return "Wrong id"
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return my_dict
-        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+    for i in range(len(res[0].json)):
+        print(res[0].json[i]["numOfLinesDisplay"])
+        if res[0].json[i]["numOfLinesDisplay"]==3:
+            event_dict.append(res[0].json[i])
+        else :
+            task_dict.append(res[0].json[i])
 
-def getMytasks(userId):
-    reportList = db.session.query(Visit.apprentice_id, Visit.title,Visit.visit_date). \
-        filter(Visit.user_id == userId).limit(3).all()
-    print(reportList)
-    my_dict = []
-    for noti in reportList:
-        daysfromnow="0"
-        if noti.visit_date:
-            daysfromnow=str(datetime.date.today() - noti.visit_date)
-        my_dict.append(
-            {"apprenticeid": str(noti.apprentice_id),
-             "title": str(noti.title),
-             "daysfromnow": daysfromnow})
-
-    if reportList is None:
-        # acount not found
-        return "Wrong id"
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return my_dict
+            return event_dict,task_dict

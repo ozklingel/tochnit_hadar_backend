@@ -134,7 +134,7 @@ def getmyApprentice_form():
     apprenticeId = request.args.get('apprenticeId')[4:]
     print(created_by_id)
     print(apprenticeId)
-    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).all()
+    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).first()
     print(apprenticeList)
     my_dict = []
     for noti in apprenticeList:

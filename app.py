@@ -18,6 +18,7 @@ from src.routes.notification_form_routes import notification_form_blueprint
 from src.routes.setEntityDetails_form_routes import setEntityDetails_form_blueprint
 from src.routes.userProfile_routes import userProfile_form_blueprint
 from src.routes.homepage import homepage_form_blueprint
+from src.routes.madadim import madadim_form_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -26,6 +27,7 @@ app.register_blueprint(onboarding_form_blueprint)
 app.register_blueprint(reports_form_blueprint)
 app.register_blueprint(messegaes_form_blueprint)
 app.register_blueprint(homepage_form_blueprint)
+app.register_blueprint(madadim_form_blueprint)
 
 if __name__ == '__main__':
 

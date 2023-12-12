@@ -15,6 +15,7 @@ class Institution(db.Model):
     contact_phone = db.Column(CONTACT_PHONE_COL, db.String(50), nullable=False)
     logo_path = db.Column(LOGO_PATH_COL, db.String(50), nullable=False)
     owner_id = db.Column(OWNER_ID_COL, db.Integer, nullable=False)
+    name = db.Column(NAME_COL, db.String(20), nullable=False)
 
     def __init__(self, id, address, city_id, phone, contact_name, contact_phone, logo_path, owner_id):
         self.id = id

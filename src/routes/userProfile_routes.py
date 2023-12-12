@@ -134,7 +134,7 @@ def getmyApprentice_form():
     apprenticeId = request.args.get('apprenticeId')[4:]
     print(created_by_id)
     print(apprenticeId)
-    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).first()
+    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).all()
     print(apprenticeList)
     my_dict = []
     for noti in apprenticeList:
@@ -152,7 +152,7 @@ def getmyApprentice_form():
                 , "teacher_grade_b": noti.teacher_grade_b, "recruitment_date": noti.recruitment_date, "release_date": noti.release_date
                 , "teacher_grade_b_phone": noti.teacher_grade_b_phone, "unit_name": noti.unit_name, "paying": noti.paying
                 , "accompany_connect_status": noti.accompany_connect_status, "army_role": noti.army_role, "spirit_status": noti.spirit_status
-                , "militaryUpdatedDateTime": time.mktime(noti.militaryupdateddatetime.timetuple()), "militaryPositionOld": noti.militarypositionold,"educationalInstitution": noti.educationalinstitution
+                , "militaryUpdatedDateTime": time.mktime(noti.militaryupdateddatetime.timetuple()) if noti.militaryupdateddatetime is not None else None, "militaryPositionOld": noti.militarypositionold,"educationalInstitution": noti.educationalinstitution
                 , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
              "workType": noti.worktype,"workPlace": noti.workplace, "workStatus": noti.workstatus
 

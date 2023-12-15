@@ -120,7 +120,7 @@ def add_visit_notification(user,apprenticeid,event,date):
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
     user = request.args.get('userId')[4:]
-    print(user)
+    print("user:",user)
     #update notification table  birthday and events
     ApprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == user).order_by(
         Apprentice.birthday.desc()).all()

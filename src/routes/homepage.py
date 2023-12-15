@@ -129,8 +129,8 @@ def homepage():
     return jsonify({
                     'user_lastname':record.last_name,
                     'user_name':record.name,
-                    "tasks":tasksAndEvents[1],
-                    "closeEvents":tasksAndEvents[0]}), HTTPStatus.OK
+                    "tasks":tasksAndEvents[1] if tasksAndEvents is not None else None ,
+                    "closeEvents":tasksAndEvents[0] if tasksAndEvents is not None else None}), HTTPStatus.OK
 
 def getlists(userId):
     # get tasksAndEvents

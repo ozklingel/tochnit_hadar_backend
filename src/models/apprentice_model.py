@@ -50,6 +50,9 @@ class Apprentice(db.Model):
     educationalinstitution = db.Column(educationalInstitution_COL, db.String(50), nullable=False)
     militarypositionold = db.Column(militaryPositionOld_COL, db.String(50), nullable=False)
     militaryupdateddatetime=db.Column(militaryUpdatedDateTime_COL, db.DateTime, nullable=False)
+    high_school_teacher_email=db.Column(high_school_teacher_email_col, db.String(50), nullable=False)
+    teacher_grade_a_email=db.Column(teacher_grade_a_email_col, db.String(50), nullable=False)
+    teacher_grade_b_email=db.Column(teacher_grade_b_email_col, db.String(50), nullable=False)
 
     def __init__(self, id, accompany_id, name, last_name, phone, email, birthday, marriage_status, marriage_date, wife_name, wife_phone, city_id, address, father_name, father_phone, father_email,
                  mother_name, mother_phone, mother_email, high_school_name, high_school_teacher, high_school_teacher_phone, pre_army_institution, teacher_grade_a, teacher_grade_a_phone, teacher_grade_b,

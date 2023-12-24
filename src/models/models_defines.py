@@ -81,6 +81,10 @@ educationFaculty_COL = "educationfaculty"
 educationalInstitution_COL = "educationalinstitution"
 militaryPositionOld_COL = "militarypositionold"
 militaryUpdatedDateTime_COL = "militaryupdateddatetime"
+high_school_teacher_email_col="high_school_teacher_email"
+teacher_grade_a_email_col="teacher_grade_a_email"
+teacher_grade_b_email_col="teacher_grade_b_email"
+
 ### Visits Table ###
 VISITS_TBL = "visits"
 APPRENTICE_ID_COL = "apprentice_id"

@@ -19,7 +19,7 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 def homepageMaster():
     accessToken =request.headers.get('Authorization')
     print("accessToken:",accessToken)
-    userId = request.args.get("userId")[4:]
+    userId = request.args.get("userId")[3:]
     print("Userid:", str(userId))
     '''
     redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
@@ -108,7 +108,7 @@ def homepageMaster():
 def homepage():
     accessToken =request.headers.get('Authorization')
     print("accessToken:",accessToken)
-    userId = request.args.get("userId")[4:]
+    userId = request.args.get("userId")[3:]
     print("Userid:", str(userId))
     '''
     redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
@@ -125,7 +125,6 @@ def homepage():
     red.hset(userId, "role", record.role_id)
 '''
     tasksAndEvents=getlists(record.id)
-    print(tasksAndEvents)
     return jsonify({
                     'user_lastname':record.last_name,
                     'user_name':record.name,
@@ -135,14 +134,27 @@ def homepage():
 def getlists(userId):
     # get tasksAndEvents
     res=getAll_notification_form()
+    if res is None:
+        return None,None
+    if str(type(res))!="<class 'tuple'>":
+        return [],[]
     event_dict = []
     task_dict = []
-
     for i in range(len(res[0].json)):
-        print(res[0].json[i]["numOfLinesDisplay"])
-        if res[0].json[i]["numOfLinesDisplay"]==3:
-            event_dict.append(res[0].json[i])
+        print("res1=" ,res[0].json[i])
+        ent=res[0].json[i]
+        if ent["numOfLinesDisplay"]==3:
+            ent["date"]=toISO(ent["date"])
+            event_dict.append(ent)
         else :
-            task_dict.append(res[0].json[i])
+            task_dict.append(ent)
 
-            return event_dict,task_dict
+    return event_dict,task_dict
+
+def toISO(d):
+    if d:
+        Date=d.split(".")
+        print("Date:" ,d)
+        return datetime(int(Date[2]),int(Date[0]), int(Date[1])).isoformat()
+    else:
+        return None

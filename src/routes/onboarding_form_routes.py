@@ -20,10 +20,10 @@ def getOTP_form():
     verify_sid = "VA280c3b665cf155bb76e5bc77bb5c750a"
 
     client = Client(account_sid, auth_token)
-
+    created_by_phone="+"+created_by_phone
     verification = client.verify.v2.services(verify_sid) \
         .verifications \
-        .create(to="+"+created_by_phone, channel="whatsapp")
+        .create(to=created_by_phone, channel="whatsapp")
     print("done")
     if verification.sid is None:
         return jsonify({"result": "error"}), HTTPStatus.OK
@@ -41,12 +41,13 @@ def verifyOTP_form():
     print(created_by_phone)
 
     result="error"
+    created_by_phone="+"+created_by_phone
 
     verification_check = client.verify \
         .v2 \
         .services('VA280c3b665cf155bb76e5bc77bb5c750a') \
         .verification_checks \
-        .create(to="+"+created_by_phone, code=otp)
+        .create(to=created_by_phone, code=otp)
 
     print(verification_check.status)
     time.sleep(2.4)

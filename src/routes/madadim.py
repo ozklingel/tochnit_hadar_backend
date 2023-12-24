@@ -206,35 +206,184 @@ def getMelaveMadadim():
 
 @madadim_form_blueprint.route("/mosadCoordinator", methods=['GET'])
 def getMosadCoordinatorMadadim():
-    mosadCoordinator = request.args.get("mosadCoordinator")
+    mosadCoordinator = request.args.get("mosadCoordinator")[3:]
     print(mosadCoordinator)
     institutionId = db.session.query(user1.institution_id).filter(user1.id == mosadCoordinator).first()
-    print(institutionId[0])
     totalMelaveCount = db.session.query(func.count(user1.id)).filter(user1.institution_id == institutionId[0]).all()
-    print(totalMelaveCount[0])
 
-    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitSadna = db.session.query(func.count(Visit.id)).filter(Visit.user_id==user1.id,Visit.title == "סדנא",Visit.visit_date < too_old,user1.institution_id==institutionId[0]).all()
-    print(OldvisitSadna[0])
+    too_old_sadnaValue = 180
+    OldvisitSadna = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "סדנא",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_sadnaCounter=0
+    for ent in OldvisitSadna:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_sadnaValue:
+            too_old_sadnaCounter=+1
+    avgSadnaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
-    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitSpiritMeeting = db.session.query(func.count(Visit.id)).filter(Visit.user_id==user1.id,Visit.title == "מצבר",Visit.visit_date < too_old,user1.institution_id==institutionId[0]).all()
-    print("OldvisitSpiritMeeting:" ,OldvisitSpiritMeeting[0])
+    too_old_SpiritMeetingValue = 180
+    OldvisitSpiritMeeting = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "מצבר",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_SpiritMeetingCounter=0
+    for ent in OldvisitSpiritMeeting:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_SpiritMeetingValue:
+            too_old_SpiritMeetingCounter=+1
+    avgSpiritMeetingGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
-    ###
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    OldvisitCallMelavim = db.session.query(func.count(Visit.id)).filter(Visit.user_id==user1.id,user1.institution_id == institutionId[0],Visit.title=='שיחה' ,Visit.visit_date < too_old).all()
-    print("OldvisitCallMelavim:" ,OldvisitCallMelavim[0])
+    too_old_CallMelavimValue = 45
+    OldvisitCallMelavim = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "שיחה",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_CallMelavimCounter=0
+    for ent in OldvisitCallMelavim:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_CallMelavimValue:
+            too_old_CallMelavimCounter=+1
+    avgCallMelavimGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
-    too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-    OldvisitMeetingMelavim = db.session.query(func.count(Visit.id)).filter(Visit.user_id==user1.id,user1.institution_id == institutionId[0],Visit.title=='מפגש' ,Visit.visit_date < too_old).all()
-    print("OldvisitMeetingMelavim:" ,OldvisitMeetingMelavim[0])
+    too_old_MeetingMelavimValue = 60
+    OldvisitMeetingMelavim = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "מפגש",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_MeetingMelavimCounter=0
+    for ent in OldvisitMeetingMelavim:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_MeetingMelavimValue:
+            too_old_MeetingMelavimCounter=+1
+    avgMeetingMelavimGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
+    too_old_HaburaMelavimValue = 45
+    OldvisitHaburaMelavim = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "חבורה",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_HaburaMelavimCounter=0
+    for ent in OldvisitHaburaMelavim:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_HaburaMelavimValue:
+            too_old_HaburaMelavimCounter=+1
+    avgHaburaMelavimGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old_enterMahzorValue = 365
+    OldvisitenterMahzor = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "הזנת_מחזור",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_enterMahzorCounter=0
+    for ent in OldvisitenterMahzor:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_enterMahzorValue:
+            too_old_enterMahzorCounter=+1
+    avgenterMahzorGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old_ForApprenticesActionValue = 180
+    OldvisitForApprenticesAction = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "עשיה_לבוגרים",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_ForApprenticesActionCounter=0
+    for ent in OldvisitForApprenticesAction:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_ForApprenticesActionValue:
+            too_old_ForApprenticesActionCounter=+1
+    avgForApprenticesActionGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old_MeetMelaveValue = 45
+    OldvisitMeetMelave = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "פגישת_מלווה",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_MeetMelaveCounter=0
+    for ent in OldvisitMeetMelave:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_MeetMelaveValue:
+            too_old_MeetMelaveCounter=+1
+    avgMeetMelaveGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old_MonthlyYeshivaValue = 30
+    OldvisitMonthlyYeshiva = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "ישיבה_חודשית",user1.institution_id==institutionId[0]).all()
+    gapList=[]
+    too_old_MonthlyYeshivaCounter=0
+    for ent in OldvisitMonthlyYeshiva:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_MonthlyYeshivaValue:
+            too_old_MonthlyYeshivaCounter=+1
+    avgMonthlyYeshivaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
+    forgotenApprenticeCount = db.session.query(func.count(Visit.title)).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
+                                                                  Visit.visit_date < too_old,user1.institution_id==institutionId[0]).all()
+    print(forgotenApprenticeCount[0][0])
     return jsonify({
         'totalMelaveCount': totalMelaveCount[0][0],
-        'OldvisitSadna': OldvisitSadna[0][0],
-        'OldvisitSpiritMeeting': OldvisitSpiritMeeting[0][0],
-        'OldvisitMelavim': OldvisitCallMelavim[0][0],
-        'OldvisitMeetingMelavim': OldvisitMeetingMelavim[0][0],
+        'forgotenApprenticeCount': forgotenApprenticeCount[0][0],
 
+        'avgMonthlyYeshivaGap': avgMonthlyYeshivaGap,
+        'approved_MonthlyYeshiva_counter': totalMelaveCount[0][0] - too_old_MonthlyYeshivaCounter,
+        'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter,
+        'too_old_MonthlyYeshivaValue': too_old_MonthlyYeshivaValue,
+
+        'avgMeetMelaveGap': avgMeetMelaveGap,
+        'approved_MeetMelave_counter': totalMelaveCount[0][0] - too_old_MeetMelaveCounter,
+        'too_old_MeetMelaveCounter': too_old_MeetMelaveCounter,
+        'too_old_MeetMelaveValue': too_old_MeetMelaveValue,
+
+        'avgForApprenticesActionGap': avgForApprenticesActionGap,
+        'approved_ForApprenticesAction_counter': totalMelaveCount[0][0] - too_old_enterMahzorCounter,
+        'too_old_ForApprenticesActionCounter': too_old_ForApprenticesActionCounter,
+        'too_old_ForApprenticesActionValue': too_old_ForApprenticesActionValue,
+
+        'avgenterMahzorGap': avgenterMahzorGap,
+        'approved_enterMahzor_counter': totalMelaveCount[0][0] - too_old_enterMahzorCounter,
+        'too_old_enterMahzorCounter': too_old_enterMahzorCounter,
+        'too_old_enterMahzorValue': too_old_enterMahzorValue,
+
+        'avgHaburaMelavimGap': avgHaburaMelavimGap,
+        'approved_HaburaMelavim_counter': totalMelaveCount[0][0] - too_old_HaburaMelavimCounter,
+        'too_old_HaburaMelavimCounter': too_old_HaburaMelavimCounter,
+        'too_old_HaburaMelavimValue': too_old_HaburaMelavimValue,
+
+        'avgMeetingMelavimGap': avgMeetingMelavimGap,
+        'approved_MeetingMelavim_counter': totalMelaveCount[0][0] - too_old_MeetingMelavimCounter,
+        'too_old_MeetingMelavimCounter': too_old_MeetingMelavimCounter,
+        'too_old_MeetingMelavimValue': too_old_MeetingMelavimValue,
+
+        'avgCallMelavimGap': avgCallMelavimGap,
+        'approved_CallMelavim_counter': totalMelaveCount[0][0] - too_old_CallMelavimCounter,
+        'too_old_CallMelavimCounter': too_old_CallMelavimCounter,
+        'too_old_CallMelavimValue': too_old_CallMelavimValue,
+
+        'avgSpiritMeetingGap': avgSpiritMeetingGap,
+        'approved_SpiritMeeting_counter': totalMelaveCount[0][0] - too_old_SpiritMeetingCounter,
+        'too_old_SpiritMeetingCounter': too_old_SpiritMeetingCounter,
+        'too_old_SpiritMeetingValue': too_old_SpiritMeetingValue,
+
+        'avgSadnaGap': avgSadnaGap,
+        'approved_sadna_counter': totalMelaveCount[0][0]-too_old_sadnaCounter,
+        'too_old_sadna_counter': too_old_sadnaCounter,
+        'too_old_sadnaValue': too_old_sadnaValue,
     }), HTTPStatus.OK
+
+
+
+
+
+

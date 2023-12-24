@@ -1,6 +1,6 @@
 import datetime
 import time
-from datetime import date
+from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -55,14 +55,14 @@ def add_contact_form():
 
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_messegases_form():
-    user = request.args.get('userId')[4:]
+    user = request.args.get('userId')[3:]
     print(user)
     messegasesList = db.session.query(ContactForm).filter(ContactForm.created_for_id == user).all()
     print(messegasesList)
     my_dict = []
     for mess in messegasesList:
         my_dict.append(
-            {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date": time.mktime(mess.created_at.timetuple()) if mess.created_at is not None else None,
+            {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
              "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread)})
 
     if not messegasesList :
@@ -85,3 +85,9 @@ def setWasRead_notification_form():
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success', 'mess form': request.form}), HTTPStatus.OK
+
+def toISO(d):
+    if d:
+        return datetime(d.year, d.month, d.day).isoformat()
+    else:
+        return None

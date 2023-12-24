@@ -1,5 +1,5 @@
 import datetime
-import time
+from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -15,7 +15,7 @@ reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/report
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
     data = request.json
-    user = str(data['userId'])[4:]
+    user = str(data['userId'])[3:]
     print(user)
     updatedEnt = None
     if user:
@@ -24,7 +24,7 @@ def add_reports_form():
         for key in List_of_apprentices:
             Visit1 = Visit(
                 user_id=user,
-                apprentice_id=str(key['id'])[4:],
+                apprentice_id=str(key['id'])[3:],
                 note=data['event_details'],
                 visit_in_army=bool(data['event_type']),
                 visit_date=data['date'],
@@ -47,15 +47,15 @@ def add_reports_form():
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
-    user = request.args.get('userId')[4:]
+    user = request.args.get('userId')[3:]
     print(user)
     reportList = db.session.query(Visit).filter(Visit.user_id == user).all()
     print(reportList)
     my_dict = []
     for noti in reportList:
-        daysFromNow = str(datetime.date.today() - noti.visit_date) if noti.visit_date is not None else None
+        daysFromNow = str(date.today() - noti.visit_date) if noti.visit_date is not None else None
         my_dict.append(
-            {"id": str(noti.id), "from": str(noti.apprentice_id), "date": time.mktime(noti.visit_date.timetuple()) if noti.visit_date is not None else None,
+            {"id": str(noti.id), "from": str(noti.apprentice_id), "date":toISO(noti.visit_date),
              "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread)})
 
     if not reportList :
@@ -78,3 +78,8 @@ def setWasRead_report_form():
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
+def toISO(d):
+    if d:
+        return datetime(d.year, d.month, d.day).isoformat()
+    else:
+        return None

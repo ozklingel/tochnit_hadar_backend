@@ -35,8 +35,8 @@ def add_notification_form():
     print(user)
 
     notification1 = notifications(
-                    userid=user[4:],
-                    apprenticeid = apprenticeid[4:],
+                    userid=user[3:],
+                    apprenticeid = apprenticeid[3:],
                     event=event,
                     date=date,
                     allreadyread=False,
@@ -84,6 +84,7 @@ def update_event_notification(user,apprenticeid,event,date,details):
             id=int(str(uuid.uuid4().int)[:5]),
 
         )
+    print("inserted:" ,notification1)
     db.session.add(notification1)
     db.session.commit()
 
@@ -119,17 +120,18 @@ def add_visit_notification(user,apprenticeid,event,date):
     db.session.commit()
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
-    user = request.args.get('userId')[4:]
+    user = request.args.get('userId')[3:]
     print("user:",user)
     #update notification table  birthday and events
     ApprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == user).order_by(
         Apprentice.birthday.desc()).all()
     for Apprentice1 in ApprenticeList:
-        BD = Apprentice1.birthday.strip().split("-")
-        gap = (date.today() - date(date.today().year, int(BD[1]), int(BD[2]))).days
+        #BD = Apprentice1.birthday.strip().split("-")
+        thisYearBirthday=date(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)
+        gap = (date.today() - thisYearBirthday).days
         print("birthday gap:", gap)
         if gap >= -7 and gap <= 7:
-            update_event_notification(Apprentice1.accompany_id, Apprentice1.id, "יומהולדת", date(date.today().year, int(BD[1]), int(BD[2])),None)
+            update_event_notification(Apprentice1.accompany_id, Apprentice1.id, "יומהולדת", thisYearBirthday,None)
         else:
             db.session.query(notifications).filter(notifications.userid == user,
                                                      notifications.apprenticeid == Apprentice1.id,
@@ -153,6 +155,8 @@ def getAll_notification_form():
     notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
     my_dict = []
     for noti in notiList:
+        daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+
         if noti.numoflinesdisplay==2:
             ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                 Apprentice.id == noti.apprenticeid).first()
@@ -170,16 +174,12 @@ def getAll_notification_form():
             ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                 Apprentice.id == noti.apprenticeid).first()
             noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
-            daysFromNow = str((date.today() - noti.date).days) if noti.date is not None else "None"
             my_dict.append(
                 {"id": noti.id, "apprenticeId": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
                  "date": noti.date.strftime("%m.%d.%Y"),
                  "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,
                  "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
             continue
-        daysFromNow = str((date.today() - noti.date).days) if noti.date is not None else "None"
-        print(noti.event.strip())
-        print(userEnt.notifyMorning)
         if userEnt.notifyDayBefore ==True and daysFromNow==-1:
             ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                 Apprentice.id == noti.apprenticeid).first()
@@ -190,6 +190,10 @@ def getAll_notification_form():
                  "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,
                  "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
             continue
+        print("event "  ,noti.event)
+        print("daysFromNow ",daysFromNow)
+        print("notifyMorning:",userEnt.notifyMorning)
+
         if userEnt.notifyMorning ==True and daysFromNow==0:
             ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                 Apprentice.id == noti.apprenticeid).first()
@@ -200,7 +204,7 @@ def getAll_notification_form():
                  "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,
                  "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
             continue
-    if not user  :
+    if  my_dict is None or my_dict==[]  :
         # acount not found
         return jsonify(["Wrong id or emty list"])
     else:
@@ -229,7 +233,7 @@ def setSetting_notification_form():
     notifyMorningval = data['notifyMorning']
     notifyDayBeforeval = data['notifyDayBefore']
     notifyStartWeekval = data['notifyStartWeek']
-    user = data['userId'][4:]
+    user = data['userId'][3:]
     print("user:",user)
     print("notifyMorningval:",bool(notifyMorningval))
     print("notifyMorningval:",notifyMorningval)
@@ -248,7 +252,7 @@ def setSetting_notification_form():
 
 @notification_form_blueprint.route('/getAllSetting', methods=['GET'])
 def getNotificationSetting_form():
-    user = request.args.get('userId')[4:]
+    user = request.args.get('userId')[3:]
     notiSettingList = db.session.query(user1.notifyMorning,user1.notifyDayBefore,user1.notifyStartWeek).filter(user1.id == user).first()
     if not notiSettingList :
         # acount not found

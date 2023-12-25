@@ -382,6 +382,52 @@ def getMosadCoordinatorMadadim():
         'too_old_sadnaValue': too_old_sadnaValue,
     }), HTTPStatus.OK
 
+@madadim_form_blueprint.route("/eshcolCoordinator", methods=['GET'])
+def getEshcolCoordinatorMadadim():
+    eshcolCoordinatorId = request.args.get("eshcolCoordinator")[3:]
+    print(eshcolCoordinatorId)
+    #get the Eshcol id
+    cluster_id = db.session.query(user1.cluster_id).filter(user1.id == eshcolCoordinatorId).first()
+    # total MosadCoordinator Count for this eshcol
+    totalMosadCoordinatorCount = db.session.query(func.count(user1.id)).filter(user1.cluster_id == cluster_id[0],user1.role_id==2).all()
+    EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == cluster_id[0],user1.role_id==1).all()
+    totalApprenticeCount=0
+    for ent  in EshcolMelvin :
+        apprenticeCount = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id == ent[0]
+                                                                                   ).all()
+        totalApprenticeCount+=apprenticeCount[0]
+
+    too_old_MonthlyYeshivaValue = 30
+    OldvisitMonthlyYeshiva = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "ישיבה_חודשית",user1.cluster_id==cluster_id[0],user1.role_id==2).all()
+    gapList=[]
+    too_old_MonthlyYeshivaCounter=0
+    for ent in OldvisitMonthlyYeshiva:
+        vIsDate=ent.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        gapList.append(gap)
+        if gap>too_old_MonthlyYeshivaValue:
+            too_old_MonthlyYeshivaCounter=+1
+    avgMonthlyYeshivaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+
+    too_old = datetime.datetime.today() - datetime.timedelta(days=30)
+    OldvisitRoshTohnit = db.session.query(func.count(Visit.title)).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_אחראי_תוכנית",
+                                                                 Visit.visit_date < too_old).first()
+    print(OldvisitRoshTohnit[0][0])
+
+    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
+    forgotenApprenticeCount = db.session.query(func.count(Visit.title)).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
+                                                                  Visit.visit_date < too_old,user1.cluster_id==cluster_id[0]).all()
+    print(forgotenApprenticeCount[0][0])
+    return jsonify({
+        'totalMosadCoordinatorCount': totalMosadCoordinatorCount[0][0],
+        'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter[0][0],
+        'OldvisitRoshTohnit': OldvisitRoshTohnit[0][0],
+        'totalApprenticeCount': totalApprenticeCount,
+        'forgotenApprenticeCount': forgotenApprenticeCount[0][0],
+
+    }), HTTPStatus.OK
+
 
 
 

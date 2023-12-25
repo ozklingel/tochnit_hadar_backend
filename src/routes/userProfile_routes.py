@@ -64,6 +64,7 @@ def getmyApprentices_form():
     for noti in apprenticeList:
         print(noti.city_id)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
+        print(city)
         reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
         eventlist = db.session.query(notifications.id,notifications.event,notifications.details).filter(
                                                                            notifications.apprenticeid == noti.id,
@@ -98,44 +99,43 @@ def getmyApprentices_form():
         "postalCode": "12131",
         "lat": 32.04282620026557,
         "lng": 34.75186193813887
-    },               "mother_email": noti.mother_email,
-             "mother_phone": noti.mother_phone, "mother_name": noti.mother_name,
-             "contacts": [
-        {
-            "id": "821eb055-84a8-439b-94ee-1debfbc8c3f4",
-            "name":noti.father_name,
-            "phone": noti.father_phone,
-            "email": noti.father_email,
-            "relationship": "father"
-        },
-        {
-            "id": "821eb055-84a8-439b-94ee-1debfbc8c3f4",
-            "name":noti.mother_name,
-            "phone": noti.mother_phone,
-            "email":  noti.mother_email,
-            "relationship": "mother"
-        }
-    ],
+    },
+             "contact1_first_name": noti.contact1_first_name,
+             "contact1_last_name": noti.contact1_last_name,
+             "contact1_phone": noti.contact1_phone,
+             "contact1_email": noti.contact1_email,
+
+             "contact2_first_name": noti.contact2_first_name,
+             "contact2_last_name": noti.contact2_last_name,
+             "contact2_phone": noti.contact2_phone,
+             "contact2_email": noti.contact2_email,
+             "contact3_first_name": noti.contact3_first_name,
+             "contact3_last_name": noti.contact3_last_name,
+             "contact3_phone": noti.contact3_phone,
+             "contact3_email": noti.contact3_email,
              "reports": [
                  str(reportList)
              ],
              "events": [
          str(eventlist)
              ]
-
-            ,"id": str(noti.id), "name": str(noti.name), "last_name": str(noti.last_name),
-             "institution_id": noti.institution_id, "hadar_plan_session ": str(noti.hadar_plan_session), "serve_type": noti.serve_type,
-             "marriage_status": str(noti.marriage_status), "base_address": str(noti.base_address),
+                , "id": str(noti.id), "thMentor": str(noti.accompany_id),
+             "militaryPositionNew": str(noti.militaryPositionNew)
+                , "avatar": str(noti.photo_path), "name": str(noti.name), "last_name": str(noti.last_name),
+             "institution_id": noti.institution_id, "thPeriod": str(noti.hadar_plan_session),
+             "serve_type": noti.serve_type,
+             "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
              "phone": noti.phone, "email": noti.email,
-             "birthday": toISO(noti.birthday) , "wife_phone": noti.wife_phone,
-             "wife_name": noti.wife_name, "marriage_date": toISO(noti.marriage_date),
-             "pre_army_institution": noti.pre_army_institution, "army_role": noti.army_role, "unit_name": noti.unit_name,
-             "accompany_connect_status": noti.accompany_connect_status, "spirit_status": noti.spirit_status, "paying": noti.paying,
-             "release_date": toISO(noti.release_date), "recruitment_date": toISO(noti.recruitment_date)
-                , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime) ,
-             "militaryPositionOld": noti.militarypositionold,"educationalInstitution": noti.educationalinstitution
+             "birthday": toISO(noti.birthday),  "marriage_date": toISO(noti.marriage_date),
+             "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
+             "unit_name": noti.unit_name,
+             "onlineStatus": noti.accompany_connect_status, "matsber": noti.spirit_status, "paying": noti.paying,
+             "militaryDateOfDischarge": toISO(noti.release_date),
+             "militaryDateOfEnlistment": toISO(noti.recruitment_date)
+                , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
+             "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
                 , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-             "workType": noti.worktype,"workPlace": noti.workplace, "workStatus": noti.workstatus
+             "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus
 
              })
 
@@ -159,9 +159,10 @@ def getProfileAtributes_form():
     userEnt = user1.query.get(created_by_id)
     if userEnt:
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
+        city = db.session.query(City).filter(City.id == userEnt.city_id).first()
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch": toISO(userEnt.birthday), "email":userEnt.email,
-                       "city":userEnt.address, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
-                       "apprentices":str(myApprenticesNamesList), "phone":userEnt.phone, "photo_path":userEnt.photo_path}
+                       "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                       "apprentices":str(myApprenticesNamesList), "phone":userEnt.id,"teudatZehut":userEnt.teudatZehut, "photo_path":userEnt.photo_path}
         return jsonify(results="success",attributes=list), HTTPStatus.OK
     else:
         return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
@@ -172,13 +173,13 @@ def getmyApprenticesNames(created_by_id):
 
     apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
     names=""
-    print(created_by_id)
-    print(apprenticeList)
+    print("created_by_id" ,created_by_id)
+    print("apprenticeList",apprenticeList)
     for noti in apprenticeList:
-        if noti.name.replace(" ", "")!="":
-            names+=str(noti.name).replace(" ", "")
+        if noti.name:
+            names+=str(noti.name)
             names +=" "
-            names+=str(noti.last_name).replace(" ", "")
+            names+=str(noti.last_name)
             names+=","
     return names[:-1]
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
@@ -228,43 +229,39 @@ def getmyApprentice_form():
             "postalCode": "12131",
             "lat": 32.04282620026557,
             "lng": 34.75186193813887
-        }, "mother_email": noti.mother_email,
-         "mother_phone": noti.mother_phone, "mother_name": noti.mother_name,
-         "contacts": [
-             {
-                 "id": "821eb055-84a8-439b-94ee-1debfbc8c3f4",
-                 "name": noti.father_name,
-                 "phone": noti.father_phone,
-                 "email": noti.father_email,
-                 "relationship": "father"
-             },
-             {
-                 "id": "821eb055-84a8-439b-94ee-1debfbc8c3f4",
-                 "name": noti.mother_name,
-                 "phone": noti.mother_phone,
-                 "email": noti.mother_email,
-                 "relationship": "mother"
-             }
-         ],
+        },
+         "contact1_first_name": noti.contact1_first_name,
+         "contact1_last_name": noti.contact1_last_name,
+         "contact1_phone": noti.contact1_phone,
+         "contact1_email": noti.contact1_email,
+
+         "contact2_first_name": noti.contact2_first_name,
+         "contact2_last_name": noti.contact2_last_name,
+         "contact2_phone": noti.contact2_phone,
+         "contact2_email": noti.contact2_email,
+         "contact3_first_name": noti.contact3_first_name,
+         "contact3_last_name": noti.contact3_last_name,
+         "contact3_phone": noti.contact3_phone,
+         "contact3_email": noti.contact3_email,
          "reports": [
              str(reportList)
          ],
          "events": [
              str(eventlist)
          ]
-
-            , "id": str(noti.id), "name": str(noti.name), "last_name": str(noti.last_name),
-         "institution_id": noti.institution_id, "hadar_plan_session ": str(noti.hadar_plan_session),
+            , "id": str(noti.id), "thMentor": str(noti.accompany_id),
+         "militaryPositionNew": str(noti.militaryPositionNew)
+            , "avatar": str(noti.photo_path), "name": str(noti.name), "last_name": str(noti.last_name),
+         "institution_id": noti.institution_id, "thPeriod": str(noti.hadar_plan_session),
          "serve_type": noti.serve_type,
-         "marriage_status": str(noti.marriage_status), "base_address": str(noti.base_address),
+         "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
          "phone": noti.phone, "email": noti.email,
-         "birthday": toISO(noti.birthday), "wife_phone": noti.wife_phone,
-         "wife_name": noti.wife_name, "marriage_date": toISO(noti.marriage_date),
-         "pre_army_institution": noti.pre_army_institution, "army_role": noti.army_role,
+         "birthday": toISO(noti.birthday), "marriage_date": toISO(noti.marriage_date),
+         "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
          "unit_name": noti.unit_name,
-         "accompany_connect_status": noti.accompany_connect_status, "spirit_status": noti.spirit_status,
-         "paying": noti.paying,
-         "release_date": toISO(noti.release_date), "recruitment_date": toISO(noti.recruitment_date)
+         "onlineStatus": noti.accompany_connect_status, "matsber": noti.spirit_status, "paying": noti.paying,
+         "militaryDateOfDischarge": toISO(noti.release_date),
+         "militaryDateOfEnlistment": toISO(noti.recruitment_date)
             , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
          "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
             , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,

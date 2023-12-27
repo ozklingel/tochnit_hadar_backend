@@ -7,6 +7,8 @@ from sqlalchemy import func
 
 from app import db, red
 from src.models.apprentice_model import Apprentice
+from src.models.city_model import City
+from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution
 from src.models.notification_model import notifications
 from src.models.user_model import user1
@@ -155,7 +157,7 @@ def missingCallsApprentice_Mosad():
 
 @madadim_form_blueprint.route("/melave", methods=['GET'])
 def getMelaveMadadim():
-    melaveId = request.args.get("melaveId")
+    melaveId = request.args.get("melaveId")[3:]
     print(melaveId)
     ApprenticeCount = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id == melaveId).all()
     too_old = datetime.datetime.today() - datetime.timedelta(days=45)
@@ -181,15 +183,20 @@ def getMelaveMadadim():
     visitHorim = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "הורים").all()
     print(visitHorim[0][0])
 
-    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    forgotenApprenticeCount = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "שיחה",
-                                                                 Visit.visit_date < too_old).all()
-    print(forgotenApprenticeCount[0][0])
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=180)
     OldvisitmeetingsBasis = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "מפגש",Visit.visit_in_army==True,
                                                                  Visit.visit_date < too_old).all()
     print(OldvisitmeetingsBasis[0][0])
+
+    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
+    forgotenApprentice = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "שיחה",
+                                                                  Visit.visit_date < too_old).all()
+    forgotenApprenticeCount=len(forgotenApprentice)
+    forgotenApprentice_full_details=[]
+    for ent in forgotenApprentice:
+        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id==ent[0],Apprentice.institution_id==Institution.id).first()
+
 
     return jsonify({
         "numOfApprentice":ApprenticeCount[0][0],
@@ -198,7 +205,10 @@ def getMelaveMadadim():
         'OldvisitSadna': OldvisitSadna[0][0],
         'OldvisitCenes': OldvisitCenes[0][0],
         'visitHorim': visitHorim[0][0],
-        'forgotenApprenticeCount': forgotenApprenticeCount[0][0],
+        'forgotenApprenticeCount': forgotenApprenticeCount,
+        'forgotenApprentice_full_details':   [tuple(row) for row in forgotenApprentice_full_details]
+,
+
         'OldvisitmeetingsBasis': OldvisitmeetingsBasis[0][0],
 
     }), HTTPStatus.OK
@@ -329,13 +339,20 @@ def getMosadCoordinatorMadadim():
     avgMonthlyYeshivaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    forgotenApprenticeCount = db.session.query(func.count(Visit.title)).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
+
+    forgotenApprentice = db.session.query(Visit.apprentice_id).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
                                                                   Visit.visit_date < too_old,user1.institution_id==institutionId[0]).all()
-    print(forgotenApprenticeCount[0][0])
+    forgotenApprenticeCount=len(forgotenApprentice)
+    forgotenApprentice_full_details=[]
+    for ent in forgotenApprentice:
+        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id==ent[0],Apprentice.institution_id==Institution.id).first()
+
+    eshcol_ApprenticeCount = db.session.query(Apprentice.id,user1).filter(Apprentice.accompany_id==user1.id,user1.cluster_id==institutionId[0]).all()
+    print("eshcol_ApprenticeCount",len(eshcol_ApprenticeCount))
     return jsonify({
         'totalMelaveCount': totalMelaveCount[0][0],
-        'forgotenApprenticeCount': forgotenApprenticeCount[0][0],
-
+        'forgotenApprenticeCount': forgotenApprenticeCount,
+        'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
         'avgMonthlyYeshivaGap': avgMonthlyYeshivaGap,
         'approved_MonthlyYeshiva_counter': totalMelaveCount[0][0] - too_old_MonthlyYeshivaCounter,
         'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter,
@@ -387,10 +404,13 @@ def getEshcolCoordinatorMadadim():
     eshcolCoordinatorId = request.args.get("eshcolCoordinator")[3:]
     print(eshcolCoordinatorId)
     #get the Eshcol id
-    cluster_id = db.session.query(user1.cluster_id).filter(user1.id == eshcolCoordinatorId).first()
+    eshcol_id = db.session.query(user1.cluster_id).filter(user1.id == eshcolCoordinatorId).first()
+    print("eshcol_id",eshcol_id)
+    print(type(user1.role_id))
+    print(type(eshcol_id[0]))
     # total MosadCoordinator Count for this eshcol
-    totalMosadCoordinatorCount = db.session.query(func.count(user1.id)).filter(user1.cluster_id == cluster_id[0],user1.role_id==2).all()
-    EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == cluster_id[0],user1.role_id==1).all()
+    totalMosadCoordinatorCount = db.session.query(func.count(user1.id)).filter(user1.cluster_id == eshcol_id[0],str(user1.role_id)=="2").all()
+    EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == eshcol_id[0],str(user1.role_id)=="1").all()
     totalApprenticeCount=0
     for ent  in EshcolMelvin :
         apprenticeCount = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id == ent[0]
@@ -398,10 +418,13 @@ def getEshcolCoordinatorMadadim():
         totalApprenticeCount+=apprenticeCount[0]
 
     too_old_MonthlyYeshivaValue = 30
-    OldvisitMonthlyYeshiva = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "ישיבה_חודשית",user1.cluster_id==cluster_id[0],user1.role_id==2).all()
+    #ישיבה עם רכזי מוסד
+    OldvisitMonthlyYeshiva = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "ישיבה_חודשית_רכז",user1.cluster_id==eshcol_id[0],str(user1.role_id)=="2").all()
     gapList=[]
     too_old_MonthlyYeshivaCounter=0
+    num_of_MOsadCoordintor=0
     for ent in OldvisitMonthlyYeshiva:
+        num_of_MOsadCoordintor+=1
         vIsDate=ent.visit_date
         now=datetime.date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
@@ -411,20 +434,31 @@ def getEshcolCoordinatorMadadim():
     avgMonthlyYeshivaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=30)
-    OldvisitRoshTohnit = db.session.query(func.count(Visit.title)).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_אחראי_תוכנית",
+    OldvisitRoshTohnit = db.session.query(func.count(Visit.title)).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_חודשית_אחראי_תוכנית",
                                                                  Visit.visit_date < too_old).first()
-    print(OldvisitRoshTohnit[0][0])
+    print("OldvisitRoshTohnit",OldvisitRoshTohnit[0])
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    forgotenApprenticeCount = db.session.query(func.count(Visit.title)).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
-                                                                  Visit.visit_date < too_old,user1.cluster_id==cluster_id[0]).all()
-    print(forgotenApprenticeCount[0][0])
+    forgotenApprentice = db.session.query(Visit.apprentice_id).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
+                                                                  Visit.visit_date < too_old,user1.cluster_id==eshcol_id[0]).all()
+    forgotenApprenticeCount=len(forgotenApprentice)
+    forgotenApprentice_full_details=[]
+    for ent in forgotenApprentice:
+        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id==ent[0],Apprentice.institution_id==Institution.id).first()
+
+    eshcol_ApprenticeCount = db.session.query(Apprentice.id,user1).filter(Apprentice.accompany_id==user1.id,user1.cluster_id==eshcol_id[0]).all()
+    print("eshcol_ApprenticeCount",len(eshcol_ApprenticeCount))
     return jsonify({
         'totalMosadCoordinatorCount': totalMosadCoordinatorCount[0][0],
-        'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter[0][0],
-        'OldvisitRoshTohnit': OldvisitRoshTohnit[0][0],
+        'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter,
+        'OldvisitRoshTohnit': OldvisitRoshTohnit[0],
         'totalApprenticeCount': totalApprenticeCount,
-        'forgotenApprenticeCount': forgotenApprenticeCount[0][0],
+        'forgotenApprenticeCount': forgotenApprenticeCount,
+        'num_of_MOsadCoordintor':num_of_MOsadCoordintor,
+        'avgMonthlyYeshivaGap': avgMonthlyYeshivaGap,
+        'eshcol_ApprenticeCount': len(eshcol_ApprenticeCount),
+        'forgotenApprentice_full_details':    [tuple(row) for row in forgotenApprentice_full_details]
+,
 
     }), HTTPStatus.OK
 

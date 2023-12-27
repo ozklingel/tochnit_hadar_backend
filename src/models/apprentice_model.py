@@ -17,15 +17,20 @@ class Apprentice(db.Model):
     contact1_first_name=db.Column("contact1_first_name", db.String(50), nullable=True)
     contact1_last_name=db.Column("contact1_last_name", db.String(50), nullable=True)
     contact1_phone=db.Column("contact1_phone", db.String(50), nullable=True)
+    contact1_relation=db.Column("contact1_relation", db.String(50), nullable=True)
+
     contact2_email=db.Column("contact2_email", db.String(50), nullable=True)
     contact2_phone=db.Column("contact2_phone", db.String(50), nullable=True)
     contact2_first_name=db.Column("contact2_first_name", db.String(50), nullable=True)
     contact2_last_name=db.Column("contact2_last_name", db.String(50), nullable=True)
+    contact2_relation=db.Column("contact2_relation", db.String(50), nullable=True)
 
     contact3_phone    =db.Column("contact3_phone", db.String(50), nullable=True)
     contact3_first_name=db.Column("contact3_first_name", db.String(50), nullable=True)
     contact3_last_name=db.Column("contact3_last_name", db.String(50), nullable=True)
     contact3_email=db.Column("contact3_email", db.String(50), nullable=True)
+    contact3_relation=db.Column("contact3_relation", db.String(50), nullable=True)
+
     city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(CITIES_TBL, ID_COL)), nullable=False)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False)
     high_school_name = db.Column(HIGH_SCHOOL_NAME_COL, db.String(50), nullable=True)

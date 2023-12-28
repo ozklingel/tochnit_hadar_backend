@@ -9,6 +9,8 @@ import boto3, botocore
 from werkzeug.utils import secure_filename
 
 from ..models.apprentice_model import Apprentice
+from ..models.city_model import City
+from ..models.cluster_model import Cluster
 
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
@@ -24,9 +26,20 @@ def setEntityDetailsByType():
            updatedEnt=None
            if typeOfSet=="Onboarding":
                entityId =str(data['entityId'])[3:]
+               print(entityId)
                atrrToBeSet = data['atrrToBeSet']
                updatedEnt = user1.query.get(entityId)
                for key in atrrToBeSet:
+                   if key == "city":
+                       CityId = db.session.query(City).filter(
+                           City.name == str(atrrToBeSet[key])).first()
+                       setattr(updatedEnt, key,CityId )
+                       continue
+                   if key == "region":
+                       clusterId = db.session.query(Cluster).filter(
+                           Cluster.name == str(atrrToBeSet[key])).first()
+                       setattr(updatedEnt, key, clusterId)
+                       continue
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
 
@@ -36,9 +49,8 @@ def setEntityDetailsByType():
                    atrrToBeSet = data['atrrToBeSet']
                    print(atrrToBeSet);
                    updatedEnt = user1.query.get(entityId)
-                   atrrToBeSetJson=json.loads(atrrToBeSet)
-                   for key in atrrToBeSetJson:
-                       setattr(updatedEnt, key, atrrToBeSetJson[key])
+                   for key in atrrToBeSet:
+                       setattr(updatedEnt, key, str(atrrToBeSet[key]))
                    db.session.commit()
 
            if typeOfSet ==  "apprenticeProflie":
@@ -52,8 +64,8 @@ def setEntityDetailsByType():
                            continue
                        setattr(updatedEnt, key, atrrToBeSet[key])
                    db.session.commit()
-       except:
-           return jsonify({'result': 'error'}), HTTPStatus.OK
+       except Exception as e:  # work on python 3.x
+           return jsonify({'result': str(e)}), HTTPStatus.OK
 
        if updatedEnt:
                # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

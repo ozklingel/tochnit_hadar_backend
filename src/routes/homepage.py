@@ -104,7 +104,7 @@ def homepageMaster():
          'user_name':record.name,
                    }), HTTPStatus.OK
 
-@homepage_form_blueprint.route("/init", methods=['GET'])
+@homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def homepage():
     accessToken =request.headers.get('Authorization')
     print("accessToken:",accessToken)

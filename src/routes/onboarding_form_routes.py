@@ -4,7 +4,8 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from twilio.rest import Client
 
-from app import red
+from app import red, db
+from src.models.city_model import City
 from src.models.user_model import user1
 
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
@@ -42,12 +43,14 @@ def verifyOTP_form():
 
     result="error"
     created_by_phone="+"+created_by_phone
-
-    verification_check = client.verify \
-        .v2 \
-        .services('VA280c3b665cf155bb76e5bc77bb5c750a') \
-        .verification_checks \
-        .create(to=created_by_phone, code=otp)
+    try:
+        verification_check = client.verify \
+            .v2 \
+            .services('VA280c3b665cf155bb76e5bc77bb5c750a') \
+            .verification_checks \
+            .create(to=created_by_phone, code=otp)
+    except:
+        return jsonify({"result": "not in system"}), HTTPStatus.OK
 
     print(verification_check.status)
     time.sleep(2.4)
@@ -76,4 +79,19 @@ def verifyOTP_form():
     return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
 
     return jsonify({"result": "error"}), HTTPStatus.OK
+
+@onboarding_form_blueprint.route('/upload_CitiesDB', methods=['GET'])
+def upload_CitiesDB():
+    import csv
+    my_list = []
+    with open('il.csv', 'r', encoding="utf8") as f:
+        reader = csv.reader(f)
+        print(reader)
+        for row in reader:
+            print(row)
+            my_list.append(City(row[0], row[1], row[2]))
+    for ent in my_list:
+        db.session.add(ent)
+    db.session.commit()
+    return jsonify({"result": "success"}), HTTPStatus.OK
 

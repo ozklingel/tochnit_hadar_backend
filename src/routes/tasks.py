@@ -23,21 +23,23 @@ def getTasks():
     meet_dict = []
     call_dict = []
     Horim_dict = []
-
-    for i in range(len(res[0].json)):
-        ent=res[0].json[i]
-        if ent["numOfLinesDisplay"]==2:
-            if ent["title"]=="שיחה":
-                call_dict.append(ent)
-            if ent["title"]=="מפגש":
-                meet_dict.append(ent)
-            if ent["title"]=="מפגש_הורים":
-                Horim_dict.append(ent)
-            return jsonify({
-                'call_dict':call_dict,
-                'Horim_dict': Horim_dict,
-                "meet_dict": meet_dict,
-                }), HTTPStatus.OK
+    try:
+        for i in range(len(res[0].json)):
+            ent=res[0].json[i]
+            if ent["numOfLinesDisplay"]==2:
+                if ent["title"]=="שיחה":
+                    call_dict.append(ent)
+                if ent["title"]=="מפגש":
+                    meet_dict.append(ent)
+                if ent["title"]=="מפגש_הורים":
+                    Horim_dict.append(ent)
+                return jsonify({
+                    'call_dict':call_dict,
+                    'Horim_dict': Horim_dict,
+                    "meet_dict": meet_dict,
+                    }), HTTPStatus.OK
+    except:
+        return jsonify({'result': 'no Tasks or wrong id'}), HTTPStatus.OK
 
 # @tasks_form_blueprint.route("/getTasks", methods=['GET'])
 # def getlists():

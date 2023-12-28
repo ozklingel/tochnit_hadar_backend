@@ -125,11 +125,7 @@ def homepage():
     red.hset(userId, "role", record.role_id)
 '''
     tasksAndEvents=getlists(record.id)
-    return jsonify({
-                    'user_lastname':record.last_name,
-                    'user_name':record.name,
-                    "tasks":tasksAndEvents[1] if tasksAndEvents is not None else None ,
-                    "closeEvents":tasksAndEvents[0] if tasksAndEvents is not None else None}), HTTPStatus.OK
+    return jsonify(tasksAndEvents[0] if tasksAndEvents is not None else None), HTTPStatus.OK
 
 def getlists(userId):
     # get tasksAndEvents
@@ -158,3 +154,5 @@ def toISO(d):
         return datetime(int(Date[2]),int(Date[0]), int(Date[1])).isoformat()
     else:
         return None
+
+

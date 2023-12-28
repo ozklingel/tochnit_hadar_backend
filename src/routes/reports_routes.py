@@ -34,15 +34,13 @@ def add_reports_form():
             )
             print(Visit1)
             db.session.add(Visit1)
-    db.session.commit()
-    if user is None  :
-        # acount not found
-        return jsonify(["Wrong id"])
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return jsonify({'result': 'success'}), HTTPStatus.OK
-        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+
+    try:
+        db.session.commit()
+
+    except:
+        return jsonify({'result': 'wrong id'}), HTTPStatus.BAD_REQUEST
+    return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])

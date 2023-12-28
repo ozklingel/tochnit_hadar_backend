@@ -18,38 +18,42 @@ setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, u
 @setEntityDetails_form_blueprint.route('/setByType', methods=['PUT'])
 def setEntityDetailsByType():
        data=request.json
-       typeOfSet = data['typeOfSet']
-       print(typeOfSet)
-       updatedEnt=None
-       if typeOfSet=="Onboarding":
-           entityId =str(data['entityId'])[3:]
-           atrrToBeSet = data['atrrToBeSet']
-           updatedEnt = user1.query.get(entityId)
-           for key in atrrToBeSet:
-               setattr(updatedEnt, key, atrrToBeSet[key])
-           db.session.commit()
-
-       if typeOfSet == "userProfile":
+       try:
+           typeOfSet = data['typeOfSet']
+           print(typeOfSet)
+           updatedEnt=None
+           if typeOfSet=="Onboarding":
                entityId =str(data['entityId'])[3:]
-               print(entityId);
                atrrToBeSet = data['atrrToBeSet']
-               print(atrrToBeSet);
                updatedEnt = user1.query.get(entityId)
-               atrrToBeSetJson=json.loads(atrrToBeSet)
-               for key in atrrToBeSetJson:
-                   setattr(updatedEnt, key, atrrToBeSetJson[key])
-               db.session.commit()
-
-       if typeOfSet ==  "apprenticeProflie":
-               entityId =str(data['entityId'])[3:]
-               atrrToBeSet = data['atrrToBeSet']
-               updatedEnt = Apprentice.query.get(entityId)
                for key in atrrToBeSet:
-                   if key== "accompany_id":
-                       setattr(updatedEnt, key, str(atrrToBeSet[key])[4:])
-                       continue
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
+
+           if typeOfSet == "userProfile":
+                   entityId =str(data['entityId'])[3:]
+                   print(entityId);
+                   atrrToBeSet = data['atrrToBeSet']
+                   print(atrrToBeSet);
+                   updatedEnt = user1.query.get(entityId)
+                   atrrToBeSetJson=json.loads(atrrToBeSet)
+                   for key in atrrToBeSetJson:
+                       setattr(updatedEnt, key, atrrToBeSetJson[key])
+                   db.session.commit()
+
+           if typeOfSet ==  "apprenticeProflie":
+                   entityId =str(data['entityId'])[3:]
+                   print(entityId)
+                   atrrToBeSet = data['atrrToBeSet']
+                   updatedEnt = Apprentice.query.get(entityId)
+                   for key in atrrToBeSet:
+                       if key== "accompany_id":
+                           setattr(updatedEnt, key, str(atrrToBeSet[key])[3:])
+                           continue
+                       setattr(updatedEnt, key, atrrToBeSet[key])
+                   db.session.commit()
+       except:
+           return jsonify({'result': 'error'}), HTTPStatus.OK
 
        if updatedEnt:
                # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

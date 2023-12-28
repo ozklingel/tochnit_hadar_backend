@@ -88,7 +88,7 @@ def getmyApprentices_form():
         "street": noti.address,
         "houseNumber": "1",
         "apartment": "1",
-        "region": city.cluster_id,
+        "region": str(city.cluster_id),
         "entrance": "a",
         "floor": "1",
         "postalCode": "12131",
@@ -112,10 +112,10 @@ def getmyApprentices_form():
              "contact3_relation": noti.contact3_relation,
 
              "reports": [
-                 [tuple(row) for row in reportList]
+                 [str(i[0]) for i in [tuple(row) for row in reportList]]
              ],
              "events": [
-                 [tuple(row) for row in eventlist]
+                 [str(i[0]) for i in  [tuple(row) for row in eventlist]]
              ]
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
@@ -160,7 +160,7 @@ def getProfileAtributes_form():
         city = db.session.query(City).filter(City.id == userEnt.city_id).first()
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch": toISO(userEnt.birthday), "email":userEnt.email,
                        "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
-                       "apprentices":str(myApprenticesNamesList), "phone":str(userEnt).id,"teudatZehut":userEnt.teudatZehut, "avatar":userEnt.photo_path}
+                       "apprentices":str(myApprenticesNamesList), "phone":str(userEnt.id),"teudatZehut":userEnt.teudatZehut, "avatar":userEnt.photo_path}
         return jsonify(results="success",attributes=list), HTTPStatus.OK
     else:
         return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
@@ -216,7 +216,7 @@ def getmyApprentice_form():
                  "street": noti.address,
                  "houseNumber": "1",
                  "apartment": "1",
-                 "region": city.cluster_id,
+                 "region": str(city.cluster_id),
                  "entrance": "a",
                  "floor": "1",
                  "postalCode": "12131",
@@ -239,12 +239,12 @@ def getmyApprentice_form():
              "contact3_email": noti.contact3_email,
              "contact3_relation": noti.contact3_relation,
 
-             "reports": [
-                 [tuple(row) for row in reportList]
-             ],
-             "events": [
-                 [tuple(row) for row in eventlist]
-             ]
+             "reports":
+                 [str(i[0]) for i in [tuple(row) for row in reportList]]
+             ,
+             "events":
+                 [str(i[0]) for i in [tuple(row) for row in eventlist]]
+
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
                 , "avatar": noti.photo_path if noti.photo_path!="" else "https://www.gravatar.com/avatar" , "name": str(noti.name), "last_name": str(noti.last_name),
@@ -271,7 +271,7 @@ def getmyApprentice_form():
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
-        return jsonify({"Apparentice_atrr":my_dict[0]}), HTTPStatus.OK
+        return jsonify(my_dict[0]), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 def toISO(d):

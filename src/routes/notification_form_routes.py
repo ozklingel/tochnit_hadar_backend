@@ -22,39 +22,37 @@ notification_form_blueprint = Blueprint('notification_form', __name__, url_prefi
 
 @notification_form_blueprint.route('/add1', methods=['POST'])
 def add_notification_form():
-    data=request.data.decode()
-    json_object = json.loads(data)
-    print(json_object)
-    user = json_object["userId"]
-    apprenticeid = json_object["apprenticeid"]
-    event = json_object["event"]
-    date = json_object["date"]
-    details = json_object["details"]
+    try:
+        data=request.data.decode()
+        json_object = json.loads(data)
+        print(json_object)
+        user = json_object["userId"]
+        apprenticeid = json_object["apprenticeid"]
+        event = json_object["event"]
+        date = json_object["date"]
+        details = json_object["details"]
 
 
-    print(user)
+        print(user)
 
-    notification1 = notifications(
-                    userid=user[3:],
-                    apprenticeid = apprenticeid[3:],
-                    event=event,
-                    date=date,
-                    allreadyread=False,
-                    numoflinesdisplay=3,
-                    details=details,
-        id=int(str(uuid.uuid4().int)[:5]),
+        notification1 = notifications(
+                        userid=user[3:],
+                        apprenticeid = apprenticeid[3:],
+                        event=event,
+                        date=date,
+                        allreadyread=False,
+                        numoflinesdisplay=3,
+                        details=details,
+            id=int(str(uuid.uuid4().int)[:5]),
 
-    )
-    print(notification1.date)
-    db.session.add(notification1)
-    db.session.commit()
-    if  notification1 is None :
-        # acount not found
-        return jsonify(["Wrong id"])
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return jsonify({"result":"success"}), HTTPStatus.OK
+        )
+        print(notification1.date)
+
+        db.session.add(notification1)
+        db.session.commit()
+    except:
+        return jsonify({"result": "wrong id "}),HTTPStatus.BAD_REQUEST
+    return jsonify({"result":"success"}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 def update_event_notification(user,apprenticeid,event,date,details):
@@ -224,38 +222,45 @@ def getAll_notification_form():
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():
-    notiId = request.form.get('noti_id')
+    data = eval(request.data.decode())
+
+    notiId = data['noti_id']
     print(notiId)
-    noti = notifications.query.get(notiId)
-    noti.allreadyread = True
-    db.session.commit()
-    if notiId:
-        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
+    try:
+        noti = notifications.query.get(notiId)
+        noti.allreadyread = True
+        db.session.commit()
+        if notiId:
+            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+            # TODO: add contact form to DB
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+    except:
+        return jsonify({'result': 'wrong id'}), HTTPStatus.OK
+
 
 @notification_form_blueprint.route('/setSetting', methods=['post'])
 def setSetting_notification_form():
-    print(request.form.to_dict())
-    data = request.form.to_dict()
+    data = eval(request.data.decode())
     notifyMorningval = data['notifyMorning']
     notifyDayBeforeval = data['notifyDayBefore']
     notifyStartWeekval = data['notifyStartWeek']
     user = data['userId'][3:]
     print("user:",user)
-    print("notifyMorningval:",bool(notifyMorningval))
     print("notifyMorningval:",notifyMorningval)
 
     user = user1.query.get(user)
     user.notifyStartWeek = notifyMorningval== 'true'
     user.notifyDayBefore = notifyDayBeforeval== 'true'
     user.notifyMorning = notifyStartWeekval== 'true'
+    try:
+        db.session.commit()
+    except:
+        return jsonify({'result': 'wrong id '}), HTTPStatus.OK
 
-    db.session.commit()
     if user:
         # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'notiId form': request.form}), HTTPStatus.OK
+        return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 @notification_form_blueprint.route('/getAllSetting', methods=['GET'])

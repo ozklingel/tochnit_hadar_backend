@@ -27,10 +27,10 @@ def add_contact_form():
         attachments = data['attachments']
     except:
         print("no attachments")
-    created_by_id = str(data['created_by_id'])[4:]
+    created_by_id = str(data['created_by_id'])[3:]
     created_for_id=None
     try:
-        created_for_id = str(data['created_for_id'])[4:]
+        created_for_id = str(data['created_for_id'])[3:]
     except:
         print("no created_for_id")
     ContactForm1 = ContactForm(
@@ -46,13 +46,15 @@ def add_contact_form():
     print(ContactForm1.created_by_id)
 
     db.session.add(ContactForm1)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except:
+        return jsonify({'result': 'error while inserting'}), HTTPStatus.BAD_REQUEST
+
     if ContactForm1:
         print(f'add contact form: subject: [{subject}, content: {content}, created_by_id: {created_by_id}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
-    return jsonify({'result': 'error while inserting'}), HTTPStatus.OK
-
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_messegases_form():
     user = request.args.get('userId')[3:]
@@ -65,7 +67,7 @@ def getAll_messegases_form():
             {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
              "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread)})
 
-    if not messegasesList :
+    if not messegasesList:
         # acount not found
         return jsonify(["Wrong id or no messages"])
     else:

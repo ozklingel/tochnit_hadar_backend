@@ -22,31 +22,32 @@ def add_contact_form():
     print(data)
     subject = data['subject']
     content = data['content']
-    attachments=""
+    attachments='{}'
+    icon=""
     try:
         attachments = data['attachments']
     except:
-        print("no attachments")
+        print("no attachments ")
+    try:
+        icon = data['icon']
+    except:
+        print("no icon")
     created_by_id = str(data['created_by_id'])[3:]
     created_for_id=None
+    created_for_id = str(data['created_for_id'])[3:]
     try:
-        created_for_id = str(data['created_for_id'])[3:]
-    except:
-        print("no created_for_id")
-    ContactForm1 = ContactForm(
-        id=str(uuid.uuid1().int)[:5],
-        created_for_id=created_for_id,
-        created_by_id=created_by_id,
-        content=content,
-        subject=subject,
-        created_at=date.today(),
-        allreadyread=False,
-        attachments=attachments
-    )
-    print(ContactForm1.created_by_id)
-
-    db.session.add(ContactForm1)
-    try:
+        ContactForm1 = ContactForm(
+            id=str(uuid.uuid1().int)[:5],
+            created_for_id=created_for_id,
+            created_by_id=created_by_id,
+            content=content,
+            subject=subject,
+            created_at=date.today(),
+            allreadyread=False,
+            attachments=attachments,
+            icon=icon
+        )
+        db.session.add(ContactForm1)
         db.session.commit()
     except:
         return jsonify({'result': 'error while inserting'}), HTTPStatus.BAD_REQUEST
@@ -65,7 +66,7 @@ def getAll_messegases_form():
     for mess in messegasesList:
         my_dict.append(
             {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
-             "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread)})
+             "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
 
     if not messegasesList:
         # acount not found

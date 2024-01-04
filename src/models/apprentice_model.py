@@ -12,7 +12,6 @@ class Apprentice(db.Model):
     birthday = db.Column(BIRTHDAY_COL, db.DateTime, nullable=False)
     marriage_status = db.Column("maritalstatus", db.String(20), nullable=False)
     marriage_date = db.Column(MARRIAGE_DATE_COL, db.DateTime, nullable=True)
-
     contact1_email =db.Column("contact1_email", db.String(50), nullable=True)
     contact1_first_name=db.Column("contact1_first_name", db.String(50), nullable=True)
     contact1_last_name=db.Column("contact1_last_name", db.String(50), nullable=True)
@@ -42,7 +41,7 @@ class Apprentice(db.Model):
     teacher_grade_b = db.Column(TEACHER_GRADE_B_COL, db.String(50), nullable=True)
     teacher_grade_b_phone = db.Column(TEACHER_GRADE_B_PHONE_COL, db.String(50), nullable=True)
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False)
-    hadar_plan_session = db.Column("thperiod", db.Integer, nullable=False)
+    hadar_plan_session = db.Column("thperiod", db.Integer, nullable=False)#mahzor
     base_address = db.Column("militarycompoundid", db.String(50), nullable=False)
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False)
     army_role = db.Column(ARMY_ROLE_COL, db.Integer, nullable=False)
@@ -63,7 +62,8 @@ class Apprentice(db.Model):
     high_school_teacher_email=db.Column(high_school_teacher_email_col, db.String(50), nullable=False)
     teacher_grade_a_email=db.Column(teacher_grade_a_email_col, db.String(50), nullable=False)
     teacher_grade_b_email=db.Column(teacher_grade_b_email_col, db.String(50), nullable=False)
-
+    teudatZehut = db.Column("teudatzehut", db.String(20), nullable=False)
+    institution_mahzor = db.Column("institution_mahzor", db.String(10), nullable=False)
     photo_path=db.Column("photo_path", db.String(50), nullable=False)
     militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False)
     def __init__(self,contact3_email,contact3_last_name,contact3_first_name,contact3_phone,contact2_last_name,contact2_first_name,contact2_phone,contact2_email,contact1_phone,contact1_last_name,contact1_email,contact1_first_name, id, accompany_id, name, last_name, phone, email, birthday, marriage_status, marriage_date, city_id, address,

@@ -16,6 +16,7 @@ from src.models.city_model import City
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
+from src.routes.notification_form_routes import getAll_notification_form
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
@@ -61,12 +62,14 @@ def getmyApprentices_form():
     apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
     print(apprenticeList)
     my_dict = []
+    #update notifiication table for user
+    res = getAll_notification_form()
     for noti in apprenticeList:
         print(noti.city_id)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         print(city)
         reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
-        eventlist = db.session.query(notifications.id,notifications.event,notifications.details).filter(
+        eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
                                                                            notifications.apprenticeid == noti.id,
                                                                            notifications.numoflinesdisplay == 3).all()
         my_dict.append(
@@ -82,19 +85,19 @@ def getmyApprentices_form():
                  "thRavMelamedYearB_phone": noti.teacher_grade_b_phone,
                  "thRavMelamedYearB_email": noti.teacher_grade_b_email,
                 "address": {
-        "country": "IL",
-        "city": city.name,
-        "cityId": noti.city_id,
-        "street": noti.address,
-        "houseNumber": "1",
-        "apartment": "1",
-        "region": str(city.cluster_id),
-        "entrance": "a",
-        "floor": "1",
-        "postalCode": "12131",
-        "lat": 32.04282620026557,
-        "lng": 34.75186193813887
-    },
+                    "country": "IL",
+                    "city": city.name,
+                    "cityId": noti.city_id,
+                    "street": noti.address,
+                    "houseNumber": "1",
+                    "apartment": "1",
+                    "region": str(city.cluster_id),
+                    "entrance": "a",
+                    "floor": "1",
+                    "postalCode": "12131",
+                    "lat": 32.04282620026557,
+                    "lng": 34.75186193813887
+                },
              "contact1_first_name": noti.contact1_first_name,
              "contact1_last_name": noti.contact1_last_name,
              "contact1_phone": noti.contact1_phone,
@@ -111,23 +114,24 @@ def getmyApprentices_form():
              "contact3_email": noti.contact3_email,
              "contact3_relation": noti.contact3_relation,
 
-             "reports": [
+             "reports":
                  [str(i[0]) for i in [tuple(row) for row in reportList]]
-             ],
-             "events": [
-                 [str(i[0]) for i in  [tuple(row) for row in eventlist]]
-             ]
+             ,
+             "events":
+
+                  [{"id" :str(row[0]),"title":row[1],"description":row[2],"date" : toISO(row[3])} for row in eventlist]
+
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
-                , "avatar": noti.photo_path if noti.photo_path!="" else "https://www.gravatar.com/avatar", "name": str(noti.name), "last_name": str(noti.last_name),
-             "institution_id": noti.institution_id, "thPeriod": str(noti.hadar_plan_session),
+                , "avatar": noti.photo_path , "name": str(noti.name), "last_name": str(noti.last_name),
+             "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
              "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
-             "phone": noti.phone, "email": noti.email,
+             "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
              "birthday": toISO(noti.birthday),  "marriage_date": toISO(noti.marriage_date),
              "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
              "unit_name": noti.unit_name,
-             "onlineStatus": noti.accompany_connect_status, "matsber": noti.spirit_status, "paying": noti.paying,
+             "onlineStatus": noti.accompany_connect_status, "matsber": str(noti.spirit_status),
              "militaryDateOfDischarge": toISO(noti.release_date),
              "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                 , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
@@ -158,28 +162,20 @@ def getProfileAtributes_form():
     if userEnt:
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-        list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "dateOfBirthInMsSinceEpoch": toISO(userEnt.birthday), "email":userEnt.email,
+        list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
                        "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
-                       "apprentices":str(myApprenticesNamesList), "phone":str(userEnt.id),"teudatZehut":userEnt.teudatZehut, "avatar":userEnt.photo_path}
-        return jsonify(results="success",attributes=list), HTTPStatus.OK
+                       "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path}
+        return jsonify(list), HTTPStatus.OK
     else:
-        return jsonify(ErrorDescription="no such id"), HTTPStatus.OK
+        return jsonify(results="no such id"), HTTPStatus.OK
 
 
 
 def getmyApprenticesNames(created_by_id):
 
     apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
-    names=""
-    print("created_by_id" ,created_by_id)
-    print("apprenticeList",apprenticeList)
-    for noti in apprenticeList:
-        if noti.name:
-            names+=str(noti.name)
-            names +=" "
-            names+=str(noti.last_name)
-            names+=","
-    return names[:-1]
+    return [{"id": str(row[0]), "name": row[1], "last_name": row[2]} for row in apprenticeList]
+
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
@@ -193,8 +189,9 @@ def getmyApprentice_form():
     my_dict = []
     if noti:
         city = db.session.query(City).filter(City.id == noti.city_id).first()
+        res = getAll_notification_form()
         reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
-        eventlist = db.session.query(notifications.id, notifications.event, notifications.details).filter(
+        eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
             notifications.apprenticeid == noti.id,
             notifications.numoflinesdisplay == 3).all()
         my_dict.append(
@@ -241,21 +238,20 @@ def getmyApprentice_form():
 
              "reports":
                  [str(i[0]) for i in [tuple(row) for row in reportList]]
-             ,
+                ,
              "events":
-                 [str(i[0]) for i in [tuple(row) for row in eventlist]]
-
+                 [{"id": row[0], "title": row[1], "description": row[2],"date" : toISO(row[3])} for row in eventlist]
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
-                , "avatar": noti.photo_path if noti.photo_path!="" else "https://www.gravatar.com/avatar" , "name": str(noti.name), "last_name": str(noti.last_name),
-             "institution_id": noti.institution_id, "thPeriod": str(noti.hadar_plan_session),
+                , "avatar": noti.photo_path , "name": str(noti.name), "last_name": str(noti.last_name),
+             "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
              "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
              "phone": noti.phone, "email": noti.email,
              "birthday": toISO(noti.birthday), "marriage_date": toISO(noti.marriage_date),
              "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
              "unit_name": noti.unit_name,
-             "onlineStatus": noti.accompany_connect_status, "matsber": noti.spirit_status, "paying": noti.paying,
+             "onlineStatus": noti.accompany_connect_status, "matsber": str(noti.spirit_status),
              "militaryDateOfDischarge": toISO(noti.release_date),
              "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                 , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),

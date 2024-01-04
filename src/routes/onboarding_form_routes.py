@@ -42,19 +42,17 @@ def verifyOTP_form():
     print(created_by_phone)
 
     result="error"
-    created_by_phone="+"+created_by_phone
     try:
         verification_check = client.verify \
             .v2 \
             .services('VA280c3b665cf155bb76e5bc77bb5c750a') \
             .verification_checks \
-            .create(to=created_by_phone, code=otp)
+            .create(to="+"+created_by_phone, code=otp)
     except:
         return jsonify({"result": "not in system"}), HTTPStatus.OK
 
     print(verification_check.status)
     time.sleep(2.4)
-    print(verification_check.status)
     if verification_check.status !="approved":
         return jsonify({"result": "error"}), HTTPStatus.OK
     userEnt = user1.query.get(created_by_phone[3:])

@@ -20,6 +20,7 @@ from src.routes.userProfile_routes import userProfile_form_blueprint
 from src.routes.homepage import homepage_form_blueprint
 from src.routes.madadim import madadim_form_blueprint
 from src.routes.tasks import tasks_form_blueprint
+from src.routes.masterUser import master_user_form_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -30,6 +31,8 @@ app.register_blueprint(messegaes_form_blueprint)
 app.register_blueprint(homepage_form_blueprint)
 app.register_blueprint(madadim_form_blueprint)
 app.register_blueprint(tasks_form_blueprint)
+
+app.register_blueprint(master_user_form_blueprint)
 
 if __name__ == '__main__':
 

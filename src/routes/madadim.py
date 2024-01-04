@@ -51,41 +51,53 @@ def lowScoreApprentice():
 
 @madadim_form_blueprint.route("/missingCalleApprentice", methods=['GET'])
 def missingCalleApprentice():
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    Oldvisitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "שיחה",
-                                                                                   Visit.visit_date < too_old).all()
-    forgotenApprenticCount = 0
-    forgotenApprenticeList = {}
-    print(Oldvisitcalls)
-    if Oldvisitcalls:
-        for ent in Oldvisitcalls:
-            apprenticeEnt = db.session.query(Apprentice.institution_id).filter(
-                Apprentice.id == ent.apprentice_id).first()
-            forgotenApprenticCount += 1
-            if apprenticeEnt.institution_id not in forgotenApprenticeList:
-                forgotenApprenticeList[apprenticeEnt.institution_id] = 0
-            forgotenApprenticeList[apprenticeEnt.institution_id] += 1
-        InstitutionList = db.session.query(Institution.id, Institution.name).all()
-        print(forgotenApprenticeList)
-        print(InstitutionList)
-        for ent in InstitutionList:
-            if ent[0] in forgotenApprenticeList:
-                forgotenApprenticeList[ent[1]] = forgotenApprenticeList[ent[0]]
-                del forgotenApprenticeList[ent[0]]
-        print("forgotenApprenticeList:", forgotenApprenticeList)
-        return jsonify({
-            'forgotenApprenticCount': forgotenApprenticCount,
-            'forgotenApprenticeList': forgotenApprenticeList
-        }), HTTPStatus.OK
-    else:
-        return jsonify({
-            'result': "error:no result",
-        }), HTTPStatus.OK
+    all_Apprentices = db.session.query(Apprentice.id,Institution.name).filter(Apprentice.institution_id==Institution.id).all()
+    # update apprentices call
+    visitcalls = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date"),Institution.name).filter(Apprentice.id==Visit.apprentice_id,Institution.id==Apprentice.institution_id,Visit.title == "שיחה").group_by(Visit.apprentice_id,Institution.name).all()
+    print(visitcalls)
+    ids=[r[0] for r in visitcalls]
+    #handle no record
+    for ent in all_Apprentices:
+        if ent.id not in ids:
+            ids.append(ent[0])
+    counts = dict()
+    for i in visitcalls:
+        counts[i[2]] = counts.get(i[2], 0) + 1
+    print(counts)
+    return jsonify({
+        'missingCalleApprentice_count': counts,
+
+    }), HTTPStatus.OK
 
 @madadim_form_blueprint.route("/missingMeetingApprentice", methods=['GET'])
 def missingMeetingApprentice():
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    Oldvisitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "מפגש",
+    all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+        Apprentice.institution_id == Institution.id).all()
+    # update apprentices call
+    visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date"),
+                                  Institution.name).filter(Apprentice.id == Visit.apprentice_id,
+                                                           Institution.id == Apprentice.institution_id,
+                                                           Visit.title == "מפגש").group_by(Visit.apprentice_id,
+                                                                                           Institution.name).all()
+    print(visitcalls)
+    ids = [r[0] for r in visitcalls]
+    # handle no record
+    for ent in all_Apprentices:
+        if ent.id not in ids:
+            ids.append(ent[0])
+    counts = dict()
+    for i in visitcalls:
+        counts[i[2]] = counts.get(i[2], 0) + 1
+    print(counts)
+    return jsonify({
+        'missingCalleApprentice_count': counts,
+
+    }), HTTPStatus.OK
+
+@madadim_form_blueprint.route("/forgotenApprentices", methods=['GET'])
+def forgotenApprentice():
+    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
+    Oldvisitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "שיחה",
                                                                                    Visit.visit_date < too_old).all()
     forgotenApprenticCount = 0
     forgotenApprenticeList = {}

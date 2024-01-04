@@ -13,8 +13,10 @@ class ContactForm(db.Model):
     created_by_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     created_for_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     allreadyread=db.Column(WAS_READ_COL, db.Boolean, nullable=True)
-    attachments=db.Column(db.String(250), nullable=False)
-    def __init__(self, id, subject, content, created_at, created_by_id,created_for_id,allreadyread,attachments):
+    attachments=db.Column( nullable=False)
+    icon = db.Column(db.String(20), nullable=False)
+
+    def __init__(self, id, subject, content, created_at, created_by_id,created_for_id,allreadyread,attachments,icon):
         self.id = id
         self.subject = subject
         self.content = content
@@ -23,4 +25,5 @@ class ContactForm(db.Model):
         self.created_for_id=created_for_id
         self.allreadyread=allreadyread
         self.attachments=attachments
+        self.icon=icon
 

@@ -1,4 +1,5 @@
 import datetime
+import json
 from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
@@ -14,13 +15,13 @@ reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/report
 
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
+
     data = request.json
     user = str(data['userId'])[3:]
-    print(user)
     updatedEnt = None
     if user:
         List_of_apprentices = data['List_of_apprentices']
-        print(data['event_details'])
+        visitId=int(str(uuid.uuid4().int)[:5])
         for key in List_of_apprentices:
             Visit1 = Visit(
                 user_id=user,
@@ -29,10 +30,13 @@ def add_reports_form():
                 visit_in_army=bool(data['event_type']),
                 visit_date=data['date'],
                 allreadyread=False,
-                id=int(str(uuid.uuid4().int)[:5]),
-                title=data['event_type']
+                id=visitId,
+                title=data['event_type'],
+                attachments=data['attachments']
+
             )
-            print(Visit1)
+            d=data['event_type'].encode('utf8')
+            print(d)
             db.session.add(Visit1)
 
     try:
@@ -51,11 +55,11 @@ def getAll_reports_form():
     print(reportList)
     my_dict = []
     for noti in reportList:
-        daysFromNow = str(date.today() - noti.visit_date) if noti.visit_date is not None else None
+        daysFromNow = (date.today() - noti.visit_date).days if noti.visit_date is not None else None
+        apprenticeList = db.session.query(Visit.apprentice_id).filter(Visit.id == noti.id ).all()
         my_dict.append(
-            {"id": str(noti.id), "from": str(noti.apprentice_id), "date":toISO(noti.visit_date),
-             "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread)})
-
+            {"id": str(noti.id), "from":[str(i[0]) for i in [tuple(row) for row in apprenticeList]], "date":toISO(noti.visit_date),
+             "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),"attachments": str(noti.attachments)})
     if not reportList :
         # acount not found
         return jsonify(["Wrong id or empty list"])

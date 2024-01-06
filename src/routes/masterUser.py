@@ -3,6 +3,7 @@ import datetime
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
+from openpyxl.reader.excel import load_workbook
 from sqlalchemy import func, and_
 
 from app import db, red
@@ -60,8 +61,8 @@ def search_entities():
     if isApprentice=="True":
         query = db.session.query(Apprentice.id)
         if thpreiodList:
-            print(thpreiodList)
-            query = query.filter(Apprentice.hadar_plan_session.in_(thpreiodList))
+            print("thpreiodList",thpreiodList)
+            query = query.filter(Apprentice.hadar_plan_session.in_(list(thpreiodList)))
             #query = query.filter_by(thpreiod=thpreiod)
         if institution_mahzor:
             query = query.filter_by(institution_mahzor=institution_mahzor)
@@ -92,6 +93,63 @@ def search_entities():
 
 
 
+@master_user_form_blueprint.route("/add_apprentice_manual", methods=['post'])
+def add_apprentice():
+    data = request.json
+    print(data)
+    first_name = data['first_name']
+    last_name = data['last_name']
+    phone = data['phone']
+    institution_name = data['institution_name']
+    try:
+        institution_id = db.session.query(Institution).filter(
+            Institution.name == institution_name).first()
+        Apprentice1 = Apprentice(
+            id=phone[1:],
+            name=first_name,
+            last_name=last_name,
+            phone=phone,
+            institution_id=institution_id,
+        )
+        db.session.add(Apprentice1)
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
 
+    if Apprentice1:
+        # TODO: add contact form to DB
+        return jsonify({'result': 'success'}), HTTPStatus.OK
 
+@master_user_form_blueprint.route("/add_apprentice_excel", methods=['put'])
+def add_apprentice_excel():
+    from openpyxl import workbook
+    path = 'Book1.xlsx'
+    wb = load_workbook(filename=path)
+    ws = wb.get_sheet_by_name('Sheet1')
+    for row in ws.iter_rows(min_row=2):
+                first_name = row[0].value
+                last_name = row[1].value
+                phone = row[3].value
+                institution_name = row[2].value
+                print(first_name)
+                print(phone)
+
+                try:
+                    institution_id = db.session.query(Institution).filter(
+                        Institution.name == str(institution_name)).first()
+                    Apprentice1 = Apprentice(
+                        id=int(str(phone)[1:]),
+                        name=first_name,
+                        last_name=last_name,
+                        phone=str(phone),
+                        institution_id=institution_id,
+                    )
+                    db.session.add(Apprentice1)
+                    db.session.commit()
+                except Exception as e:
+                    return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
+
+                if Apprentice1:
+                    # TODO: add contact form to DB
+                    return jsonify({'result': 'success'}), HTTPStatus.OK
 

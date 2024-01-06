@@ -2,7 +2,7 @@ import datetime
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from datetime import datetime,date
+from datetime import datetime,date,timedelta
 
 from sqlalchemy import func
 
@@ -53,7 +53,6 @@ def homepageMaster():
     #handle exist record
     for ent in visitcalls:
         gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-        print("call gap:", gap)
         if gap>100:
             forgotenApprenticeList.append(ent.apprentice_id)
         if gap >= 60:
@@ -77,7 +76,6 @@ def homepageMaster():
     #handle exist record
     for ent in visitmeetings:
         gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-        print("meeting gap:", gap)
         if gap>100:
             if ent.apprentice_id in forgotenApprenticeList:
                 forgotenApprenticCount+=1
@@ -87,30 +85,69 @@ def homepageMaster():
             orangevisitmeetings+=1
         if 90>gap:
             greenvisitmeetings+=1
-
-    call_score=greenvisitcalls/len(all_Apprentices)*12
-    meeting_score=greenvisitmeetings/len(all_Apprentices)*12
-    group_meeting = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי").all()
-    gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
-    group_meeting_score=0
-    if gap>60:
-        group_meeting_score+=12
-    cenes_yearly = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.apprentice_id).filter(Visit.title == "כנס_שנתי").all()
-    gap = (date.today() - cenes_yearly.visit_date).days if group_meeting is not None else 100
-    cenes_yearly_score=0
-    if gap<365:
-        cenes_yearly_score+=6.6
-    yeshiva_monthly = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.apprentice_id).filter(Visit.title == "ישיבת_מלוים").all()
-    gap = (date.today() - yeshiva_monthly.visit_date).days if group_meeting is not None else 100
-    yeshiva_monthly_score=0
-    if gap<30:
-        yeshiva_monthly_score+=6.6
-    Horim_meeting = db.session.query(Visit.apprentice_id).filter(Visit.title == "מפגש_הורים").all()
-    Horim_meeting_score=0
-    if len(Horim_meeting)==len(all_Apprentices):
-        Horim_meeting_score+=10
-
+    #compute score diagram
+    counts = dict()
+    all_melave = db.session.query(user1.id).filter(user1.role_id=="0").all()
+    for melave in all_melave:
+        melaveId=melave[0]
+        melave_Apprentices_count = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id==melaveId).group_by(Apprentice.id).first()
+        if melave_Apprentices_count is None:
+            continue
+        print("melaveId",melaveId)
+        good_call_melave_count = 0
+        visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).filter(Visit.title == "שיחה" ,Visit.user_id==melaveId).group_by(
+            Visit.apprentice_id).all()
+        for ent in visitcalls:
+            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 22
+            print("call gap:", gap)
+            if gap <= 21:
+                good_call_melave_count+=1
+        call_score=good_call_melave_count/melave_Apprentices_count[0]*12
+        good_meeting_melave_count = 0
+        visitMeeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).filter(
+            Visit.title == "מפגש", Visit.user_id == melaveId).group_by(
+            Visit.apprentice_id).all()
+        for ent in visitMeeting:
+            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
+            print("call gap:", gap)
+            if gap <= 60:
+                good_meeting_melave_count += 1
+        meeting_score = good_meeting_melave_count / melave_Apprentices_count[0] * 12
+        group_meeting = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי",Visit.user_id==melaveId).first()
+        gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
+        group_meeting_score=0
+        if gap<=60:
+            group_meeting_score+=12
+        cenes_yearly = db.session.query(Visit.user_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.user_id).filter(Visit.title == "כנס_שנתי",Visit.user_id==melaveId).all()
+        gap = (date.today() - cenes_yearly.visit_date).days if group_meeting is not None else 400
+        cenes_yearly_score=0
+        if gap<365:
+            cenes_yearly_score+=6.6
+        yeshiva_monthly = db.session.query(Visit.user_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.user_id).filter(Visit.title == "ישיבת_מלוים",Visit.user_id==melaveId).first()
+        gap = (date.today() - yeshiva_monthly.visit_date).days if group_meeting is not None else 100
+        yeshiva_monthly_score=0
+        if gap<30:
+            yeshiva_monthly_score+=6.6
+        professional_2monthly = db.session.query(Visit.user_id,func.max(Visit.visit_date).label("visit_date")).group_by(Visit.user_id).filter(Visit.title == "מפגש_מקצועי",Visit.user_id==melaveId).first()
+        gap = (date.today() - professional_2monthly.visit_date).days if group_meeting is not None else 100
+        professional_2monthly_score=0
+        if gap<60:
+            professional_2monthly_score+=6.6
+        Horim_meeting = db.session.query(Visit.apprentice_id).filter(Visit.title == "מפגש_הורים",Visit.user_id==melaveId).all()
+        Horim_meeting_score=0
+        if len(Horim_meeting)==len(all_Apprentices):
+            Horim_meeting_score+=10
+        too_old = datetime.today() - timedelta(days=365)
+        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "ביקור_בסיס",Visit.visit_date > too_old,Visit.user_id==melaveId).group_by(Visit.visit_date).count()
+        base_meeting_score=0
+        if base_meeting>2:
+            base_meeting_score+=10
+        melave_score=base_meeting_score+Horim_meeting_score+professional_2monthly_score+yeshiva_monthly_score+\
+                        cenes_yearly_score+\
+                        group_meeting_score+meeting_score+call_score
+        counts[melave_score] = counts.get(melave_score, 0) + 1
     return jsonify({
+        'melave_score': counts ,
         'totalApprentices': len(all_Apprentices),
         'forgotenApprenticCount': forgotenApprenticCount,
         'orangevisitmeetings': orangevisitmeetings,

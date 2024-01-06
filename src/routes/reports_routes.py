@@ -35,8 +35,7 @@ def add_reports_form():
                 attachments=data['attachments']
 
             )
-            d=data['event_type'].encode('utf8')
-            print(d)
+
             db.session.add(Visit1)
 
     try:

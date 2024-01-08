@@ -51,18 +51,30 @@ def lowScoreApprentice():
 
 @madadim_form_blueprint.route("/missingCalleApprentice", methods=['GET'])
 def missingCalleApprentice():
-    all_Apprentices = db.session.query(Apprentice.id,Institution.name).filter(Apprentice.institution_id==Institution.id).all()
-    # update apprentices call
-    visitcalls = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date"),Institution.name).filter(Apprentice.id==Visit.apprentice_id,Institution.id==Apprentice.institution_id,Visit.title == "שיחה").group_by(Visit.apprentice_id,Institution.name).all()
+    all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+        Apprentice.institution_id == Institution.id).all()
+    # update apprentices meet
+    visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date"),
+                                  Institution.name).filter(Apprentice.id == Visit.apprentice_id,
+                                                           Institution.id == Apprentice.institution_id,
+                                                           Visit.title == "שיחה").group_by(Visit.apprentice_id,
+                                                                                           Institution.name).all()
     print(visitcalls)
-    ids=[r[0] for r in visitcalls]
-    #handle no record
+    ids_have_visit = [r[0] for r in visitcalls]
+    ids_no_visit=[]
+    # handle no record
     for ent in all_Apprentices:
-        if ent.id not in ids:
-            ids.append(ent[0])
+        if ent.id not in ids_have_visit:
+            ids_no_visit.append([ent[0],ent[1]])
     counts = dict()
     for i in visitcalls:
-        counts[i[2]] = counts.get(i[2], 0) + 1
+        vIsDate=i.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        if gap>21:
+            counts[i[2]] = counts.get(i[2], 0) + 1
+    for i in ids_no_visit:
+        counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
         'missingCalleApprentice_count': counts,
@@ -73,78 +85,99 @@ def missingCalleApprentice():
 def missingMeetingApprentice():
     all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
         Apprentice.institution_id == Institution.id).all()
-    # update apprentices call
+    # update apprentices meet
     visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date"),
                                   Institution.name).filter(Apprentice.id == Visit.apprentice_id,
                                                            Institution.id == Apprentice.institution_id,
-                                                           Visit.title == "מפגש").group_by(Visit.apprentice_id,
+                                                           Visit.title == "שיחה").group_by(Visit.apprentice_id,
                                                                                            Institution.name).all()
     print(visitcalls)
-    ids = [r[0] for r in visitcalls]
+    ids_have_visit = [r[0] for r in visitcalls]
+    ids_no_visit=[]
     # handle no record
     for ent in all_Apprentices:
-        if ent.id not in ids:
-            ids.append(ent[0])
+        if ent.id not in ids_have_visit:
+            ids_no_visit.append([ent[0],ent[1]])
     counts = dict()
     for i in visitcalls:
-        counts[i[2]] = counts.get(i[2], 0) + 1
+        vIsDate=i.visit_date
+        now=datetime.date.today()
+        gap = (now-vIsDate).days if vIsDate is not None else 0
+        if gap>21:
+            counts[i[2]] = counts.get(i[2], 0) + 1
+    for i in ids_no_visit:
+        counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
-        'missingCalleApprentice_count': counts,
+        'missingmeetApprentice_count': counts,
 
     }), HTTPStatus.OK
 
 @madadim_form_blueprint.route("/forgotenApprentices", methods=['GET'])
 def forgotenApprentice():
-    too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    Oldvisitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "שיחה",
-                                                                                   Visit.visit_date < too_old).all()
-    forgotenApprenticCount = 0
-    forgotenApprenticeList = {}
-    print(Oldvisitcalls)
-    if Oldvisitcalls:
-        for ent in Oldvisitcalls:
-            apprenticeEnt = db.session.query(Apprentice.institution_id).filter(
-                Apprentice.id == ent.apprentice_id).first()
-            forgotenApprenticCount += 1
-            if apprenticeEnt.institution_id not in forgotenApprenticeList:
-                forgotenApprenticeList[apprenticeEnt.institution_id] = 0
-            forgotenApprenticeList[apprenticeEnt.institution_id] += 1
-        InstitutionList = db.session.query(Institution.id, Institution.name).all()
-        print(forgotenApprenticeList)
-        print(InstitutionList)
-        for ent in InstitutionList:
-            if ent[0] in forgotenApprenticeList:
-                forgotenApprenticeList[ent[1]] = forgotenApprenticeList[ent[0]]
-                del forgotenApprenticeList[ent[0]]
-        print("forgotenApprenticeList:", forgotenApprenticeList)
+
+        all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+            Apprentice.institution_id == Institution.id).all()
+        # update apprentices meet
+        visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.apprentice_id,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title == "שיחה").group_by(Visit.apprentice_id,
+                                                                                               Institution.name).all()
+        print(visitcalls)
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0], ent[1]])
+        counts = dict()
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = datetime.date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            if gap > 100:
+                counts[i[2]] = counts.get(i[2], 0) + 1
+        for i in ids_no_visit:
+            counts[i[1]] = counts.get(i[1], 0) + 1
+        print(counts)
         return jsonify({
-            'forgotenApprenticCount': forgotenApprenticCount,
-            'forgotenApprenticeList': forgotenApprenticeList
-        }), HTTPStatus.OK
-    else:
-        return jsonify({
-            'result': "error:no result",
+            'missingmeetApprentice_count': counts,
+
         }), HTTPStatus.OK
 
-@madadim_form_blueprint.route("/missingMeetingApprentice_Mosad", methods=['GET'])
+@madadim_form_blueprint.route("/forgotenApprentice_Mosad", methods=['GET'])
 def missingMeetingApprentice_Mosad():
-    institution = request.args.get("institutionId")
-    print(institution)
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    Oldvisitcalls = db.session.query(Visit,Apprentice).filter(Visit.apprentice_id==Apprentice.id,Visit.title == "מפגש",
-                                                                 Visit.visit_date < too_old).filter(Apprentice.institution_id==institution).all()
-    print(Oldvisitcalls[0])
-    list=[]
-    for ent in Oldvisitcalls:
-        print(type(ent[0].visit_date))
-        vIsDate=ent[0].visit_date
-        now=datetime.date.today()
-        gap = (now-vIsDate).days if vIsDate is not None else 0
-        list.append({"apprentice":ent[1].name+ent[1].last_name,"gap":gap})
-
+    institution_id = request.args.get("institutionId")
+    print(institution_id)
+    all_Apprentices = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(
+        Apprentice.institution_id == institution_id).all()
+    # update apprentices meet
+    visitcalls = db.session.query(Visit.apprentice_id,Apprentice.name,Apprentice.last_name ,func.max(Visit.visit_date).label("visit_date"),
+                                  Institution.name).filter(Apprentice.id == Visit.apprentice_id,
+                                                           Institution.id == Apprentice.institution_id,Apprentice.institution_id==institution_id,
+                                                           Visit.title == "שיחה").group_by(Visit.apprentice_id,Apprentice.name,Apprentice.last_name,
+                                                                                           Institution.name).all()
+    print(visitcalls)
+    ids_have_visit = [r[0] for r in visitcalls]
+    ids_no_visit = []
+    # handle no record
+    for ent in all_Apprentices:
+        if ent.id not in ids_have_visit:
+            ids_no_visit.append([ent[0], ent[1],ent[2]])
+    counts = dict()
+    for i in visitcalls:
+        vIsDate = i.visit_date
+        now = datetime.date.today()
+        gap = (now - vIsDate).days if vIsDate is not None else 0
+        if gap > 100:
+            counts[ent[1]+" "+ent[2]] = gap
+    for i in ids_no_visit:
+        counts[ent[1]+" "+ent[2]] = 101
+    print(counts)
     return jsonify({
-        'gapList': list,
+        'missingmeetApprentice_count': counts,
+
     }), HTTPStatus.OK
 
 @madadim_form_blueprint.route("/missingCallsApprentice_Mosad", methods=['GET'])

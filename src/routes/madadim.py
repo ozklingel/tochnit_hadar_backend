@@ -204,57 +204,89 @@ def missingCallsApprentice_Mosad():
 def getMelaveMadadim():
     melaveId = request.args.get("melaveId")[3:]
     print(melaveId)
-    ApprenticeCount = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id == melaveId).all()
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    Oldvisitcalls = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "שיחה",
-                                                                 Visit.visit_date < too_old).all()
-    print(Oldvisitcalls[0][0])
+    ApprenticeCount = db.session.query(Apprentice.id).filter(Apprentice.accompany_id == melaveId).all()
+    Apprentice_ids_call=[r[0] for r in ApprenticeCount]
+    too_old = datetime.datetime.today() - datetime.timedelta(days=21)
+    Oldvisitcalls = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "שיחה",
+                                                                 Visit.visit_date > too_old).all()
+    for i in Oldvisitcalls:
+        if i[0] in  Apprentice_ids_call:
+            Apprentice_ids_call.remove(i[0])
+    print(len(Apprentice_ids_call))
 
-    too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-    Oldvisitmeetings = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "מפגש",
-                                                                 Visit.visit_date < too_old).all()
-    print(Oldvisitmeetings[0][0])
-
-    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitSadna = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "סדנא",
-                                                                 Visit.visit_date < too_old).all()
-    print(OldvisitSadna[0][0])
-
-    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitCenes = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "כנס",
-                                                                 Visit.visit_date < too_old).all()
-    print(OldvisitCenes[0][0])
-
-    visitHorim = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "הורים").all()
-    print(visitHorim[0][0])
-
+    Apprentice_ids_meet=[r[0] for r in ApprenticeCount]
+    too_old = datetime.datetime.today() - datetime.timedelta(days=21)
+    Oldvisitmeet = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש",
+                                                                 Visit.visit_date > too_old).all()
+    for i in Oldvisitmeet:
+        if i[0] in  Apprentice_ids_meet:
+            Apprentice_ids_meet.remove(i[0])
+    print(len(Apprentice_ids_meet))
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitmeetingsBasis = db.session.query(func.count(Visit.title)).filter(Visit.user_id==melaveId,Visit.title == "מפגש",Visit.visit_in_army==True,
-                                                                 Visit.visit_date < too_old).all()
-    print(OldvisitmeetingsBasis[0][0])
+    OldvisitProffesionalMeet = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש_מקצועי",
+                                                                 Visit.visit_date > too_old).all()
+    if len(OldvisitProffesionalMeet)>=2:
+           sadna_score=100
+    if len(OldvisitProffesionalMeet) == 1:
+        sadna_score = 50
+    if len(OldvisitProffesionalMeet) == 0:
+        sadna_score = 0
 
+    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
+    Oldvisit_cenes = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title == "כנס",
+                                                                 Visit.visit_date > too_old).all()
+    if len(Oldvisit_cenes)>=2:
+           cenes_score=100
+    if len(Oldvisit_cenes) == 1:
+        cenes_score = 50
+    if len(Oldvisit_cenes) == 0:
+        cenes_score = 0
+
+    Apprentice_ids_Horim=[r[0] for r in ApprenticeCount]
+    OldvisitHorim = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש_הורים"
+                                                                 ).all()
+    for i in OldvisitHorim:
+        if i[0] in  Apprentice_ids_call:
+            Apprentice_ids_Horim.remove(i[0])
+    print(len(Apprentice_ids_call))
+
+
+    Apprentice_ids_meetInArmy=[r[0] for r in ApprenticeCount]
+    too_old = datetime.datetime.today() - datetime.timedelta(days=180)
+    OldvisitmeetInArmy = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש",Visit.visit_in_army==True,
+                                                                 Visit.visit_date > too_old).all()
+    for i in OldvisitmeetInArmy:
+        if i[0] in  Apprentice_ids_meetInArmy:
+            Apprentice_ids_meetInArmy.remove(i[0])
+    print(len(Apprentice_ids_meetInArmy))
+
+    Apprentice_ids_forgoten=[r[0] for r in ApprenticeCount]
     too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    forgotenApprentice = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "שיחה",
-                                                                  Visit.visit_date < too_old).all()
-    forgotenApprenticeCount=len(forgotenApprentice)
-    forgotenApprentice_full_details=[]
-    for ent in forgotenApprentice:
-        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id==ent[0],Apprentice.institution_id==Institution.id).first()
-
+    Oldvisitcalls = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Apprentice.id==Visit.apprentice_id,Institution.id==Apprentice.institution_id,Visit.title == "שיחה",
+                                                                 Visit.visit_date > too_old).all()
+    for i in Oldvisitcalls:
+        if i[0] in  Apprentice_ids_forgoten:
+            Apprentice_ids_forgoten.remove(i[0])
+    print(len(Apprentice_ids_forgoten))
+    forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
+                                                       Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
 
     return jsonify({
-        "numOfApprentice":ApprenticeCount[0][0],
-        'Oldvisitmeetings': Oldvisitmeetings[0][0],
-        'Oldvisitcalls': Oldvisitcalls[0][0],
-        'OldvisitSadna': OldvisitSadna[0][0],
-        'OldvisitCenes': OldvisitCenes[0][0],
-        'visitHorim': visitHorim[0][0],
-        'forgotenApprenticeCount': forgotenApprenticeCount,
-        'forgotenApprentice_full_details':   [tuple(row) for row in forgotenApprentice_full_details]
+        "numOfApprentice":len(ApprenticeCount),
+        'Oldvisitmeetings': len(Apprentice_ids_meet),
+        'Oldvisitmeeting_Army': len(Apprentice_ids_meetInArmy),
+        'oldvisitcalls': len(Apprentice_ids_call),
+        'OldvisitSadna': sadna_score,
+        'OldvisitCenes': cenes_score,
+        'NovisitHorim': len(Apprentice_ids_Horim),
+        'forgotenApprenticeCount': len(Apprentice_ids_forgoten)
 ,
-
-        'OldvisitmeetingsBasis': OldvisitmeetingsBasis[0][0],
+        'forgotenApprentice_full_details':   [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
+                                     "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
+                                     "serve_type": row[7],"hadar_plan_session": row[8]
+                                     } for row in forgotenApprentice_full_details]
+,
 
     }), HTTPStatus.OK
 

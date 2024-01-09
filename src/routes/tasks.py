@@ -7,6 +7,7 @@ from datetime import datetime,date
 from sqlalchemy import func
 
 from app import db, red
+from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
@@ -24,20 +25,35 @@ def getTasks():
     call_dict = []
     Horim_dict = []
     try:
-        for i in range(len(res[0].json)):
+        for i in range(0,len(res[0].json)):
             ent=res[0].json[i]
+            print(ent)
             if ent["numOfLinesDisplay"]==2:
                 if ent["title"]=="שיחה":
                     call_dict.append(ent)
-                if ent["title"]=="מפגש":
+                if ent["title"]=="מפגש" or ent["title"]=="מפגש_קבוצתי" :
                     meet_dict.append(ent)
                 if ent["title"]=="מפגש_הורים":
                     Horim_dict.append(ent)
-                return jsonify({
-                    'call_dict':call_dict,
-                    'Horim_dict': Horim_dict,
-                    "meet_dict": meet_dict,
-                    }), HTTPStatus.OK
+        ApprenticeList = db.session.query( Apprentice.id).filter(
+            Apprentice.accompany_id == userId).all()
+        all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
+
+        visitHorim = db.session.query(Visit.apprentice_id).filter(Visit.user_id == userId,
+                                                    Visit.title == "מפגש_הורים").all()
+        for i in visitHorim:
+            if i[0] in all_ApprenticeList_Horim:
+                all_ApprenticeList_Horim.remove(i[0])
+        for ent in all_ApprenticeList_Horim:
+            Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(
+                Apprentice.id == ent).first()
+            Horim_dict.append({'allreadyread': False, 'apprenticeId': Apprentice1.name+" "+Apprentice1.last_name, 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': 94275, 'numOfLinesDisplay': 2, 'title': 'מפגש הורים'})
+
+        return jsonify({
+            'call_dict':call_dict,
+            'Horim_dict': Horim_dict,
+            "meet_dict": meet_dict,
+            }), HTTPStatus.OK
     except:
         return jsonify({'result': 'no Tasks or wrong id'}), HTTPStatus.OK
 

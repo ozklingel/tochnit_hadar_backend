@@ -122,6 +122,18 @@ def add_visit_notification(user,apprenticeid,event,date):
 def getAll_notification_form():
     user = request.args.get('userId')[3:]
     print("user:",user)
+
+    # update notification created by system=group meetings
+    visitEvent = db.session.query(Visit).filter(Visit.user_id == user,
+                                                Visit.title == "מפגש_קבוצתי").order_by(Visit.visit_date.desc()).first()
+    # handle no row so insert need a meeting notification
+    if visitEvent is None:
+        add_visit_notification(user, None, "מפגש_קבוצתי", '2023-01-01')
+    gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
+    print("meeting group gap:", gap)
+    if gap > 30:
+        add_visit_notification(visitEvent.user_id, visitEvent.apprentice_id, visitEvent.title, visitEvent.visit_date)
+
     #update notification table  birthday and events
     ApprenticeList = db.session.query(Apprentice.birthday,Apprentice.id,Apprentice.accompany_id).filter(Apprentice.accompany_id == user).all()
     for Apprentice1 in ApprenticeList:
@@ -168,7 +180,7 @@ def getAll_notification_form():
                 Apprentice.id == noti.apprenticeid).first()
             noti.details = noti.event if noti.details is None else noti.details
             my_dict.append(
-                {"id": noti.id, "apprenticeId": ApprenticeName.last_name.strip() + " " + ApprenticeName.name.strip(),
+                {"id": noti.id, "apprenticeId": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
                  "date": noti.date.strftime("%m.%d.%Y"),
                  "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,
                  "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})

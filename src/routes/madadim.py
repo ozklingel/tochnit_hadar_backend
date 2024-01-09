@@ -389,6 +389,7 @@ def getMosadCoordinatorMadadim():
 
     'good_apprenties_mosad_meet': len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_meet),
     'good_apprentice_mosad_groupMeet': len(all_apprenties_mosad)-len(old_apprentice_ids_groupMeet),
+    'all_Melave_mosad': len(all_Melave),
 
     'all_apprenties_mosad': len(all_apprenties_mosad),
         'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
@@ -407,59 +408,42 @@ def getEshcolCoordinatorMadadim():
     #get the Eshcol id
     eshcol_id = db.session.query(user1.cluster_id).filter(user1.id == eshcolCoordinatorId).first()
     print("eshcol_id",eshcol_id)
-    print(type(user1.role_id))
-    print(type(eshcol_id[0]))
-    # total MosadCoordinator Count for this eshcol
-    totalMosadCoordinatorCount = db.session.query(func.count(user1.id)).filter(user1.cluster_id == eshcol_id[0],str(user1.role_id)=="2").all()
-    EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == eshcol_id[0],str(user1.role_id)=="1").all()
-    totalApprenticeCount=0
-    for ent  in EshcolMelvin :
-        apprenticeCount = db.session.query(func.count(Apprentice.id)).filter(Apprentice.accompany_id == ent[0]
-                                                                                   ).all()
-        totalApprenticeCount+=apprenticeCount[0]
 
-    too_old_MonthlyYeshivaValue = 30
-    #ישיבה עם רכזי מוסד
-    OldvisitMonthlyYeshiva = db.session.query(Visit.visit_date).filter(Visit.user_id==user1.id,Visit.title == "ישיבה_חודשית_רכז",user1.cluster_id==eshcol_id[0],str(user1.role_id)=="2").all()
-    gapList=[]
-    too_old_MonthlyYeshivaCounter=0
-    num_of_MOsadCoordintor=0
-    for ent in OldvisitMonthlyYeshiva:
-        num_of_MOsadCoordintor+=1
-        vIsDate=ent.visit_date
-        now=datetime.date.today()
-        gap = (now-vIsDate).days if vIsDate is not None else 0
-        gapList.append(gap)
-        if gap>too_old_MonthlyYeshivaValue:
-            too_old_MonthlyYeshivaCounter=+1
-    avgMonthlyYeshivaGap=sum(gapList) / len(gapList) if len(gapList)!=0 else 0
+    # total MosadCoordinator Count for this eshcol
+    all_MosadCoordinator = db.session.query(user1.id).filter(user1.cluster_id == eshcol_id[0],user1.role_id=="1").all()
+    EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == eshcol_id[0],user1.role_id=="0").all()
+    all_EshcolApprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id==Institution.id,Institution.owner_id==str(eshcol_id[0])).all()
+
+    all_MosadCoordinator_ids_call = [r[0] for r in all_MosadCoordinator]
+    too_old = datetime.datetime.today() - datetime.timedelta(days=60)
+    new_visit_yeshiva = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,
+                                                            user1.cluster_id == eshcol_id[0],
+                                                            Visit.title == "מפגש",
+                                                            Visit.visit_date > too_old).all()
+    for i in new_visit_yeshiva:
+        if i[0] in all_MosadCoordinator_ids_call:
+            all_MosadCoordinator_ids_call.remove(i[0])
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=30)
-    OldvisitRoshTohnit = db.session.query(func.count(Visit.title)).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_חודשית_אחראי_תוכנית",
-                                                                 Visit.visit_date < too_old).first()
-    print("OldvisitRoshTohnit",OldvisitRoshTohnit[0])
+    newvisit_yeshiva_Tohnit = db.session.query(Visit.visit_date).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_כלל_תוכנית",Visit.visit_date>too_old).all()
 
+    Apprentice_ids_forgoten=[r[0] for r in all_EshcolApprentices]
     too_old = datetime.datetime.today() - datetime.timedelta(days=100)
-    forgotenApprentice = db.session.query(Visit.apprentice_id).filter(Visit.user_id==user1.id,Visit.title == "שיחה",
-                                                                  Visit.visit_date < too_old,user1.cluster_id==eshcol_id[0]).all()
-    forgotenApprenticeCount=len(forgotenApprentice)
-    forgotenApprentice_full_details=[]
-    for ent in forgotenApprentice:
-        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id==ent[0],Apprentice.institution_id==Institution.id).first()
+    Oldvisitcalls = db.session.query(Visit.apprentice_id).filter(Apprentice.id==Visit.apprentice_id,Institution.id==Apprentice.institution_id,Institution.owner_id==str(eshcol_id[0]),Visit.title == "שיחה",
+                                                                 Visit.visit_date > too_old).all()
+    for i in Oldvisitcalls:
+        if i[0] in  Apprentice_ids_forgoten:
+            Apprentice_ids_forgoten.remove(i[0])
+    forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
+                                                       Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
 
-    eshcol_ApprenticeCount = db.session.query(Apprentice.id,user1).filter(Apprentice.accompany_id==user1.id,user1.cluster_id==eshcol_id[0]).all()
-    print("eshcol_ApprenticeCount",len(eshcol_ApprenticeCount))
     return jsonify({
-        'totalMosadCoordinatorCount': totalMosadCoordinatorCount[0][0],
-        'too_old_MonthlyYeshivaCounter': too_old_MonthlyYeshivaCounter,
-        'OldvisitRoshTohnit': OldvisitRoshTohnit[0],
-        'totalApprenticeCount': totalApprenticeCount,
-        'forgotenApprenticeCount': forgotenApprenticeCount,
-        'num_of_MOsadCoordintor':num_of_MOsadCoordintor,
-        'avgMonthlyYeshivaGap': avgMonthlyYeshivaGap,
-        'eshcol_ApprenticeCount': len(eshcol_ApprenticeCount),
-        'forgotenApprentice_full_details':    [tuple(row) for row in forgotenApprentice_full_details]
-,
+        'newvisit_yeshiva_Tohnit': len(newvisit_yeshiva_Tohnit) ,
+        'all_MosadCoordinator_count': len(all_MosadCoordinator),
+        'good_apprenties_mosad_call': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),
+        'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
+        'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
+
 
     }), HTTPStatus.OK
 

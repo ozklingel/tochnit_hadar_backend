@@ -123,7 +123,7 @@ def add_apprentice():
 @master_user_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
     from openpyxl import workbook
-    path = 'Book1.xlsx'
+    path = '/home/ubuntu/flaskapp/Book1.xlsx'
     wb = load_workbook(filename=path)
     ws = wb.get_sheet_by_name('Sheet1')
     for row in ws.iter_rows(min_row=2):

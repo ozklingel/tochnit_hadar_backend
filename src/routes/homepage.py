@@ -17,6 +17,40 @@ from src.routes.notification_form_routes import getAll_notification_form
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
 
+def compute_visit_score(melaveId,all_melave_Apprentices,event,maxScore,expected_gap):
+    all_melave_Apprentices_ids = [r[0] for r in all_melave_Apprentices]
+
+    visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+        Visit.title == event, Visit.user_id == melaveId).order_by(Visit.visit_date).all()
+    from collections import defaultdict
+    visitcalls_melave_list = defaultdict(list)
+    # key is apprenticeId and value is list of  gaps visits date
+    for index in range(1, len(visitcalls)):
+        gap = (visitcalls[index][1] - visitcalls[index - 1][1]).days if visitcalls[index] is not None else 21
+        visitcalls_melave_list[visitcalls[index][0]].append(gap)
+    print(visitcalls_melave_list)
+    visitcalls_melave_avg = 0
+    for k, v in visitcalls_melave_list.items():
+        if k in all_melave_Apprentices_ids:
+            all_melave_Apprentices_ids.remove(k)
+        visitcalls_melave_avg += (sum(v) / len(v))
+    print("all_melave_Apprentices_ids",all_melave_Apprentices_ids)
+
+    #t least one apprentice with no calls
+    if len(all_melave_Apprentices_ids) != 0:
+        visitcalls_melave_avg = 0
+    else:
+        visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
+            visitcalls_melave_list) != 0 else 0
+    print("visitcalls_melave_avg", visitcalls_melave_avg)
+    call_panish = visitcalls_melave_avg - expected_gap
+    if call_panish > 0:
+        call_score = maxScore - call_panish / 2
+    else:
+        call_score = maxScore
+    return call_score
+
+
 def melave_score(all_Apprentices):
     # compute score diagram
     counts = dict()
@@ -29,40 +63,8 @@ def melave_score(all_Apprentices):
             counts[100] = counts.get(100, 0) + 1
             continue
         print("melaveId", melaveId)
-        good_call_melave_count = 0
-        visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
-        from collections import defaultdict
-        visitcalls_melave_list = defaultdict(list)
-        #key is apprenticeId and value is list of  gaps visits date
-        for index in range(1,len(visitcalls)):
-            gap = (visitcalls[index][1] - visitcalls[index-1][1]).days if visitcalls[index] is not None else 21
-            visitcalls_melave_list[visitcalls[index][0]].append(gap)
-        print("visitcalls_melave_list",visitcalls_melave_list)
-        visitcalls_melave_avg=0
-        for k, v in visitcalls_melave_list.items():
-            if k in all_melave_Apprentices:
-                all_melave_Apprentices.remove(k)
-            visitcalls_melave_avg+=(sum(v)/len(v))
-        if len(all_melave_Apprentices)!=0:
-            visitcalls_melave_avg=0
-        visitcalls_melave_avg=visitcalls_melave_avg/len(visitcalls_melave_list) if len(visitcalls_melave_list)!=0 else 0
-        print("visitcalls_melave_avg",visitcalls_melave_avg)
-        call_panish=visitcalls_melave_avg-21
-        if call_panish>0:
-            call_score=12-call_panish/2
-        else:
-            call_score=12
-        good_meeting_melave_count = 0
-        visitMeeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).filter(
-            Visit.title == "מפגש", Visit.user_id == melaveId).group_by(
-            Visit.apprentice_id).all()
-        for ent in visitMeeting:
-            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-           # print("call gap:", gap)
-            if gap <= 60:
-                good_meeting_melave_count += 1
-        meeting_score = 12*good_meeting_melave_count / melave_Apprentices_count[0] if melave_Apprentices_count[0]!=0 else 0
+        call_score=compute_visit_score(melaveId,all_melave_Apprentices,"שיחה",12,21)
+        personal_meet_score=compute_visit_score(melaveId,all_melave_Apprentices,"מפגש",12,21)
         group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
@@ -103,7 +105,7 @@ def melave_score(all_Apprentices):
             base_meeting_score += 10
         melave_score = base_meeting_score + Horim_meeting_score + professional_2monthly_score + yeshiva_monthly_score + \
                        cenes_yearly_score + \
-                       group_meeting_score + meeting_score + call_score
+                       group_meeting_score + personal_meet_score + call_score
         counts[melave_score] = counts.get(melave_score, 0) + 1
     k, v = [], []
     for key, value in counts.items():

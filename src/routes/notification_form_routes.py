@@ -233,8 +233,7 @@ def getAll_notification_form():
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():
-    data = eval(request.data.decode())
-
+    data = request.form.to_dict()#dont change prod issue
     notiId = data['noti_id']
     print(notiId)
     try:

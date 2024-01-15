@@ -17,38 +17,7 @@ from src.routes.notification_form_routes import getAll_notification_form
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
 
-def compute_visit_score(melaveId,all_melave_Apprentices,event,maxScore,expected_gap):
-    all_melave_Apprentices_ids = [r[0] for r in all_melave_Apprentices]
 
-    visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-        Visit.title == event, Visit.user_id == melaveId).order_by(Visit.visit_date).all()
-    from collections import defaultdict
-    visitcalls_melave_list = defaultdict(list)
-    # key is apprenticeId and value is list of  gaps visits date
-    for index in range(1, len(visitcalls)):
-        gap = (visitcalls[index][1] - visitcalls[index - 1][1]).days if visitcalls[index] is not None else 21
-        visitcalls_melave_list[visitcalls[index][0]].append(gap)
-    print(visitcalls_melave_list)
-    visitcalls_melave_avg = 0
-    for k, v in visitcalls_melave_list.items():
-        if k in all_melave_Apprentices_ids:
-            all_melave_Apprentices_ids.remove(k)
-        visitcalls_melave_avg += (sum(v) / len(v))
-    print("all_melave_Apprentices_ids",all_melave_Apprentices_ids)
-
-    #t least one apprentice with no calls
-    if len(all_melave_Apprentices_ids) != 0:
-        visitcalls_melave_avg = 0
-    else:
-        visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
-            visitcalls_melave_list) != 0 else 0
-    print("visitcalls_melave_avg", visitcalls_melave_avg)
-    call_panish = visitcalls_melave_avg - expected_gap
-    if call_panish > 0:
-        call_score = maxScore - call_panish / 2
-    else:
-        call_score = maxScore
-    return call_score
 
 
 def melave_score(all_Apprentices):
@@ -62,9 +31,12 @@ def melave_score(all_Apprentices):
         if len(all_melave_Apprentices)==0:
             counts[100] = counts.get(100, 0) + 1
             continue
-        print("melaveId", melaveId)
-        call_score=compute_visit_score(melaveId,all_melave_Apprentices,"שיחה",12,21)
-        personal_meet_score=compute_visit_score(melaveId,all_melave_Apprentices,"מפגש",12,21)
+        visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
+        call_score=compute_visit_score(all_melave_Apprentices,visitcalls,12,21)
+        visitmeetings = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
+        personal_meet_score=compute_visit_score(all_melave_Apprentices,visitmeetings,12,21)
         group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
@@ -113,13 +85,44 @@ def melave_score(all_Apprentices):
         v.append(value)
     return (k,v)
 
+def compute_visit_score(all_children,visits,maxScore,expected_gap):
+    all_children_ids = [r[0] for r in all_children]
+
+    from collections import defaultdict
+    visitcalls_melave_list = defaultdict(list)
+    # key is apprenticeId and value is list of  gaps visits date
+    for index in range(1, len(visits)):
+        gap = (visits[index][1] - visits[index - 1][1]).days if visits[index] is not None else 21
+        visitcalls_melave_list[visits[index][0]].append(gap)
+    print(visitcalls_melave_list)
+    visitcalls_melave_avg = 0
+    for k, v in visitcalls_melave_list.items():
+        if k in all_children_ids:
+            all_children_ids.remove(k)
+        visitcalls_melave_avg += (sum(v) / len(v))
+    print(all_children_ids)
+    #t least one apprentice with no calls
+    if len(all_children_ids) != 0:
+        visitcalls_melave_avg = 0
+    else:
+        visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
+            visitcalls_melave_list) != 0 else 0
+    call_panish = visitcalls_melave_avg - expected_gap
+    print(expected_gap)
+    print(visitcalls_melave_avg)
+
+    if call_panish > 0:
+        call_score = maxScore - call_panish / 2
+    else:
+        call_score = maxScore
+    return call_score
 
 def mosad_Coordinators_score():
     all_Mosad_coord = db.session.query(user1.id, user1.institution_id).filter(user1.role_id == "1").all()
     mosad_Cooordinator_score_dict = dict()
 
     for mosad_coord in all_Mosad_coord:
-        print(all_Mosad_coord)
+        print("all_Mosad_coord",all_Mosad_coord)
         Mosad_coord_score=0
         mosad_coord_id = mosad_coord[0]
         institution_id = mosad_coord[1]
@@ -129,27 +132,22 @@ def mosad_Coordinators_score():
             mosad_Cooordinator_score_dict[100] = mosad_Cooordinator_score_dict.get(100, 0) + 1
             continue
         all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
+        print("all_Mosad_Melaves_list",all_Mosad_Melaves_list)
         #מצבר=30
-        visit_racaz_mosad_monthly_meetings = db.session.query(Visit.user_id, func.max(Visit.visit_date).label(
-            "visit_date")).group_by(Visit.user_id).filter(Visit.title == "מצבר").filter(
-            Visit.user_id.in_(list(all_Mosad_Melaves_list))).all()
-        visit_Mosad_melave_meetings_personal = 0
-        for ent in visit_racaz_mosad_monthly_meetings:
-            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-            if gap < 90:
-                visit_Mosad_melave_meetings_personal += 1
-        Mosad_coord_score+=30*visit_Mosad_melave_meetings_personal/len(all_Mosad_Melave) if len(all_Mosad_Melave)!=0 else 0
-
+        visit_matzbar_meetings = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.title == "מצבר").filter(
+            Visit.user_id.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
+        print(visit_matzbar_meetings)
+        visit_matzbar_meetings_score=compute_visit_score(all_Mosad_Melave, visit_matzbar_meetings, 30, 90)
+        print("visit_matzbar_meetings_score",visit_matzbar_meetings_score)
+        Mosad_coord_score+=visit_matzbar_meetings_score
         #מפגש_מקצועי=10
-        visit_mosad_professional_meetings = db.session.query(Visit.user_id, func.max(Visit.visit_date).label(
-            "visit_date")).group_by(Visit.user_id).filter(Visit.title == "מפגש_מקצועי").filter(
-            Visit.user_id.in_(list(all_Mosad_Melaves_list))).all()
-        visit_mosad_professional_meetings_counter = 0
-        for ent in visit_mosad_professional_meetings:
-            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-            if gap < 90:
-                visit_mosad_professional_meetings_counter += 1
-        Mosad_coord_score+=10*visit_mosad_professional_meetings_counter/len(all_Mosad_Melave) if len(all_Mosad_Melave)!=0 else 0
+        visit_mosad_professional_meetings = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.title == "מפגש_מקצועי").filter(
+            Visit.user_id.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
+        print(visit_matzbar_meetings)
+        visit_mosad_professional_meetings_score=compute_visit_score(all_Mosad_Melave, visit_mosad_professional_meetings, 30, 90)
+        print("visit_mosad_professional_meetings_score",visit_mosad_professional_meetings_score)
+        Mosad_coord_score+=visit_mosad_professional_meetings_score
+
         #ישיבת_מלוים=15
         todays_Month = dates.HebrewDate.today().month
         if todays_Month==2 or todays_Month==6 or todays_Month==8:

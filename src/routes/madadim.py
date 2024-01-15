@@ -20,34 +20,29 @@ madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 
 @madadim_form_blueprint.route("/lowScoreApprentice", methods=['GET'])
 def lowScoreApprentice():
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
-    Oldvisitcalls = db.session.query(Visit.apprentice_id,Visit.visit_date).filter(Visit.title =="שיחה" ,Visit.visit_date<too_old).all()
+    Oldvisitcalls = db.session.query(Visit.apprentice_id,Institution.name).filter(Visit.apprentice_id==Apprentice.id,Institution.id==
+                                                                                  Apprentice.institution_id,Visit.title =="נסיון_שנכשל" ).all()
     forgotenApprenticCount=0
     forgotenApprenticeList={}
     print(Oldvisitcalls)
-    if Oldvisitcalls:
-        for ent in Oldvisitcalls:
-            apprenticeEnt = db.session.query(Apprentice.institution_id).filter(Apprentice.id == ent.apprentice_id).first()
-            forgotenApprenticCount+=1
-            if apprenticeEnt.institution_id not in forgotenApprenticeList:
-                forgotenApprenticeList[apprenticeEnt.institution_id] =0
-            forgotenApprenticeList[apprenticeEnt.institution_id]+=1
-        InstitutionList = db.session.query(Institution.id,Institution.name).all()
-        print(forgotenApprenticeList)
-        print(InstitutionList)
-        for ent in InstitutionList:
-            if ent[0] in forgotenApprenticeList:
-                forgotenApprenticeList[ent[1]] = forgotenApprenticeList[ent[0]]
-                del forgotenApprenticeList[ent[0]]
-        print("forgotenApprenticeList:" ,forgotenApprenticeList)
-        return jsonify({
-        'forgotenApprenticCount': forgotenApprenticCount,
-        'forgotenApprenticeList':forgotenApprenticeList
-                   }), HTTPStatus.OK
-    else:
-        return jsonify({
-        'result': "error:no result",
-                   }), HTTPStatus.OK
+
+    for ent in Oldvisitcalls:
+        forgotenApprenticCount+=1
+        if ent[1] not in forgotenApprenticeList:
+            forgotenApprenticeList[ent[1]] =0
+        forgotenApprenticeList[ent[1] ]+=1
+
+    print(forgotenApprenticeList)
+
+    print("forgotenApprenticeList:" ,forgotenApprenticeList)
+    return jsonify({
+    'forgotenApprenticCount': forgotenApprenticCount ,
+    'forgotenApprenticeList': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
+               }), HTTPStatus.OK
+
+    return jsonify({
+    'result': "error:no result",
+               }), HTTPStatus.OK
 
 @madadim_form_blueprint.route("/missingCalleApprentice", methods=['GET'])
 def missingCalleApprentice():
@@ -67,16 +62,21 @@ def missingCalleApprentice():
         if ent.id not in ids_have_visit:
             ids_no_visit.append([ent[0],ent[1]])
     counts = dict()
+    missingCallApprentice_total=0
     for i in visitcalls:
         vIsDate=i.visit_date
         now=datetime.date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
         if gap>21:
+            missingCallApprentice_total+=1
             counts[i[2]] = counts.get(i[2], 0) + 1
     for i in ids_no_visit:
+        missingCallApprentice_total += 1
         counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
+        'missingCallApprentice_total': missingCallApprentice_total,
+
         'missingCalleApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
     }), HTTPStatus.OK
@@ -99,16 +99,20 @@ def missingMeetingApprentice():
         if ent.id not in ids_have_visit:
             ids_no_visit.append([ent[0],ent[1]])
     counts = dict()
+    missingmeetApprentice_total=0
     for i in visitcalls:
         vIsDate=i.visit_date
         now=datetime.date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
         if gap>21:
+            missingmeetApprentice_total+=1
             counts[i[2]] = counts.get(i[2], 0) + 1
     for i in ids_no_visit:
+        missingmeetApprentice_total += 1
         counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
+        'missingmeetApprentice_total': missingmeetApprentice_total,
         'missingmeetApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
     }), HTTPStatus.OK
@@ -132,17 +136,22 @@ def forgotenApprentice():
             if ent.id not in ids_have_visit:
                 ids_no_visit.append([ent[0], ent[1]])
         counts = dict()
+        forgotenApprentice_total=0
         for i in visitcalls:
             vIsDate = i.visit_date
             now = datetime.date.today()
             gap = (now - vIsDate).days if vIsDate is not None else 0
             if gap > 100:
+                forgotenApprentice_total+=1
                 counts[i[2]] = counts.get(i[2], 0) + 1
         for i in ids_no_visit:
+            forgotenApprentice_total += 1
             counts[i[1]] = counts.get(i[1], 0) + 1
         print(counts)
         return jsonify({
-            'missingmeetApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
+        'forgotenApprentice_total': forgotenApprentice_total,
+
+            'forgotenApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
         }), HTTPStatus.OK
 

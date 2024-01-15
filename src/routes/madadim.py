@@ -77,7 +77,7 @@ def missingCalleApprentice():
         counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
-        'missingCalleApprentice_count': counts,
+        'missingCalleApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
     }), HTTPStatus.OK
 
@@ -109,7 +109,7 @@ def missingMeetingApprentice():
         counts[i[1]] = counts.get(i[1], 0) + 1
     print(counts)
     return jsonify({
-        'missingmeetApprentice_count': counts,
+        'missingmeetApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
     }), HTTPStatus.OK
 
@@ -142,7 +142,7 @@ def forgotenApprentice():
             counts[i[1]] = counts.get(i[1], 0) + 1
         print(counts)
         return jsonify({
-            'missingmeetApprentice_count': counts,
+            'missingmeetApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
 
         }), HTTPStatus.OK
 
@@ -273,6 +273,8 @@ def getMelaveMadadim():
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
 
     return jsonify({
+    'melave': 55,
+
         "numOfApprentice":len(ApprenticeCount),
         'Oldvisitmeetings': len(Apprentice_ids_meet),
         'Oldvisitmeeting_Army': len(Apprentice_ids_meetInArmy),
@@ -383,6 +385,9 @@ def getMosadCoordinatorMadadim():
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
 
     return jsonify({
+
+    'mosadCoordinator_score': 55,
+
     'good_Melave_ids_sadna': len(all_Melave)-len(old_Melave_ids_professional),
     'good_Melave_ids_matzbar': len(all_Melave)-len(old_Melave_ids_matzbar),
     'good_apprenties_mosad_call': len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_call),
@@ -438,6 +443,8 @@ def getEshcolCoordinatorMadadim():
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
 
     return jsonify({
+    'eshcolCoordinator': 55,
+
         'newvisit_yeshiva_Tohnit': len(newvisit_yeshiva_Tohnit) ,
         'all_MosadCoordinator_count': len(all_MosadCoordinator),
         'good_apprenties_mosad_call': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),

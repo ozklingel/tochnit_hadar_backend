@@ -23,33 +23,46 @@ def melave_score(all_Apprentices):
     all_melave = db.session.query(user1.id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
-        melave_Apprentices_count = db.session.query(func.count(Apprentice.id)).filter(
-            Apprentice.accompany_id == melaveId).group_by(Apprentice.id).first()
-        if melave_Apprentices_count is None:
+        all_melave_Apprentices = db.session.query(Apprentice.id).filter(
+            Apprentice.accompany_id == melaveId).all()
+        if len(all_melave_Apprentices)==0:
             counts[100] = counts.get(100, 0) + 1
-
             continue
         print("melaveId", melaveId)
         good_call_melave_count = 0
-        visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId).group_by(
-            Visit.apprentice_id).all()
-        for ent in visitcalls:
-            gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 22
-            print("call gap:", gap)
-            if gap <= 21:
-                good_call_melave_count += 1
-        call_score = good_call_melave_count / melave_Apprentices_count[0] * 12
+        visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
+        from collections import defaultdict
+        visitcalls_melave_list = defaultdict(list)
+        #key is apprenticeId and value is list of  gaps visits date
+        for index in range(1,len(visitcalls)):
+            gap = (visitcalls[index][1] - visitcalls[index-1][1]).days if visitcalls[index] is not None else 21
+            visitcalls_melave_list[visitcalls[index][0]].append(gap)
+        print("visitcalls_melave_list",visitcalls_melave_list)
+        visitcalls_melave_avg=0
+        for k, v in visitcalls_melave_list.items():
+            if k in all_melave_Apprentices:
+                all_melave_Apprentices.remove(k)
+            visitcalls_melave_avg+=(sum(v)/len(v))
+        if len(all_melave_Apprentices)!=0:
+            visitcalls_melave_avg=0
+        visitcalls_melave_avg=visitcalls_melave_avg/len(visitcalls_melave_list) if len(visitcalls_melave_list)!=0 else 0
+        print("visitcalls_melave_avg",visitcalls_melave_avg)
+        call_panish=visitcalls_melave_avg-21
+        if call_panish>0:
+            call_score=12-call_panish/2
+        else:
+            call_score=12
         good_meeting_melave_count = 0
         visitMeeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).filter(
             Visit.title == "מפגש", Visit.user_id == melaveId).group_by(
             Visit.apprentice_id).all()
         for ent in visitMeeting:
             gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
-            print("call gap:", gap)
+           # print("call gap:", gap)
             if gap <= 60:
                 good_meeting_melave_count += 1
-        meeting_score = good_meeting_melave_count / melave_Apprentices_count[0] * 12
+        meeting_score = 12*good_meeting_melave_count / melave_Apprentices_count[0] if melave_Apprentices_count[0]!=0 else 0
         group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
@@ -81,7 +94,7 @@ def melave_score(all_Apprentices):
         if len(Horim_meeting) == len(all_Apprentices):
             Horim_meeting_score += 10
         too_old = datetime.today() - timedelta(days=365)
-        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "ביקור_בסיס",
+        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",Visit.visit_in_army==True,
                                                                                             Visit.visit_date > too_old,
                                                                                             Visit.user_id == melaveId).group_by(
             Visit.visit_date).count()
@@ -92,7 +105,11 @@ def melave_score(all_Apprentices):
                        cenes_yearly_score + \
                        group_meeting_score + meeting_score + call_score
         counts[melave_score] = counts.get(melave_score, 0) + 1
-    return counts
+    k, v = [], []
+    for key, value in counts.items():
+        k.append(key)
+        v.append(value)
+    return (k,v)
 
 
 def mosad_Coordinators_score():
@@ -119,7 +136,7 @@ def mosad_Coordinators_score():
             gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
             if gap < 90:
                 visit_Mosad_melave_meetings_personal += 1
-        Mosad_coord_score+=30*visit_Mosad_melave_meetings_personal/len(all_Mosad_Melave)
+        Mosad_coord_score+=30*visit_Mosad_melave_meetings_personal/len(all_Mosad_Melave) if len(all_Mosad_Melave)!=0 else 0
 
         #מפגש_מקצועי=10
         visit_mosad_professional_meetings = db.session.query(Visit.user_id, func.max(Visit.visit_date).label(
@@ -130,7 +147,7 @@ def mosad_Coordinators_score():
             gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
             if gap < 90:
                 visit_mosad_professional_meetings_counter += 1
-        Mosad_coord_score+=10*visit_mosad_professional_meetings_counter/len(all_Mosad_Melave)
+        Mosad_coord_score+=10*visit_mosad_professional_meetings_counter/len(all_Mosad_Melave) if len(all_Mosad_Melave)!=0 else 0
         #ישיבת_מלוים=15
         todays_Month = dates.HebrewDate.today().month
         if todays_Month==2 or todays_Month==6 or todays_Month==8:
@@ -144,7 +161,7 @@ def mosad_Coordinators_score():
                                       Visit.visit_date > too_old).all()
             if visit_allMelavim_monthly_meetings:
                 Mosad_coord_score += 10
-                Mosad_coord_score+=5*len(visit_allMelavim_monthly_meetings)/len(all_Mosad_Melave)
+                Mosad_coord_score+=5*len(visit_allMelavim_monthly_meetings)/len(all_Mosad_Melave) if len(all_Mosad_Melave)!=0 else 0
         #עשייה_לבוגרים=5
         too_old = datetime.today() - timedelta(days=365)
         visit_did_for_apprentice = db.session.query(Visit.user_id,
@@ -161,8 +178,11 @@ def mosad_Coordinators_score():
         if len(visit_Hazana_new_THsession)>=1:
             Mosad_coord_score += 10
         mosad_Cooordinator_score_dict[Mosad_coord_score] = mosad_Cooordinator_score_dict.get(Mosad_coord_score, 0) + 1
-
-    return mosad_Cooordinator_score_dict
+    k, v = [], []
+    for key, value in mosad_Cooordinator_score_dict.items():
+        k.append(key)
+        v.append(value)
+    return (k,v)
 
 def Eshcol_corrdintors_score():
     all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id).filter(user1.role_id == "2").all()
@@ -186,7 +206,7 @@ def Eshcol_corrdintors_score():
             gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
             if gap < 31:
                 success_visit_Mosad_monthly_meetings_personal += 1
-        Eshcol_coord_score = success_visit_Mosad_monthly_meetings_personal / len(all_Mosad_Cordinators) * 60
+        Eshcol_coord_score = success_visit_Mosad_monthly_meetings_personal / len(all_Mosad_Cordinators) * 60 if len(all_Mosad_Cordinators)!=0 else 0
         too_old = datetime.today() - timedelta(days=31)
         visit_Tohnit_monthly_meetings = db.session.query(Visit.user_id,
                                                          func.max(Visit.visit_date).label("visit_date")).group_by(
@@ -195,8 +215,11 @@ def Eshcol_corrdintors_score():
         if visit_Tohnit_monthly_meetings:
             Eshcol_coord_score += 40
         eshcol_Cooordinator_score[Eshcol_coord_score] = eshcol_Cooordinator_score.get(Eshcol_coord_score, 0) + 1
-    return eshcol_Cooordinator_score
-
+    k, v = [], []
+    for key, value in eshcol_Cooordinator_score.items():
+        k.append(key)
+        v.append(value)
+    return (k, v)
 
 def red_green_orange_status(all_Apprentices):
     redvisitcalls = 0
@@ -277,6 +300,10 @@ def homepageMaster():
     eshcol_Cooordinator_score=Eshcol_corrdintors_score()
     mosad_Cooordinator_score=mosad_Coordinators_score()
     greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+    print(eshcol_Cooordinator_score)
+    print(mosad_Cooordinator_score)
+    print(counts_melave_score)
+
     return jsonify({
         'eshcol_Cooordinator_score': eshcol_Cooordinator_score,
         'Mosad_Cooordinator_score': mosad_Cooordinator_score,
@@ -289,12 +316,12 @@ def homepageMaster():
         'greenvisitcalls': greenvisitcalls,
         'orangevisitcalls': orangevisitcalls,
         'redvisitcalls': redvisitcalls,
-        'user_lastname':record.last_name,
-         'user_name':record.name,
+       # 'user_lastname':record.last_name,
+        # 'user_name':record.name,
                    }), HTTPStatus.OK
 
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
-def homepage():
+def get_closest_Events():
     accessToken =request.headers.get('Authorization')
     print("accessToken:",accessToken)
     userId = request.args.get("userId")[3:]
@@ -314,7 +341,7 @@ def homepage():
     red.hset(userId, "role", record.role_id)
 '''
     tasksAndEvents=getlists(record.id)
-    return jsonify(tasksAndEvents[0] if tasksAndEvents is not None else None), HTTPStatus.OK
+    return jsonify( {"events": tasksAndEvents[0] if tasksAndEvents is not None else []}), HTTPStatus.OK
 
 def getlists(userId):
     # get tasksAndEvents
@@ -326,7 +353,7 @@ def getlists(userId):
     event_dict = []
     task_dict = []
     for i in range(len(res[0].json)):
-        print("res1=" ,res[0].json[i])
+       # print("res1=" ,res[0].json[i])
         ent=res[0].json[i]
         if ent["numOfLinesDisplay"]==3:
             ent["date"]=toISO(ent["date"])
@@ -339,7 +366,6 @@ def getlists(userId):
 def toISO(d):
     if d:
         Date=d.split(".")
-        print("Date:" ,d)
         return datetime(int(Date[2]),int(Date[0]), int(Date[1])).isoformat()
     else:
         return None

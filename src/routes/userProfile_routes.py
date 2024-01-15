@@ -123,7 +123,7 @@ def getmyApprentices_form():
 
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
-                , "avatar": noti.photo_path , "name": str(noti.name), "last_name": str(noti.last_name),
+                , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar' , "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
              "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
@@ -164,7 +164,7 @@ def getProfileAtributes_form():
         city = db.session.query(City).filter(City.id == userEnt.city_id).first()
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
                        "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
-                       "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path}
+                       "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
         return jsonify(list), HTTPStatus.OK
     else:
         return jsonify(results="no such id"), HTTPStatus.OK
@@ -243,7 +243,7 @@ def getmyApprentice_form():
                  [{"id": row[0], "title": row[1], "description": row[2],"date" : toISO(row[3])} for row in eventlist]
                 , "id": str(noti.id), "thMentor": str(noti.accompany_id),
              "militaryPositionNew": str(noti.militaryPositionNew)
-                , "avatar": noti.photo_path , "name": str(noti.name), "last_name": str(noti.last_name),
+                , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar', "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
              "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),

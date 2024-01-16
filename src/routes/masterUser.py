@@ -102,14 +102,14 @@ def add_apprentice():
     phone = data['phone']
     institution_name = data['institution_name']
     try:
-        institution_id = db.session.query(Institution).filter(
-            Institution.name == institution_name).first()
+        institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
+        print(institution_id)
         Apprentice1 = Apprentice(
-            id=phone[1:],
+            id=int(phone[1:]),
             name=first_name,
             last_name=last_name,
             phone=phone,
-            institution_id=institution_id,
+            institution_id=institution_id[0],
         )
         db.session.add(Apprentice1)
         db.session.commit()

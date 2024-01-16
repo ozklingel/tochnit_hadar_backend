@@ -36,8 +36,8 @@ def lowScoreApprentice():
 
     print("forgotenApprenticeList:" ,forgotenApprenticeList)
     return jsonify({
-    'forgotenApprenticCount': forgotenApprenticCount ,
-    'forgotenApprenticeList': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
+    'lowScoreApprentice_Count': forgotenApprenticCount ,
+    'lowScoreApprentice_List': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
                }), HTTPStatus.OK
 
     return jsonify({

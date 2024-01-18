@@ -12,6 +12,7 @@ from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution
 from src.models.notification_model import notifications
+from src.models.role_model import Role
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 from src.routes.notification_form_routes import getAll_notification_form
@@ -25,7 +26,7 @@ def search_entities():
     isEshcol_coord = request.args.get("isEshcol_coord")
     isMelave= request.args.get("isMelave")
     isApprentice = request.args.get("isApprentice")
-    institution_id = request.args.get("institution_id")
+    institution_name = request.args.get("institution_name")
     thpreiodList = request.args.get("thpreiod")
     institution_mahzor = request.args.get("institution_mahzor")
     eshcol = request.args.get("eshcol")
@@ -45,14 +46,13 @@ def search_entities():
     if len(entityType):
         query = db.session.query(user1.id)
         query = query.filter(user1.role_id.in_(entityType))
-        if institution_id:
-            query = query.filter_by(institution_id=institution_id)
+        if institution_name:
+            query = query.filter(user1.institution_id==Institution.id,Institution.name==institution_name)
         if eshcol:
             query = query.filter_by(eshcol=eshcol)
         if city_name:
-            city_idDB = db.session.query(City.id).filter(City.name == city_name).first()
-            if city_idDB:
-                query = query.filter_by(city_id=city_idDB.id)
+            query = query.filter(City.id==user1.city_id,city_name==City.name)
+
     res1=None
     if query:
         res1 = query.all()
@@ -70,24 +70,39 @@ def search_entities():
             query = query.filter_by(marriage_status=marriage_status)
         if base_address:
             query = query.filter_by(base_address=base_address)
-        if institution_id:
-            query = query.filter_by(institution_id=institution_id)
+        if institution_name:
+            query = query.filter(Apprentice.institution_id==Institution.id,Institution.name==institution_name)
         if eshcol:
             query = query.filter_by(eshcol=eshcol)
         if city_name:
-            city_idDB = db.session.query(City.id).filter(City.name == city_name).first()
-            print("city_idDB",city_idDB)
-            if city_idDB:
-                query = query.filter_by(city_id=city_idDB.id)
+            #city_idDB = db.session.query(City.id).filter(City.name == city_name).first()
+            print("city_idDB",city_name)
+            #if city_idDB:
+            query = query.filter(City.id==Apprentice.city_id,city_name==City.name)
     res2=None
     if query:
         res2 = query.all()
-    print("res2",res2)
-    return jsonify({"users":
-        [str(i[0]) for i in [tuple(row) for row in res1]] if res1 is not None else [],
-                    "apprentices":
-                        [str(i[0]) for i in [tuple(row) for row in res2]] if res2 is not None else [],
+    print("app",res2)
+    print("user",res1)
+    appren_details=[]
+    usedtails=[]
+    for apprenEnt in res2:
+        appren_details.append(db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name,Cluster.name,Institution.name,Apprentice.unit_name,Apprentice.hadar_plan_session,Apprentice.army_role,Apprentice.base_address,Apprentice.serve_type,Apprentice.marriage_status,Apprentice.institution_mahzor).filter(apprenEnt[0]==Apprentice.id,user1.cluster_id==Cluster.id,Institution.id==user1.institution_id).first())
+    for userEnt in res1:
+        usedtails.append(db.session.query(user1.id,user1.role_id,user1.name,user1.last_name,Cluster.name,Institution.name).filter(user1.id==userEnt[0],user1.cluster_id==Cluster.id,Institution.id==user1.institution_id).first())
 
+    return jsonify({"users":
+       [ {"id" :str(row[0]),"role_id":row[1],"name":row[2]
+          ,"last_name":row[3],"Cluster":row[4]
+          ,"Institution":row[5]} for row in [tuple(row) for row in usedtails]] if usedtails is not None else [],
+                    "apprentices":
+                        [{"id": str(row[0]),  "name": row[1]
+                             , "last_name": row[2], "Cluster": row[3]
+                             , "Institution": row[4], "unit_name": row[5], "base_address": row[6]
+                          , "army_role": row[7], "hadar_plan_session": row[8]
+                          , "institution_mahzor": row[9], "marriage_status": row[10]
+                          , "serve_type": row[11]} for row in
+                         [tuple(row) for row in appren_details]] if appren_details is not None else [],
                     }
     ), HTTPStatus.OK
 
@@ -110,6 +125,7 @@ def add_apprentice():
             last_name=last_name,
             phone=phone,
             institution_id=institution_id[0],
+            photo_path="https://www.gravatar.com/avatar"
         )
         db.session.add(Apprentice1)
         db.session.commit()

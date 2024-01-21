@@ -27,6 +27,11 @@ class user1(db.Model):
     notifyDayBefore = db.Column(notifyDayBefore_COL, db.Boolean, nullable=False)
     notifyMorning = db.Column(notifyMorning_COL, db.Boolean, nullable=False)
 
+    notifyStartWeek_sevev = db.Column("notifystartweek_sevev", db.Boolean, nullable=False)
+    notifyDayBefore_sevev = db.Column("notifydaybefore_sevev", db.Boolean, nullable=False)
+    notifyMorning_sevev = db.Column("notifymorning_sevev", db.Boolean, nullable=False)
+    notifyMorning_weekly_report = db.Column("notifymorning_weekly_report", db.Boolean, nullable=False)
+
     def __init__(self, id, name, last_name, role_id, teudatZehut, email, birthday, city_id, address, institution_id, cluster_id, photo_path):
         self.id = id
         self.name = name

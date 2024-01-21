@@ -2,6 +2,7 @@ import redis
 from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -22,6 +23,7 @@ from src.routes.madadim import madadim_form_blueprint
 from src.routes.tasks import tasks_form_blueprint
 from src.routes.masterUser import master_user_form_blueprint
 from src.routes.export_import import export_import_blueprint
+from src.routes.institutionProfile_routes import institutionProfile_form_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -34,6 +36,7 @@ app.register_blueprint(madadim_form_blueprint)
 app.register_blueprint(tasks_form_blueprint)
 app.register_blueprint(export_import_blueprint)
 app.register_blueprint(master_user_form_blueprint)
+app.register_blueprint(institutionProfile_form_blueprint)
 
 if __name__ == '__main__':
 

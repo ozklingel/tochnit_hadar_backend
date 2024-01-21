@@ -62,8 +62,7 @@ def getmyApprentices_form():
     apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
     print(apprenticeList)
     my_dict = []
-    #update notifiication table for user
-    res = getAll_notification_form()
+
     for noti in apprenticeList:
         print(noti.city_id)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
@@ -189,7 +188,6 @@ def getmyApprentice_form():
     my_dict = []
     if noti:
         city = db.session.query(City).filter(City.id == noti.city_id).first()
-        res = getAll_notification_form()
         reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
         eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
             notifications.apprenticeid == noti.id,

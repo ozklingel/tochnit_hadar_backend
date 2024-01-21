@@ -1,6 +1,7 @@
 import datetime
 import time
 from datetime import datetime,date
+from twilio.rest import Client
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -14,7 +15,23 @@ import uuid
 from ..models.visit_model import Visit
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
+@messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])
+def send_whatsapp():
+    data = request.json
+    print(data)
+    subject = data['subject']
+    content = data['content']
+    account_sid = "AC7e7b44337bff9de0cb3702ad5e23e1e8"
+    auth_token = "61caa0e3ab00c4d8928e97fdad1a8d52"
+    client = Client(account_sid, auth_token)
 
+    message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        body='Hello there!',
+        to='whatsapp:+972549247616'
+    )
+
+    print(message.sid)
 #from chat box
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():
@@ -79,9 +96,9 @@ def getAll_messegases_form():
 
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_notification_form():
-    mess_id = request.form.get('report_id')
-    mess = Visit.query.get(mess_id)
+def setWasRead_message_form():
+    mess_id = request.form.get('message_id')
+    mess = ContactForm.query.get(mess_id)
     mess.allreadyread = 'true'
     db.session.commit()
     if mess_id:

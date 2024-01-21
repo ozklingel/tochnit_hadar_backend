@@ -281,6 +281,11 @@ def getMelaveMadadim():
     forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
 
+    done_visits_dict = [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
+                                     "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
+                                     "serve_type": row[7],"hadar_plan_session": row[8]} for row in
+                        [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
+
     return jsonify({
     'melave': 55,
 
@@ -293,10 +298,7 @@ def getMelaveMadadim():
         'NovisitHorim': len(Apprentice_ids_Horim),
         'forgotenApprenticeCount': len(Apprentice_ids_forgoten)
 ,
-        'forgotenApprentice_full_details':   [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
-                                     "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
-                                     "serve_type": row[7],"hadar_plan_session": row[8]
-                                     } for row in forgotenApprentice_full_details]
+        'forgotenApprentice_full_details':   done_visits_dict
 ,
 
     }), HTTPStatus.OK
@@ -403,12 +405,11 @@ def getMosadCoordinatorMadadim():
 
     'good_apprenties_mosad_meet': len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_meet),
     'good_apprentice_mosad_groupMeet': len(all_apprenties_mosad)-len(old_apprentice_ids_groupMeet),
-    'all_Melave_mosad': len(all_Melave),
+    'all_Melave_mosad_count': len(all_Melave),
 
     'all_apprenties_mosad': len(all_apprenties_mosad),
         'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
         'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
-        'good_MelavimMeeting_count': len(all_Melave)-len(old_Melave_ids_MelavimMeeting),
         'new_MelavimMeeting': len(new_MelavimMeeting),
         'visitDoForBogrim': len(visitDoForBogrim),
         'isVisitenterMahzor': isVisitenterMahzor,

@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
+from ..models.institution_model import Institution
 
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
@@ -64,6 +65,14 @@ def setEntityDetailsByType():
                            continue
                        setattr(updatedEnt, key, atrrToBeSet[key])
                    db.session.commit()
+           if typeOfSet == "mosadProflie":
+               entityId = str(data['entityId'])
+               print(entityId)
+               atrrToBeSet = data['atrrToBeSet']
+               updatedEnt = Institution.query.get(entityId)
+               for key in atrrToBeSet:
+                   setattr(updatedEnt, key, atrrToBeSet[key])
+               db.session.commit()
        except Exception as e:  # work on python 3.x
            return jsonify({'result': str(e)}), HTTPStatus.OK
 

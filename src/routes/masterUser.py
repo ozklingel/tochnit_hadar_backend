@@ -169,3 +169,23 @@ def add_apprentice_excel():
                     # TODO: add contact form to DB
                     return jsonify({'result': 'success'}), HTTPStatus.OK
 
+@master_user_form_blueprint.route('/deleteEnt', methods=['PUT'])
+def deleteEnt():
+       data=request.json
+       try:
+           typeOfSet = data['typeOfSet']
+
+           print(typeOfSet)
+           updatedEnt=None
+           if typeOfSet=="mosad":
+               entityId = str(data['entityId'])
+               res = db.session.query(Institution).filter(Institution.id == entityId).delete()
+           if typeOfSet == "user":
+               entityId = str(data['entityId'])[3:]
+               res = db.session.query(user1).filter(user1.id == entityId).delete()
+           if typeOfSet == "apprentice":
+               entityId = str(data['entityId'])[3:]
+               res = db.session.query(Apprentice).filter(Apprentice.id == entityId).delete()
+       except Exception as e:
+           return jsonify({'result': 'error'+e}), HTTPStatus.OK
+

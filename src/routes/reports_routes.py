@@ -32,7 +32,8 @@ def add_reports_form():
                 allreadyread=False,
                 id=visitId,
                 title=data['event_type'],
-                attachments=data['attachments']
+                attachments=data['attachments'],
+                description=data['description']
 
             )
 

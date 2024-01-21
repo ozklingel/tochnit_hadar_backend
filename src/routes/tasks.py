@@ -2,7 +2,6 @@ import datetime
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from datetime import datetime,date
 
 from sqlalchemy import func
 
@@ -24,10 +23,12 @@ def getTasks():
     meet_dict = []
     call_dict = []
     Horim_dict = []
+    todo_ids=[]
     try:
         for i in range(0,len(res[0].json)):
             ent=res[0].json[i]
-            print(ent)
+            #print(ent)
+            todo_ids.append(ent["id"])
             if ent["numOfLinesDisplay"]==2:
                 if ent["title"]=="שיחה":
                     call_dict.append(ent)
@@ -48,14 +49,20 @@ def getTasks():
             Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(
                 Apprentice.id == ent).first()
             Horim_dict.append({'allreadyread': False, 'apprenticeId': Apprentice1.name+" "+Apprentice1.last_name, 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': 94275, 'numOfLinesDisplay': 2, 'title': 'מפגש הורים'})
-
+        too_old = datetime.datetime.today() - datetime.timedelta(days=60)
+        done_visits = db.session.query(Visit.apprentice_id,Visit.title,Visit.visit_date).filter(Visit.user_id == userId,
+                                                    Visit.id.not_in(todo_ids),Visit.visit_date>too_old).all()
+        done_visits_dict=[{"apprentice_id": str(row[0]), "title": row[1]
+             , "visit_date": row[2]} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
         return jsonify({
-            'call_dict':call_dict,
-            'Horim_dict': Horim_dict,
-            "meet_dict": meet_dict,
-            }), HTTPStatus.OK
-    except:
-        return jsonify({'result': 'no Tasks or wrong id'}), HTTPStatus.OK
+            'todo_call_dict':call_dict,
+            'todo_Horim_dict': Horim_dict,
+            "todo_meet_dict": meet_dict,
+            "done_visits_dict": done_visits_dict,
+
+        }), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
 
 # @tasks_form_blueprint.route("/getTasks", methods=['GET'])
 # def getlists():

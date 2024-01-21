@@ -15,16 +15,8 @@ class Visit(db.Model):
     title = db.Column(TITLE_COL, db.String(50), nullable=True)
     allreadyread=db.Column(ALLREADYREAD, db.Boolean, nullable=True)
     attachments = db.Column("attachments", db.String(100), nullable=True)
+    description = db.Column("description", db.String(100), nullable=True)
 
 
-    def __init__(self, id, apprentice_id, visit_date, user_id, visit_in_army, note,allreadyread,title,attachments):
-        self.id = id
-        self.apprentice_id = apprentice_id
-        self.visit_date = visit_date
-        self.user_id = user_id
-        self.visit_in_army = visit_in_army
-        self.note = note
-        self.allreadyread = allreadyread
-        self.title = title
-        self.attachments = attachments
+
 

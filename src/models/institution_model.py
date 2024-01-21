@@ -16,13 +16,9 @@ class Institution(db.Model):
     logo_path = db.Column(LOGO_PATH_COL, db.String(50), nullable=False)
     owner_id = db.Column(OWNER_ID_COL, db.Integer, nullable=False)
     name = db.Column(NAME_COL, db.String(20), nullable=False)
+    admin_name = db.Column("admin_name", db.String(50), nullable=False)
+    admin_phone = db.Column("admin_phone", db.String(50), nullable=False)
+    roshYeshiva_name = db.Column("roshyeshiva_name", db.String(50), nullable=False)
+    roshYeshiva_phone = db.Column("roshyeshiva_phone", db.String(50), nullable=False)
+    shluha = db.Column("shluha", db.String(50), nullable=False)
 
-    def __init__(self, id, address, city_id, phone, contact_name, contact_phone, logo_path, owner_id):
-        self.id = id
-        self.address = address
-        self.city_id = city_id
-        self.phone = phone
-        self.contact_name = contact_name
-        self.contact_phone = contact_phone
-        self.logo_path = logo_path
-        self.owner_id = owner_id

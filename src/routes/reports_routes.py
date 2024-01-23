@@ -2,10 +2,12 @@ import datetime
 import json
 from datetime import datetime,date
 
+import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
 
+from config import AWS_access_key_id, AWS_secret_access_key
 from ..models.ent_group import ent_group
 
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
@@ -23,6 +25,7 @@ def add_reports_form():
     user = str(data['userId'])[3:]
     updatedEnt = None
     ent_group1=None
+    attachments=[]
     if user:
         List_of_apprentices = data['List_of_apprentices']
         visitId=int(str(uuid.uuid4().int)[:5])
@@ -35,6 +38,25 @@ def add_reports_form():
             )
             db.session.add(ent_group1)
 
+        files = request.files.getlist('file[]')
+        for file in files:
+            print(file)
+            new_filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[1].lower()
+            bucket_name = "th01-s3"
+            session = boto3.Session()
+            s3_client = session.client('s3',
+                                       aws_access_key_id=AWS_access_key_id,
+                                       aws_secret_access_key=AWS_secret_access_key)
+            s3 = boto3.resource('s3',
+                                aws_access_key_id=AWS_access_key_id,
+                                aws_secret_access_key=AWS_secret_access_key)
+            print(new_filename)
+            try:
+                s3_client.upload_fileobj(file, bucket_name, new_filename)
+                attachments.append(new_filename)
+            except:
+                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+
         for key in List_of_apprentices:
             Visit1 = Visit(
                 user_id=user,
@@ -45,7 +67,7 @@ def add_reports_form():
                 allreadyread=False,
                 id=visitId,
                 title=data['event_type'],
-                attachments=data['attachments'],
+                attachments=attachments,
                 description=data['description']
 
             )

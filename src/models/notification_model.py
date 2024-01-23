@@ -18,4 +18,5 @@ class notifications(db.Model):
     allreadyread = db.Column(WAS_READ_COL, db.Boolean, nullable=True)
     numoflinesdisplay=db.Column(db.Integer, nullable=False)
     details=db.Column(db.String(100), nullable=False);
+    frequency=db.Column(db.String(100), nullable=False);
 

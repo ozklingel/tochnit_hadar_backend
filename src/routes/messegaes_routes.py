@@ -53,8 +53,8 @@ def add_contact_form():
         print("no icon")
     created_by_id = str(data['created_by_id'])[3:]
     created_for_id = str(data['created_for_id'])[3:]
-    '''
-    files = flask.request.files.getlist("file")
+
+    files = request.files.getlist('file[]')
     for file in files:
         print(file)
         new_filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[1].lower()
@@ -72,7 +72,7 @@ def add_contact_form():
             attachments.append(new_filename)
         except:
             return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
-    '''
+
     try:
         ContactForm1 = ContactForm(
             id=str(uuid.uuid1().int)[:5],

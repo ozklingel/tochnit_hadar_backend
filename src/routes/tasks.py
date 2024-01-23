@@ -28,7 +28,7 @@ def getTasks():
         for i in range(0,len(res[0].json)):
             ent=res[0].json[i]
             todo_ids.append(ent["id"])
-            if ent["numOfLinesDisplay"]==2:
+            if ent["numOfLinesDisplay"]==2:#noti not created by user
                 ent["status"] = "todo"
                 ent["id"] = str(ent["id"])
 
@@ -46,7 +46,7 @@ def getTasks():
         for ent in all_ApprenticeList_Horim:
             Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(
                 Apprentice.id == ent).first()
-            todo_dict.append({'status':'todo',"allreadyread": False, 'apprenticeId': Apprentice1.name+" "+Apprentice1.last_name, 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': str(uuid.uuid4().int)[:5], 'numOfLinesDisplay': 2, 'title': 'מפגש הורים'})
+            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': Apprentice1.name+" "+Apprentice1.last_name, 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
         done_visits = db.session.query(Visit.apprentice_id,Visit.title,Visit.visit_date,Visit.id).filter(Visit.user_id == userId,
                                                     Visit.id.not_in(todo_ids),Visit.visit_date>too_old).all()

@@ -287,20 +287,31 @@ def getMelaveMadadim():
                         [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
 
     return jsonify({
-                           'melave_score': 55,
+                           'melave_score': str(55),
 
-        "numOfApprentice":len(ApprenticeCount),
-        'Oldvisitmeetings': len(Apprentice_ids_meet),
-        'new_visitmeeting_Army': len(Apprentice_ids_meetInArmy),
-        'oldvisitcalls': len(Apprentice_ids_call),
+        "numOfApprentice":str(len(ApprenticeCount)),
+        'Oldvisitmeetings': str(len(Apprentice_ids_meet)),
+        'new_visitmeeting_Army': str(len(Apprentice_ids_meetInArmy)),
+        'oldvisitcalls': str(len(Apprentice_ids_call)),
         'sadna_score': sadna_score,
         'cenes_score': cenes_score,
-        'No_visitHorim': len(Apprentice_ids_Horim),
-        'forgotenApprenticeCount': len(Apprentice_ids_forgoten)
-,
-        'forgotenApprentice_full_details':   done_forgoten_dict
-,
+        'No_visitHorim':str( len(Apprentice_ids_Horim)),
+        'forgotenApprenticeCount': str(len(Apprentice_ids_forgoten)),
+        'forgotenApprentice_full_details':   done_forgoten_dict,
+        'forgotenApprentice_4_yearly': [[3, 2, 0, 2], [1, 2, 3, 4]],
 
+        'visitCall_monthlyGap_avg': [[21,20,20,20,20,20,20,20,20,20,15],[1,2,3,4,5,6,7,8,9,10,11]],
+        'visitMeeting_monthlyGap_avg': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        'visitCall_currentGap_avg': "21",
+        'visitmeeting_currentGap_avg': "22",
+        'visitsadna_startYear': "22",
+        'visitsadna_presence': [[21, 20, 20, 20], [1, 2, 3, 4]],
+
+        'visitCenes_yearly': True,
+        'visitCenes_yearly_presence': "1",
+        'visitCenes_4_yearly_presence': [[1, 0, 0, 0], [2022, 2023, 2024, 2025]],
+        'visitHorim_yearly': "2",
+        'visitHorim_4_yearly': [[92, 0, 12, 0], [2022, 2023, 2024, 2025]],
     }), HTTPStatus.OK
 
 
@@ -370,7 +381,7 @@ def getMosadCoordinatorMadadim():
         isVisitenterMahzor=True
 
     too_old = datetime.datetime.today() - datetime.timedelta(days=365)
-    visitDoForBogrim = db.session.query(Visit.visit_date).filter(Visit.user_id==mosadCoordinator,Visit.title == "עשייה_לבוגרים",Visit.visit_date>too_old).all()
+    visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title == "עשייה_לבוגרים",Visit.visit_date>too_old).all()
 
 
     old_Melave_ids_MelavimMeeting = [r[0] for r in all_Melave]
@@ -403,21 +414,34 @@ def getMosadCoordinatorMadadim():
 
                 'mosadCoordinator_score': 55,
 
-    'good_Melave_ids_sadna': len(all_Melave)-len(old_Melave_ids_professional),
-    'good_Melave_ids_matzbar': len(all_Melave)-len(old_Melave_ids_matzbar),
-    'good_apprenties_mosad_call': len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_call),
+    'good_Melave_ids_sadna': str(len(all_Melave)-len(old_Melave_ids_professional)),
+    'good_Melave_ids_matzbar': str(len(all_Melave)-len(old_Melave_ids_matzbar)),
+    'good_apprenties_mosad_call': str(len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_call)),
 
-    'good_apprenties_mosad_meet': len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_meet),
-    'good_apprentice_mosad_groupMeet': len(all_apprenties_mosad)-len(old_apprentice_ids_groupMeet),
-    'all_Melave_mosad_count': len(all_Melave),
+    'good_apprenties_mosad_meet': str(len(all_apprenties_mosad)-len(old_apprenties_mosad_ids_meet)),
+    'good_apprentice_mosad_groupMeet': str(len(all_apprenties_mosad)-len(old_apprentice_ids_groupMeet)),
+    'all_Melave_mosad_count':str( len(all_Melave)),
 
-    'all_apprenties_mosad': len(all_apprenties_mosad),
-        'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
+    'all_apprenties_mosad': str(len(all_apprenties_mosad)),
+        'Apprentice_forgoten_count': str(len(Apprentice_ids_forgoten)),
         'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
-        'new_MelavimMeeting': len(new_MelavimMeeting),
-        'visitDoForBogrim': len(visitDoForBogrim),
+        'new_MelavimMeeting': str(len(new_MelavimMeeting)),
+        'visitDoForBogrim': str(len(visitDoForBogrim)),
         'isVisitenterMahzor': isVisitenterMahzor,
-        'avg_presence_MelavimMeeting': (len(all_Melave)-len(old_Melave_ids_MelavimMeeting))/len(all_Melave),
+        'avg_presence_MelavimMeeting': str((len(all_Melave)-len(old_Melave_ids_MelavimMeeting))/len(all_Melave)),
+        'avg_presence_MelavimMeeting_monthly': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15],
+                                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        'avg_matzbarMeeting_gap':"60",
+        'avg_matzbarMeeting_gap_monthly': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15],
+                                                                         [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        'avg_apprenticeCall_gap': "60",
+        'avg_apprenticeCall_gap_monthly': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15],
+                                           [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        'avg_apprenticeMeeting_gap': "60",
+        'avg_apprenticeMeeting_gap_monthly': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15],
+                                           [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        "visitDoForBogrim_list":[tuple(row) for row in visitDoForBogrim],
+        'forgotenApprentice_4_yearly': [[3, 2, 0, 2], [1, 2, 3, 4]],
 
     }), HTTPStatus.OK
 
@@ -461,12 +485,15 @@ def getEshcolCoordinatorMadadim():
                       'eshcolCoordinator_score': 55,
 
         'newvisit_yeshiva_Tohnit': "100" if len(newvisit_yeshiva_Tohnit)>0 else "0" ,
-        'all_MosadCoordinator_count': len(all_MosadCoordinator),
-        'good__mosad_racaz_meeting': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),
-        'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
-        'all_EshcolApprentices_count': len(all_EshcolApprentices),
+        'all_MosadCoordinator_count': str(len(all_MosadCoordinator)),
+        'good__mosad_racaz_meeting': str(len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call)),
+        'Apprentice_forgoten_count': str(len(Apprentice_ids_forgoten)),
+        'all_EshcolApprentices_count':str( len(all_EshcolApprentices)),
         'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
-
+        'avg_apprenticeCall_gap': "60",
+        'good__mosad_racaz_meeting_monthly': [[21, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15],
+                                           [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]],
+        'forgotenApprentice_4_yearly': [[3, 2, 0, 2], [1, 2, 3, 4]],
 
     }), HTTPStatus.OK
 

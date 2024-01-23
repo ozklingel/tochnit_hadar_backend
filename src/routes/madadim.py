@@ -263,7 +263,7 @@ def getMelaveMadadim():
 
     Apprentice_ids_meetInArmy=[r[0] for r in ApprenticeCount]
     too_old = datetime.datetime.today() - datetime.timedelta(days=180)
-    OldvisitmeetInArmy = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש",Visit.visit_in_army==True,
+    OldvisitmeetInArmy = db.session.query(Visit.apprentice_id,Visit.visit_date).distinct(Visit.visit_date).filter(Visit.user_id==melaveId,Visit.title == "מפגש",Visit.visit_in_army==True,
                                                                  Visit.visit_date > too_old).all()
     for i in OldvisitmeetInArmy:
         if i[0] in  Apprentice_ids_meetInArmy:
@@ -281,24 +281,24 @@ def getMelaveMadadim():
     forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
 
-    done_visits_dict = [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
+    done_forgoten_dict = [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
                                      "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
                                      "serve_type": row[7],"hadar_plan_session": row[8]} for row in
                         [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
 
     return jsonify({
-    'melave': 55,
+                           'melave_score': 55,
 
         "numOfApprentice":len(ApprenticeCount),
         'Oldvisitmeetings': len(Apprentice_ids_meet),
-        'Oldvisitmeeting_Army': len(Apprentice_ids_meetInArmy),
+        'new_visitmeeting_Army': len(Apprentice_ids_meetInArmy),
         'oldvisitcalls': len(Apprentice_ids_call),
-        'OldvisitSadna': sadna_score,
-        'OldvisitCenes': cenes_score,
-        'NovisitHorim': len(Apprentice_ids_Horim),
+        'sadna_score': sadna_score,
+        'cenes_score': cenes_score,
+        'No_visitHorim': len(Apprentice_ids_Horim),
         'forgotenApprenticeCount': len(Apprentice_ids_forgoten)
 ,
-        'forgotenApprentice_full_details':   done_visits_dict
+        'forgotenApprentice_full_details':   done_forgoten_dict
 ,
 
     }), HTTPStatus.OK
@@ -379,8 +379,12 @@ def getMosadCoordinatorMadadim():
                                                                 user1.institution_id == institutionId,
                                                                 Visit.title == "מפגש_מלוים",
                                                          Visit.visit_date > too_old).all()
+    good_MelavimMeeting_ = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,
+                                                                user1.institution_id == institutionId,
+                                                                Visit.title == "מפגש_מלוים",
+                                                         Visit.visit_date > too_old).all()
 
-    for i in new_MelavimMeeting:
+    for i in good_MelavimMeeting_:
         if i[0] in old_Melave_ids_MelavimMeeting:
             old_Melave_ids_MelavimMeeting.remove(i[0])
 
@@ -397,7 +401,7 @@ def getMosadCoordinatorMadadim():
 
     return jsonify({
 
-    'mosadCoordinator_score': 55,
+                'mosadCoordinator_score': 55,
 
     'good_Melave_ids_sadna': len(all_Melave)-len(old_Melave_ids_professional),
     'good_Melave_ids_matzbar': len(all_Melave)-len(old_Melave_ids_matzbar),
@@ -413,6 +417,7 @@ def getMosadCoordinatorMadadim():
         'new_MelavimMeeting': len(new_MelavimMeeting),
         'visitDoForBogrim': len(visitDoForBogrim),
         'isVisitenterMahzor': isVisitenterMahzor,
+        'avg_presence_MelavimMeeting': (len(all_Melave)-len(old_Melave_ids_MelavimMeeting))/len(all_Melave),
 
     }), HTTPStatus.OK
 
@@ -431,7 +436,7 @@ def getEshcolCoordinatorMadadim():
 
     all_MosadCoordinator_ids_call = [r[0] for r in all_MosadCoordinator]
     too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-    new_visit_yeshiva = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,
+    new_visit_yeshiva = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,user1.role_id=="1",
                                                             user1.cluster_id == eshcol_id[0],
                                                             Visit.title == "מפגש",
                                                             Visit.visit_date > too_old).all()
@@ -453,12 +458,13 @@ def getEshcolCoordinatorMadadim():
                                                        Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
 
     return jsonify({
-    'eshcolCoordinator': 55,
+                      'eshcolCoordinator_score': 55,
 
-        'newvisit_yeshiva_Tohnit': len(newvisit_yeshiva_Tohnit) ,
+        'newvisit_yeshiva_Tohnit': "100" if len(newvisit_yeshiva_Tohnit)>0 else "0" ,
         'all_MosadCoordinator_count': len(all_MosadCoordinator),
-        'good_apprenties_mosad_call': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),
+        'good__mosad_racaz_meeting': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),
         'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
+        'all_EshcolApprentices_count': len(all_EshcolApprentices),
         'forgotenApprentice_full_details': [tuple(row) for row in forgotenApprentice_full_details],
 
 

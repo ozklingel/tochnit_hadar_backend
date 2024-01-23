@@ -1,3 +1,5 @@
+from sqlalchemy import ARRAY
+
 from . import *
 from datetime import datetime
 from .user_model import user1
@@ -13,7 +15,7 @@ class ContactForm(db.Model):
     created_by_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     created_for_id = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)
     allreadyread=db.Column(WAS_READ_COL, db.Boolean, nullable=True)
-    attachments=db.Column( nullable=False)
+    attachments=db.Column(ARRAY(db.String), nullable=False)
     icon = db.Column(db.String(20), nullable=False)
 
     def __init__(self, id, subject, content, created_at, created_by_id,created_for_id,allreadyread,attachments,icon):

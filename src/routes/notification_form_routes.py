@@ -148,8 +148,7 @@ def getAll_notification_form():
 @notification_form_blueprint.route('/add1', methods=['POST'])
 def add_notification_form():
     try:
-        data=request.data.decode()
-        json_object = json.loads(data)
+        json_object = request.json
         print(json_object)
         user = json_object["userId"]
         apprenticeid = json_object["apprenticeid"]
@@ -245,7 +244,7 @@ def add_visit_notification(user,apprenticeid,event,date):
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():
-    data = request.form.to_dict()#dont change prod issue
+    data = request.json
     notiId = data['noti_id']
     print(notiId)
     try:
@@ -262,7 +261,7 @@ def setWasRead_notification_form():
 
 @notification_form_blueprint.route('/setSetting', methods=['post'])
 def setSetting_notification_form():
-    data=request.form.to_dict()
+    data = request.json
 
     notifyMorningval = data['notifyMorning']
     notifyDayBeforeval = data['notifyDayBefore']

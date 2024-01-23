@@ -13,28 +13,22 @@
        on  sql shell :
        
 
-CREATE TABLE  notifications(
 
-id int,
-apprenticeid int ,
-userid int ,
-event text DEFAULT '',
-date DATE ,
-allreadyread boolean DEFAULT False,
-numOfLinesDisplay int  ,
-details text DEFAULT '',
-PRIMARY KEY(id),
-CONSTRAINT fk_1
-      FOREIGN KEY(userid)
-      REFERENCES user1(id),
-CONSTRAINT fk_2
-      FOREIGN KEY(apprenticeid)
-      REFERENCES apprentice(id)
-	 
+DROP TABLE IF EXISTS institutions CASCADE ;
+DROP TABLE IF EXISTS clusters CASCADE ;
+DROP TABLE IF EXISTS user1 CASCADE ;
+DROP TABLE IF EXISTS apprentice CASCADE ;
+DROP TABLE IF EXISTS notifications CASCADE ;
+DROP TABLE IF EXISTS contact_forms CASCADE ;
+DROP TABLE IF EXISTS visits CASCADE ;
 
-);
 
 CREATE TABLE institutions(
+shluha text DEFAULT '',
+roshYeshiva_phone text DEFAULT '',
+roshYeshiva_name text DEFAULT '',
+admin_phone text DEFAULT '',
+admin_name text DEFAULT '',
 id int,
 address  text DEFAULT '',
 city_id text DEFAULT '',
@@ -42,8 +36,9 @@ phone  text DEFAULT '',
 contact_name text DEFAULT '',
 contact_phone text DEFAULT '',
 logo_path text DEFAULT '',
-name char (50) DEFAULT '',
+name text DEFAULT '',
 owner_id text DEFAULT '',
+
     PRIMARY KEY(id)
 
 );
@@ -78,12 +73,17 @@ eshcol  text DEFAULT '',
 institution_id  int DEFAULT 0,
 address  text DEFAULT '',
 creationDate  date ,
-photo_path  text DEFAULT '',
+photo_path  text DEFAULT 'https://www.gravatar.com/avatar',
 city_id int DEFAULT 0,
 cluster_id int DEFAULT 0,
 notifyStartWeek boolean DEFAULT False,
 notifyMorning boolean DEFAULT True,
 notifyDayBefore boolean DEFAULT False,
+
+notifyMorning_weekly_report boolean DEFAULT False,
+notifyMorning_sevev boolean DEFAULT False,
+notifyDayBefore_sevev boolean DEFAULT False,
+notifyStartWeek_sevev boolean DEFAULT False,
 
 PRIMARY KEY(id)
 ,
@@ -122,14 +122,17 @@ contact1_email text DEFAULT '',
 contact1_first_name text DEFAULT '',
 contact1_last_name text DEFAULT '',
 contact1_phone text DEFAULT '',
+contact1_relation text DEFAULT '',
 contact2_email text DEFAULT '',
 contact2_phone text DEFAULT '',
 contact2_first_name text DEFAULT '',
 contact2_last_name text DEFAULT '',
+contact2_relation text DEFAULT '',
 contact3_phone text DEFAULT '',
 contact3_first_name text DEFAULT '',
 contact3_last_name text DEFAULT '',
 contact3_email text DEFAULT '',
+contact3_relation text DEFAULT '',
 militaryCompoundId text DEFAULT '',
 unit_name text DEFAULT '',
 serve_type text DEFAULT '',
@@ -147,7 +150,7 @@ eshcol  text DEFAULT '',
 institution_id  int DEFAULT 0,
 address  text DEFAULT '',
 creationDate  text DEFAULT '',
-photo_path  text DEFAULT '',
+photo_path  text DEFAULT 'https://www.gravatar.com/avatar',
 city_id int DEFAULT 0,
 cluster_id int DEFAULT 0,
 army_role text DEFAULT '',
@@ -161,6 +164,7 @@ workPlace text DEFAULT '',
 workStatus text DEFAULT '',  
 militaryPositionNew text DEFAULT '',                                  
 first_name text DEFAULT '',
+institution_mahzor DEFAULT '',
 PRIMARY KEY(id)
 ,
 CONSTRAINT fk_1
@@ -184,7 +188,9 @@ created_at DATE ,
 subject text DEFAULT '',
 content text DEFAULT '',
 allreadyread boolean DEFAULT False,
-attachments text DEFAULT '',
+attachments text[] default '{}',
+icon text DEFAULT 'empty',
+description text DEFAULT '',
 
 PRIMARY KEY(id),
 CONSTRAINT fk_1
@@ -205,8 +211,9 @@ visit_in_army boolean DEFAULT False,
 visit_date DATE ,
 note text DEFAULT '',
 title text DEFAULT '',
+attachments text[] default '{}',
+description text DEFAULT '',
 allreadyread boolean DEFAULT False,
-PRIMARY KEY(id),
 CONSTRAINT fk_1
       FOREIGN KEY(user_id)
       REFERENCES user1(id),
@@ -215,6 +222,33 @@ CONSTRAINT fk_2
       REFERENCES apprentice(id)
 
 );
+CREATE TABLE  notifications(
+
+id int,
+apprenticeid int ,
+userid int ,
+event text DEFAULT '',
+date DATE ,
+allreadyread boolean DEFAULT False,
+numOfLinesDisplay int  ,
+details text DEFAULT '',
+institution_id boolean DEFAULT False,
+PRIMARY KEY(id),
+CONSTRAINT fk_1
+      FOREIGN KEY(userid)
+      REFERENCES user1(id),
+CONSTRAINT fk_2
+      FOREIGN KEY(apprenticeid)
+      REFERENCES apprentice(id)
+	 
+
+);
+
+
+
+
+
+
 
 
 

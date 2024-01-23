@@ -1,11 +1,17 @@
 import datetime
+import json
 import time
 from datetime import datetime,date
+
+import boto3
+import flask
 from twilio.rest import Client
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
+
+from config import AWS_access_key_id, AWS_secret_access_key
 from ..models.contact_form_model import ContactForm
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
@@ -39,19 +45,34 @@ def add_contact_form():
     print(data)
     subject = data['subject']
     content = data['content']
-    attachments='{}'
+    attachments=[]
     icon=""
-    try:
-        attachments = data['attachments']
-    except:
-        print("no attachments ")
     try:
         icon = data['icon']
     except:
         print("no icon")
     created_by_id = str(data['created_by_id'])[3:]
-    created_for_id=None
     created_for_id = str(data['created_for_id'])[3:]
+    '''
+    files = flask.request.files.getlist("file")
+    for file in files:
+        print(file)
+        new_filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[1].lower()
+        bucket_name = "th01-s3"
+        session = boto3.Session()
+        s3_client = session.client('s3',
+                                   aws_access_key_id=AWS_access_key_id,
+                                   aws_secret_access_key=AWS_secret_access_key)
+        s3 = boto3.resource('s3',
+                            aws_access_key_id=AWS_access_key_id,
+                            aws_secret_access_key=AWS_secret_access_key)
+        print(new_filename)
+        try:
+            s3_client.upload_fileobj(file, bucket_name, new_filename)
+            attachments.append(new_filename)
+        except:
+            return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+    '''
     try:
         ContactForm1 = ContactForm(
             id=str(uuid.uuid1().int)[:5],
@@ -66,8 +87,8 @@ def add_contact_form():
         )
         db.session.add(ContactForm1)
         db.session.commit()
-    except:
-        return jsonify({'result': 'error while inserting'}), HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
 
     if ContactForm1:
         print(f'add contact form: subject: [{subject}, content: {content}, created_by_id: {created_by_id}]')
@@ -81,13 +102,14 @@ def getAll_messegases_form():
     print(messegasesList)
     my_dict = []
     for mess in messegasesList:
+        print(mess.attachments)
         my_dict.append(
             {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
              "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
 
     if not messegasesList:
         # acount not found
-        return jsonify(["Wrong id or no messages"])
+        return jsonify([])
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
@@ -97,17 +119,22 @@ def getAll_messegases_form():
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_message_form():
-    mess_id = request.form.get('message_id')
-    mess = ContactForm.query.get(mess_id)
-    mess.allreadyread = 'true'
-    db.session.commit()
-    if mess_id:
-        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': 'success', 'mess form': request.form}), HTTPStatus.OK
-
+    data = request.json
+    message_id = data['message_id']
+    print(message_id)
+    try:
+        noti = ContactForm.query.get(message_id)
+        noti.allreadyread = True
+        db.session.commit()
+        if message_id:
+            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+            # TODO: add contact form to DB
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+    except:
+        return jsonify({'result': 'wrong id'}), HTTPStatus.OK
 def toISO(d):
     if d:
         return datetime(d.year, d.month, d.day).isoformat()
     else:
         return None
+

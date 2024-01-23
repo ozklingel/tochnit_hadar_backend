@@ -14,7 +14,7 @@ class Visit(db.Model):
     note = db.Column(NOTE_COL, db.String(50), nullable=True)
     title = db.Column(TITLE_COL, db.String(50), nullable=True)
     allreadyread=db.Column(ALLREADYREAD, db.Boolean, nullable=True)
-    attachments = db.Column("attachments", db.String(100), nullable=True)
+    attachments = db.Column("attachments", nullable=True)
     description = db.Column("description", db.String(100), nullable=True)
 
 

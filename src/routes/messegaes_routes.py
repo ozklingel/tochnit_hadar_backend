@@ -46,11 +46,13 @@ def add_contact_form():
     subject = data['subject']
     content = data['content']
     attachments=[]
+    type="פניות_שירות"
     icon=""
     try:
+        type = data['type']
         icon = data['icon']
     except:
-        print("no icon")
+        print("no icon or type")
     created_by_id = str(data['created_by_id'])[3:]
     created_for_id = str(data['created_for_id'])[3:]
 
@@ -83,6 +85,7 @@ def add_contact_form():
             created_at=date.today(),
             allreadyread=False,
             attachments=attachments,
+            type=type,
             icon=icon
         )
         db.session.add(ContactForm1)
@@ -104,7 +107,7 @@ def getAll_messegases_form():
     for mess in messegasesList:
         print(mess.attachments)
         my_dict.append(
-            {"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
+            {"type":mess.type,"attachments":mess.attachments,"id": str(mess.id), "from": str(mess.created_by_id), "date":toISO(mess.created_at),
              "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
 
     if not messegasesList:

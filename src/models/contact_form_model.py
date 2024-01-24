@@ -17,15 +17,7 @@ class ContactForm(db.Model):
     allreadyread=db.Column(WAS_READ_COL, db.Boolean, nullable=True)
     attachments=db.Column(ARRAY(db.String), nullable=False)
     icon = db.Column(db.String(20), nullable=False)
+    type = db.Column("type",db.String(250), nullable=False)
 
-    def __init__(self, id, subject, content, created_at, created_by_id,created_for_id,allreadyread,attachments,icon):
-        self.id = id
-        self.subject = subject
-        self.content = content
-        self.created_at = created_at
-        self.created_by_id = created_by_id
-        self.created_for_id=created_for_id
-        self.allreadyread=allreadyread
-        self.attachments=attachments
-        self.icon=icon
+
 

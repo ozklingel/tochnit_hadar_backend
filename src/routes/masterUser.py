@@ -112,11 +112,19 @@ def search_entities():
 def add_apprentice():
     data = request.json
     print(data)
-    first_name = data['first_name']
-    last_name = data['last_name']
-    phone = data['phone']
-    institution_name = data['institution_name']
+
+
+
     try:
+        first_name = data['first_name']
+        last_name = data['last_name']
+        phone = data['phone']
+        institution_name = data['institution_name']
+        accompany_id = data['accompany_id']
+        birthday = data['birthday']
+        city_name = data['city_name']
+        CityId = db.session.query(City).filter(City.name==city_name).first()
+
         institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
         print(institution_id)
         Apprentice1 = Apprentice(
@@ -124,7 +132,10 @@ def add_apprentice():
             name=first_name,
             last_name=last_name,
             phone=phone,
+            birthday=birthday,
             institution_id=institution_id[0],
+            accompany_id=int(accompany_id[1:]),
+            city_id=CityId,
             photo_path="https://www.gravatar.com/avatar"
         )
         db.session.add(Apprentice1)

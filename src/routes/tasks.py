@@ -29,8 +29,14 @@ def getTasks():
             ent=res[0].json[i]
             todo_ids.append(ent["id"])
             if ent["numOfLinesDisplay"]==2:#noti not created by user
+                del ent["numOfLinesDisplay"]
+                del ent["apprenticeName"]
+
+                print(ent)
                 ent["status"] = "todo"
                 ent["id"] = str(ent["id"])
+                if ent["title"]== "מפגש_קבוצתי" :
+                    ent["apprenticeId"]=[]
 
                 todo_dict.append(ent)
 
@@ -44,14 +50,15 @@ def getTasks():
             if i[0] in all_ApprenticeList_Horim:
                 all_ApprenticeList_Horim.remove(i[0])
         for ent in all_ApprenticeList_Horim:
-            Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(
-                Apprentice.id == ent).first()
-            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': Apprentice1.name+" "+Apprentice1.last_name, 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
+            #Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
+            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': [str(ent)], 'date': '01.01.2023', 'daysfromnow': 373, 'event': 'מפגש הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-        done_visits = db.session.query(Visit.apprentice_id,Visit.title,Visit.visit_date,Visit.id).filter(Visit.user_id == userId,
+        done_visits = db.session.query(Visit.apprentice_id,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
                                                     Visit.id.not_in(todo_ids),Visit.visit_date>too_old).all()
-        done_visits_dict=[{'status':'done',"apprentice_id": str(row[0]), "title": row[1]
-             , "visit_date": row[2], "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
+        done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
+        "description": str(row[4]),'status':'done',"apprenticeId": [str(row[0])], "title": str(row[1])
+             ,"daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
+
         tasks_list = todo_dict+done_visits_dict
 
         return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK

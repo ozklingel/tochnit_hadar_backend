@@ -33,7 +33,6 @@ def getAll_notification_form():
         if visitEvent is None:
             add_visit_notification(user, None, "מפגש_קבוצתי", '2023-01-01')
         gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-        print("meeting group gap:", gap)
         if gap > 30:
             add_visit_notification(visitEvent.user_id, visitEvent.apprentice_id, visitEvent.title, visitEvent.visit_date)
 
@@ -42,7 +41,6 @@ def getAll_notification_form():
         for Apprentice1 in ApprenticeList:
             thisYearBirthday=date(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)
             gap = (date.today() - thisYearBirthday).days
-            print("birthday gap:", gap)
             if gap >= -7 and gap <= 7:
                 update_event_notification(Apprentice1.accompany_id, Apprentice1.id, "יומהולדת", thisYearBirthday,None)
             else:
@@ -59,7 +57,6 @@ def getAll_notification_form():
                 add_visit_notification(user, Apprentice1.id,"שיחה", '2023-01-01')
 
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-            print("call gap:", gap)
             if gap > 30:
                 add_visit_notification(visitEvent.user_id, visitEvent.apprentice_id,visitEvent.title, visitEvent.visit_date)
             # update notification created by system=apprentices meetings
@@ -68,7 +65,6 @@ def getAll_notification_form():
             if visitEvent is None:
                 add_visit_notification(user, Apprentice1.id,"מפגש", '2023-01-01')
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-            print("meeting gap:", gap)
             if gap > 30:
                 add_visit_notification(visitEvent.user_id, visitEvent.apprentice_id,visitEvent.title, visitEvent.visit_date)
         #send  notifications.
@@ -83,7 +79,7 @@ def getAll_notification_form():
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event if noti.details is None else noti.details
                 my_dict.append(
-                    {"id": noti.id, "apprenticeId": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
+                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
                      "date": noti.date.strftime("%m.%d.%Y"),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,"description": noti.details,"frequency": noti.frequency if  noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
@@ -96,7 +92,7 @@ def getAll_notification_form():
                         Apprentice.id == noti.apprenticeid).first()
                     noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                     my_dict.append(
-                        {"id": noti.id, "apprenticeId": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                        {"id": noti.id, "apprenticeId":[str(noti.apprenticeid)],"apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
                          "date": noti.date.strftime("%m.%d.%Y"),
                          "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
                          "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
@@ -106,21 +102,19 @@ def getAll_notification_form():
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
-                    {"id": noti.id, "apprenticeId": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
                      "date": noti.date.strftime("%m.%d.%Y"),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency,
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                 continue
-            print("event "  ,noti.event)
-            print("daysFromNow ",daysFromNow)
-            print("notifyMorning:",userEnt.notifyMorning)
+
 
             if userEnt.notifyMorning ==True and daysFromNow==0:
                 ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
-                    {"id": noti.id, "apprenticeId": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
                      "date": noti.date.strftime("%m.%d.%Y"),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
@@ -149,7 +143,6 @@ def getAll_notification_form():
 def add_notification_form():
     try:
         json_object = request.json
-        print(json_object)
         user = json_object["userId"]
         apprenticeid = json_object["apprenticeid"]
         event = json_object["event"]
@@ -158,7 +151,6 @@ def add_notification_form():
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
 
 
-        print(user)
 
         notification1 = notifications(
                         userid=user[3:],
@@ -173,7 +165,6 @@ def add_notification_form():
             id=int(str(uuid.uuid4().int)[:5]),
 
         )
-        print(notification1.date)
 
         db.session.add(notification1)
         db.session.commit()
@@ -210,7 +201,6 @@ def update_event_notification(user,apprenticeid,event,date,details):
             id=int(str(uuid.uuid4().int)[:5]),
 
         )
-    print("inserted:" ,notification1)
     db.session.add(notification1)
     db.session.commit()
 
@@ -218,7 +208,6 @@ def add_visit_notification(user,apprenticeid,event,date):
     allreadyread=db.session.query(notifications.allreadyread).filter(notifications.userid == user, notifications.apprenticeid == apprenticeid,notifications.event==event).first()
     res=db.session.query(notifications).filter(notifications.userid == user, notifications.apprenticeid == apprenticeid,notifications.event==event).delete()
     notification1=None
-    print("num of deleted 2",res)
 
     if res==0:
         notification1 = notifications(
@@ -249,7 +238,6 @@ def add_visit_notification(user,apprenticeid,event,date):
 def setWasRead_notification_form():
     data = request.json
     notiId = data['noti_id']
-    print(notiId)
     try:
         noti = notifications.query.get(notiId)
         noti.allreadyread = True

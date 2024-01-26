@@ -23,13 +23,16 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 def melave_score(all_Apprentices):
     # compute score diagram
     counts = dict()
-    all_melave = db.session.query(user1.id).filter(user1.role_id == "0").all()
+    score_melaveProfile = []
+    all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices)==0:
             counts[100] = counts.get(100, 0) + 1
+            score_melaveProfile.append({user1.id,user1.name,user1.institution_id,100})
+            score_melaveProfile.append({"id":melave.id, "name":melave.name,"institution_id": melave.institution_id, "score":100})
             continue
         visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
             Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
@@ -79,18 +82,21 @@ def melave_score(all_Apprentices):
                        cenes_yearly_score + \
                        group_meeting_score + personal_meet_score + call_score
         counts[melave_score] = counts.get(melave_score, 0) + 1
+        score_melaveProfile.append(
+            {"id": melave.id, "name": melave.name, "institution_id": melave.institution_id, "score": 100})
+
     k, v = [], []
     for key, value in counts.items():
         k.append(key)
         v.append(value)
-    return (k,v)
+    return (k,v),score_melaveProfile
 
 
 
 def mosad_Coordinators_score():
-    all_Mosad_coord = db.session.query(user1.id, user1.institution_id).filter(user1.role_id == "1").all()
+    all_Mosad_coord = db.session.query(user1.id, user1.institution_id,user1.name).filter(user1.role_id == "1").all()
     mosad_Cooordinator_score_dict = dict()
-
+    score_MosadCoordProfile=[]
     for mosad_coord in all_Mosad_coord:
         Mosad_coord_score=0
         mosad_coord_id = mosad_coord[0]
@@ -99,8 +105,8 @@ def mosad_Coordinators_score():
                                                              user1.institution_id == institution_id).all()
         if len(all_Mosad_Melave) == 0:
             mosad_Cooordinator_score_dict[100] = mosad_Cooordinator_score_dict.get(100, 0) + 1
+            score_MosadCoordProfile.append({"id":mosad_coord.id, "name":mosad_coord.name,"institution_id": mosad_coord.institution_id, "score":100})
             continue
-        print("all_Mosad_Melave",all_Mosad_Melave)
         all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
         #מצבר=30
         visit_matzbar_meetings = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.title == "מצבר").filter(
@@ -143,11 +149,15 @@ def mosad_Coordinators_score():
         if len(visit_Hazana_new_THsession)>=1:
             Mosad_coord_score += 10
         mosad_Cooordinator_score_dict[Mosad_coord_score] = mosad_Cooordinator_score_dict.get(Mosad_coord_score, 0) + 1
+        score_MosadCoordProfile.append(
+            {"id": mosad_coord.id, "name": mosad_coord.name, "institution_id": mosad_coord.institution_id,
+             "score": Mosad_coord_score})
+
     k, v = [], []
     for key, value in mosad_Cooordinator_score_dict.items():
         k.append(key)
         v.append(value)
-    return (k,v)
+    return (k,v),score_MosadCoordProfile
 
 def compute_visit_score(all_children,visits,maxScore,expected_gap):
     all_children_ids = [r[0] for r in all_children]
@@ -158,7 +168,6 @@ def compute_visit_score(all_children,visits,maxScore,expected_gap):
     for index in range(1, len(visits)):
         gap = (visits[index][1] - visits[index - 1][1]).days if visits[index] is not None else 21
         visitcalls_melave_list[visits[index][0]].append(gap)
-    print(visitcalls_melave_list)
     visitcalls_melave_avg = 0
     for k, v in visitcalls_melave_list.items():
         if k in all_children_ids:
@@ -181,16 +190,17 @@ def compute_visit_score(all_children,visits,maxScore,expected_gap):
         call_score=0
     return call_score
 def Eshcol_corrdintors_score():
-    all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id).filter(user1.role_id == "2").all()
+    all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id,user1.name,user1.institution_id).filter(user1.role_id == "2").all()
     eshcol_Cooordinator_score = dict()
+    score_EshcolCoordProfile=[]
     for Eshcol_coord in all_Eshcol_coord:
         Eshcol_coord_id = Eshcol_coord[0]
         cluster_id = Eshcol_coord[1]
         all_Mosad_Cordinators = db.session.query(user1.id).filter(user1.role_id == "1",
                                                                   user1.cluster_id == cluster_id).all()
-        print("all_Mosad_Cordinators",all_Mosad_Cordinators)
         if len(all_Mosad_Cordinators) == 0:
             eshcol_Cooordinator_score[100] = eshcol_Cooordinator_score.get(100, 0) + 1
+            score_EshcolCoordProfile.append({"id":Eshcol_coord.id, "name":Eshcol_coord.name,"institution_id": Eshcol_coord.institution_id, "score":100})
 
             continue
         all_Mosad_Cordinators_list = [r[0] for r in all_Mosad_Cordinators]
@@ -198,7 +208,6 @@ def Eshcol_corrdintors_score():
         visit_Mosad_monthly_meetings_personal = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.title == "ישיבה_חודשית_אשכול_מוסד").filter(
             Visit.user_id.in_(list(all_Mosad_Cordinators_list))).order_by(Visit.visit_date).all()
         visit_Mosad_monthly_meetings_personal_score=compute_visit_score(all_Mosad_Cordinators, visit_Mosad_monthly_meetings_personal, 60, 30)
-        print("visit_Mosad_monthly_meetings_personal",visit_Mosad_monthly_meetings_personal)
         Eshcol_coord_score=visit_Mosad_monthly_meetings_personal_score
         too_old = datetime.today() - timedelta(days=31)
         visit_Tohnit_monthly_meetings = db.session.query(Visit.user_id,
@@ -208,11 +217,15 @@ def Eshcol_corrdintors_score():
         if visit_Tohnit_monthly_meetings:
             Eshcol_coord_score += 40
         eshcol_Cooordinator_score[Eshcol_coord_score] = eshcol_Cooordinator_score.get(Eshcol_coord_score, 0) + 1
+        score_EshcolCoordProfile.append(
+            {"id": Eshcol_coord.id, "name": Eshcol_coord.name, "institution_id": Eshcol_coord.institution_id,
+             "score": Eshcol_coord_score})
+
     k, v = [], []
     for key, value in eshcol_Cooordinator_score.items():
         k.append(key)
         v.append(value)
-    return (k, v)
+    return (k, v),score_EshcolCoordProfile
 
 def red_green_orange_status(all_Apprentices):
     redvisitcalls = 0
@@ -289,16 +302,16 @@ def homepageMaster():
 '''
     all_Apprentices = db.session.query(Apprentice.id).all()
 
-    counts_melave_score=melave_score(all_Apprentices)
-    mosad_Cooordinator_score=mosad_Coordinators_score()
-    eshcol_Cooordinator_score=Eshcol_corrdintors_score()
+    counts_melave_score,score_melaveProfile_list=melave_score(all_Apprentices)
+    mosad_Cooordinator_score,score_MosadCoordProfile_list=mosad_Coordinators_score()
+    eshcol_Cooordinator_score,score_EshcolCoordProfile_list=Eshcol_corrdintors_score()
 
     greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
-    print(eshcol_Cooordinator_score)
-    print(mosad_Cooordinator_score)
-    print(counts_melave_score)
 
     return jsonify({
+        'score_melaveProfile_list': score_melaveProfile_list,
+        'score_Mosad_Eshcol_CoordProfile_list': score_MosadCoordProfile_list+score_EshcolCoordProfile_list,
+
         'eshcol_Cooordinator_score': eshcol_Cooordinator_score,
         'Mosad_Cooordinator_score': mosad_Cooordinator_score,
         'melave_score': counts_melave_score ,

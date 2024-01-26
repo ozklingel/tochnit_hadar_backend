@@ -130,7 +130,6 @@ def getAll_notification_form():
     if user_Role[0]=="3":#ahrai tohhnit
         notify_set = db.session.query(user1.id,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-
         visitEvent_sevev = db.session.query(Visit).filter(Visit.user_id == user,
                                                     too_old<Visit.visit_date,Visit.title =="סבב_מוסד").first()
         if visitEvent_sevev==None:

@@ -113,28 +113,84 @@ def search_entities():
 @master_user_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
     from openpyxl import workbook
-    path = '/home/ubuntu/flaskapp/Book1.xlsx'
+    #/home/ubuntu/flaskapp/
+    path = '/home/ubuntu/flaskapp/apprentice_enter.xlsx'
     wb = load_workbook(filename=path)
-    ws = wb.get_sheet_by_name('Sheet1')
-    for row in ws.iter_rows(min_row=2):
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
         first_name = row[0].value
-        last_name = row[1].value
-        phone = row[3].value
-        institution_name = row[2].value
+        last_name = row[0].value
+        phone = row[1].value
+        city = row[3].value
+        address = row[4].value
+        serve_type = row[5].value
+        institution_name = row[6].value
+        contact1_first_name = row[7].value
+        contact1_phone = row[8].value
+        contact2_first_name = row[9].value
+        contact2_phone = row[10].value
+        hadar_plan_session = row[11].value
+        teacher_grade_a = row[12].value
+        teacher_grade_b = row[13].value
+        contact1_email = row[15].value
+        birthday = row[16].value
+        marriage_status = row[17].value
+        army_role = row[18].value#מפקד?
         print(first_name)
-        print(phone)
+        try:
+            institution_id = db.session.query(Institution).filter(Institution.name == str(institution_name)).first()
+            Apprentice1 = Apprentice(
+                id=phone,
+                name=first_name,
+                last_name=last_name,
+                phone=str(phone),
+                army_role=army_role,
+                marriage_status=marriage_status,
+                #birthday=institution_id,
+                contact1_email=contact1_email,
+                teacher_grade_b=teacher_grade_b,
+                teacher_grade_a=teacher_grade_a,
+                hadar_plan_session=hadar_plan_session,
+                contact2_phone=contact2_phone,
+                contact2_first_name=contact2_first_name,
+                contact1_phone=contact1_phone,
+                contact1_first_name=contact1_first_name,
+            )
+            db.session.add(Apprentice1)
+        except Exception as e:
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+    db.session.commit()
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK
+@master_user_form_blueprint.route("/add_user_excel", methods=['put'])
+def add_user_excel():
+    from openpyxl import workbook
+    #/home/ubuntu/flaskapp/
+    path = '/home/ubuntu/flaskapp/user_enter.xlsx'
+    wb = load_workbook(filename=path)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        first_name = row[0].value
+        last_name = row[0].value
+        institution_name = row[1].value
+        phone = row[4].value
+        role = row[2].value
+        email = row[4].value
+
+        print(first_name)
 
         try:
             institution_id = db.session.query(Institution).filter(
                 Institution.name == str(institution_name)).first()
-            Apprentice1 = Apprentice(
-                id=int(str(phone)[1:]),
+            user = user1(
+                id=int(str(phone)[1:].replace("-","")),
                 name=first_name,
                 last_name=last_name,
-                phone=str(phone),
+                role_id=str(role),
+                email=str(email),
                 institution_id=institution_id,
             )
-            db.session.add(Apprentice1)
+            db.session.add(user)
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     db.session.commit()
@@ -156,6 +212,7 @@ def deleteEnt():
                entityId = str(data['entityId'])[3:]
                res = db.session.query(ContactForm).filter(ContactForm.created_for_id == entityId,).delete()
                res = db.session.query(ContactForm).filter(ContactForm.created_by_id == entityId,).delete()
+               res = db.session.query(notifications).filter(notifications.userid == entityId,).delete()
 
                res = db.session.query(user1).filter(user1.id == entityId).delete()
            if typeOfSet == "apprentice":

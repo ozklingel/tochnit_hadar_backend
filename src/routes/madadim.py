@@ -226,7 +226,7 @@ def getMelaveMadadim():
     Apprentice_ids_meet=[r[0] for r in ApprenticeCount]
     too_old = datetime.datetime.today() - datetime.timedelta(days=21)
     Oldvisitmeet = db.session.query(Visit.apprentice_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש",
-                                                                 Visit.visit_date > too_old).all()
+                                                                 Visit.visit_date >= too_old).all()
     for i in Oldvisitmeet:
         if i[0] in  Apprentice_ids_meet:
             Apprentice_ids_meet.remove(i[0])

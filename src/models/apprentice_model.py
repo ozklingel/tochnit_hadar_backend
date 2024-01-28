@@ -45,7 +45,7 @@ class Apprentice(db.Model):
     base_address = db.Column("militarycompoundid", db.String(50), nullable=False,default="")
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False,default="")
     army_role = db.Column(ARMY_ROLE_COL, db.Integer, nullable=False,default=0)
-    serve_type = db.Column(SERVE_TYPE_COL, db.Integer, nullable=False,default=0)
+    serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False,default=0)
     recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
     release_date = db.Column(RELEASE_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
     paying = db.Column(PAYING_COL, db.Boolean, nullable=False,default=False)

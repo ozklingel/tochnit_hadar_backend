@@ -7,6 +7,7 @@ from datetime import datetime,date,timedelta
 
 from sqlalchemy import func
 
+import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
@@ -31,15 +32,14 @@ def melave_score(all_Apprentices):
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices)==0:
             counts[100] = counts.get(100, 0) + 1
-            score_melaveProfile.append({user1.id,user1.name,user1.institution_id,100})
             score_melaveProfile.append({"id":melave.id, "name":melave.name,"institution_id": melave.institution_id, "score":100})
             continue
         visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
+            Visit.title == "שיחה", Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
         call_score=compute_visit_score(all_melave_Apprentices,visitcalls,12,21)
         visitmeetings = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId).order_by(Visit.visit_date).all()
-        personal_meet_score=compute_visit_score(all_melave_Apprentices,visitmeetings,12,21)
+            Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
+        personal_meet_score=compute_visit_score(all_melave_Apprentices,visitmeetings,12,90)
         group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
@@ -68,7 +68,7 @@ def melave_score(all_Apprentices):
         Horim_meeting = db.session.query(Visit.apprentice_id).filter(Visit.title == "מפגש_הורים",
                                                                      Visit.user_id == melaveId).all()
         Horim_meeting_score = 0
-        if len(Horim_meeting) == len(all_Apprentices):
+        if len(Horim_meeting) == len(all_melave_Apprentices):
             Horim_meeting_score += 10
         too_old = datetime.today() - timedelta(days=365)
         base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",Visit.visit_in_army==True,

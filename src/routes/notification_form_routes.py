@@ -8,6 +8,7 @@ from os import sys, path
 
 from sqlalchemy import func, or_
 
+from .user_apprentice_Profile import toISO
 from ..models.apprentice_model import Apprentice
 from ..models.user_model import user1
 from ..models.visit_model import Visit
@@ -79,8 +80,8 @@ def getAll_notification_form():
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event if noti.details is None else noti.details
                 my_dict.append(
-                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
-                     "date": noti.date.strftime("%m.%d.%Y"),
+                    {"id": str(noti.id),"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
+                     "date": toISO(noti.date),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,"description": noti.details,"frequency": noti.frequency if  noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                 continue
@@ -92,8 +93,8 @@ def getAll_notification_form():
                         Apprentice.id == noti.apprenticeid).first()
                     noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                     my_dict.append(
-                        {"id": noti.id, "apprenticeId":[str(noti.apprenticeid)],"apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
-                         "date": noti.date.strftime("%m.%d.%Y"),
+                        {"id": str(noti.id), "apprenticeId":[str(noti.apprenticeid)],"apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                         "date": toISO(noti.date),
                          "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
                          "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                     continue
@@ -102,40 +103,86 @@ def getAll_notification_form():
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
-                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
-                     "date": noti.date.strftime("%m.%d.%Y"),
+                    {"id": str(noti.id),"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                     "date": toISO(noti.date),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency,
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                 continue
-
-
             if userEnt.notifyMorning ==True and daysFromNow==0:
                 ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                     Apprentice.id == noti.apprenticeid).first()
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
-                    {"id": noti.id,"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
-                     "date": noti.date.strftime("%m.%d.%Y"),
+                    {"id": str(noti.id),"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                     "date": toISO(noti.date),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                 continue
         if  my_dict is None or my_dict==[]  :
             # acount not found
-            return jsonify(["Wrong id or emty list"])
+            return jsonify([])
         else:
             # print(f' notifications: {my_dict}]')
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+
     if user_Role[0]=="3":#ahrai tohhnit
-        notify_set = db.session.query(user1.id,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()
+        userEnt = db.session.query(user1.id,user1.notifyStartWeek,user1.notifyMorning,user1.notifyDayBefore,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
         visitEvent_sevev = db.session.query(Visit).filter(Visit.user_id == user,
                                                     too_old<Visit.visit_date,Visit.title =="סבב_מוסד").first()
         if visitEvent_sevev==None:
-            if notify_set.notifyMorning_sevev:
-                add_visit_notification(visitEvent_sevev.user_id, None,visitEvent_sevev.title, None)
-        return jsonify(["Wrong id or empty list"])
+            add_visit_notification(userEnt.id, None,"סבב_מוסד", None)
+        notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
+        my_dict = []
+        for noti in notiList:
+            daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+            if userEnt.notifyStartWeek == True and date(date.today().year, noti.date.month,
+                                                        noti.date.day).weekday() == 6:
+                gap = (date.today() - date(date.today().year, noti.date.month, noti.date.day)).days
+                if gap < 7:
+                    ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
+                        Apprentice.id == noti.apprenticeid).first()
+                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                    my_dict.append(
+                        {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
+                         "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                         "date": noti.date.strftime("%m.%d.%Y"),
+                         "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                         "allreadyread": noti.allreadyread,
+                         "frequency": noti.frequency if noti.frequency is not None else "never",
+                         "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
+                    continue
+            if userEnt.notifyDayBefore == True and daysFromNow == -1:
+                ApprenticeNames = db.session.query(Apprentice.name, Apprentice.last_name).filter(
+                    Apprentice.id == noti.apprenticeid).first()
+                noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                my_dict.append(
+                    {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
+                     "apprenticeName": ApprenticeNames.last_name.strip() + " " + ApprenticeNames.name.strip(),
+                     "date": noti.date.strftime("%m.%d.%Y"),
+                     "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                     "allreadyread": noti.allreadyread, "frequency": noti.frequency,
+                     "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
+                continue
+            if userEnt.notifyMorning == True and daysFromNow == 0:
+                noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                my_dict.append(
+                    {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
+                     "date": noti.date.strftime("%m.%d.%Y"),
+                     "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                     "allreadyread": noti.allreadyread,
+                     "frequency": noti.frequency if noti.frequency is not None else "never",
+                     "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
+        if  my_dict is None or my_dict==[]  :
+            # acount not found
+            return jsonify([])
+        else:
+            # print(f' notifications: {my_dict}]')
+            # TODO: get Noti form to DB
+            return jsonify(my_dict), HTTPStatus.OK
+        return jsonify([])
 
 
 @notification_form_blueprint.route('/add1', methods=['POST'])
@@ -143,7 +190,7 @@ def add_notification_form():
     try:
         json_object = request.json
         user = json_object["userId"]
-        apprenticeid = json_object["apprenticeid"]
+        apprenticeid = json_object["apprenticeid"] if json_object["apprenticeid"] else ""
         event = json_object["event"]
         date = json_object["date"]
         details = json_object["details"]
@@ -167,8 +214,8 @@ def add_notification_form():
 
         db.session.add(notification1)
         db.session.commit()
-    except:
-        return jsonify({"result": "wrong id "}),HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
     return jsonify({"result":"success"}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 

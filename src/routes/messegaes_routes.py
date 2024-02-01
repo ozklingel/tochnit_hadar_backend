@@ -12,6 +12,7 @@ from http import HTTPStatus
 from os import sys, path
 
 from config import AWS_access_key_id, AWS_secret_access_key
+from .user_apprentice_Profile import toISO
 from ..models.contact_form_model import ContactForm
 pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(pth)
@@ -135,9 +136,17 @@ def setWasRead_message_form():
             return jsonify({'result': 'success'}), HTTPStatus.OK
     except:
         return jsonify({'result': 'wrong id'}), HTTPStatus.OK
-def toISO(d):
-    if d:
-        return datetime(d.year, d.month, d.day).isoformat()
-    else:
-        return None
+
+
+@messegaes_form_blueprint.route('/delete', methods=['DELETE'])
+def deleteEnt():
+       data=request.json
+       try:
+           entityId = str(data['entityId'])
+           res = db.session.query(ContactForm).filter(ContactForm.id == entityId).delete()
+           db.session.commit()
+           return jsonify({'result': 'sucess'}), HTTPStatus.OK
+       except Exception as e:
+           return jsonify({'result': 'error'+str(e)}), HTTPStatus.OK
+
 

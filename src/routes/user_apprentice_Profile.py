@@ -12,11 +12,11 @@ from http import HTTPStatus
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
+from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
-from src.routes.notification_form_routes import getAll_notification_form
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
@@ -46,7 +46,7 @@ def uploadPhoto_form():
         except:
             return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
         updatedEnt = user1.query.get(created_by_id)
-        updatedEnt.photo_path=new_filename
+        updatedEnt.photo_path="https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename
         db.session.commit()
         #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
         return jsonify({'result': 'success', 'image path': new_filename}), HTTPStatus.OK
@@ -71,6 +71,8 @@ def getmyApprentices_form():
         eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
                                                                            notifications.apprenticeid == noti.id,
                                                                            notifications.numoflinesdisplay == 3).all()
+        base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
+        base_id = base_id[0] if base_id else 0
         my_dict.append(
             {"highSchoolRavMelamed_phone": noti.high_school_teacher_phone
                      ,"highSchoolRavMelamed_name": noti.high_school_teacher,
@@ -125,7 +127,7 @@ def getmyApprentices_form():
                 , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar' , "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
-             "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
+             "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
              "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
              "birthday": toISO(noti.birthday),  "marriage_date": toISO(noti.marriage_date),
              "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
@@ -192,6 +194,10 @@ def getmyApprentice_form():
         eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
             notifications.apprenticeid == noti.id,
             notifications.numoflinesdisplay == 3).all()
+        base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
+        base_id = base_id[0] if base_id else 0
+
+        print("base_id",base_id)
         my_dict.append(
             {"highSchoolRavMelamed_phone": noti.high_school_teacher_phone
                 , "highSchoolRavMelamed_name": noti.high_school_teacher,
@@ -244,7 +250,7 @@ def getmyApprentice_form():
                 , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar', "name": str(noti.name), "last_name": str(noti.last_name),
              "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
              "serve_type": noti.serve_type,
-             "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
+             "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
              "phone": noti.phone, "email": noti.email,
              "birthday": toISO(noti.birthday), "marriage_date": toISO(noti.marriage_date),
              "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,

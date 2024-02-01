@@ -78,20 +78,6 @@ def verifyOTP_form():
 
     return jsonify({"result": "error"}), HTTPStatus.OK
 
-@onboarding_form_blueprint.route('/upload_CitiesDB', methods=['GET'])
-def upload_CitiesDB():
-    import csv
-    my_list = []
-    with open('/home/ubuntu/flaskapp/src/routes/il.csv', 'r', encoding="utf8") as f:
-        reader = csv.reader(f)
-        print(reader)
-        for row in reader:
-            print(row)
-            my_list.append(City(row[0], row[1], row[2]))
-    for ent in my_list:
-        db.session.add(ent)
-    db.session.commit()
-    return jsonify({"result": "success"}), HTTPStatus.OK
 
 @onboarding_form_blueprint.route('/get_CitiesDB', methods=['GET'])
 def get_CitiesDB():

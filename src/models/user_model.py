@@ -30,6 +30,7 @@ class user1(db.Model):
     notifyDayBefore_sevev = db.Column("notifydaybefore_sevev", db.Boolean, nullable=False,default=True)
     notifyMorning_sevev = db.Column("notifymorning_sevev", db.Boolean, nullable=False,default=True)
     notifyMorning_weekly_report = db.Column("notifymorning_weekly_report", db.Boolean, nullable=False,default=True)
+    eshcol = db.Column("eshcol", db.String(50), nullable=False,default="")
 
 
     def as_dict(self):

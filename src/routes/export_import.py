@@ -14,6 +14,8 @@ from sqlalchemy import func
 import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
+from src.models.base_model import Base
+from src.models.city_model import City
 from src.models.gift import gift
 from src.models.notification_model import notifications
 from src.models.system_report import system_report
@@ -22,8 +24,42 @@ from src.models.visit_model import Visit
 from src.routes.notification_form_routes import getAll_notification_form
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
+@export_import_blueprint.route('/upload_CitiesDB', methods=['PUT'])
+def upload_CitiesDB():
+    import csv
+    my_list = []
+    #/home/ubuntu/flaskapp/
+    with open('/home/ubuntu/flaskapp/cities_add.csv', 'r', encoding="utf8") as f:
+        reader = csv.reader(f)
+        print(reader)
+        for row in reader:
+            print(row)
+            my_list.append(City(row[0].strip(), row[1].strip(), row[2].strip()))
+    for ent in my_list:
+        db.session.add(ent)
+    try:
+        db.session.commit()
+        return jsonify({"result": "success"}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({"result":str(e)}), HTTPStatus.OK
+
+
+@export_import_blueprint.route('/upload_baseDB', methods=['PUT'])
+def upload_baseDB():
+    import csv
+    my_list = []
+    #/home/ubuntu/flaskapp/
+    with open('/home/ubuntu/flaskapp/base_add.csv', 'r', encoding="utf8") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            print(row[1].strip())
+            ent=Base(int(str(uuid.uuid4().int)[:5]), row[0].strip(), row[1].strip())
+            db.session.add(ent)
+    db.session.commit()
+    return jsonify({"result": "success"}), HTTPStatus.OK
+
 @export_import_blueprint.route("/export_dict", methods=['post'])
-def export_apprentice_score():
+def export_dict():
     data = request.json
     to_csv = data['list']
     keys = to_csv[0].keys()
@@ -108,17 +144,16 @@ def monthly():
             creation_date=date.today(),
         )
         db.session.add(system_report1)
-        visitmeetings,visitmeets_melave_avg = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-            Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
+        visitmeetings = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
+        personal_meet_score ,visitmeet_melave_avg= compute_visit_score(all_melave_Apprentices, visitmeetings, 12, 90)
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
             type="visitmeets_melave_avg",
-            value=visitmeets_melave_avg,
+            value=visitmeet_melave_avg,
             creation_date=date.today(),
         )
         db.session.add(system_report1)
-        personal_meet_score = compute_visit_score(all_melave_Apprentices, visitmeetings, 12, 90)
         group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
@@ -159,6 +194,15 @@ def monthly():
         base_meeting_score = 0
         if base_meeting >= 2:
             base_meeting_score += 10
+        print(base_meeting_score)
+        print(cenes_yearly_score)
+        print(yeshiva_monthly_score)
+        print(professional_2monthly_score)
+        print(Horim_meeting_score)
+        print(group_meeting_score)
+        print(personal_meet_score)
+        print(call_score)
+
         melave_score = base_meeting_score + Horim_meeting_score + professional_2monthly_score + yeshiva_monthly_score + \
                        cenes_yearly_score + \
                        group_meeting_score + personal_meet_score + call_score
@@ -188,21 +232,6 @@ def two_monthly():
         if len(all_melave_Apprentices) == 0:
             continue
 
-        professional_2monthly = db.session.query(Visit.user_id,
-                                                 func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId).first()
-        gap = (date.today() - professional_2monthly.visit_date).days if professional_2monthly is not None else 100
-        professional_2monthly_score = 0
-        if gap < 60:
-            professional_2monthly_score += 6.6
-            system_report1 = system_report(
-                id=int(str(uuid.uuid4().int)[:5]),
-                related_id=melaveId,
-                type="professional_2monthly",
-                value=100,
-                creation_date=date.today(),
-            )
-            db.session.add(system_report1)
     try:
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -213,6 +242,9 @@ def two_monthly():
 
 @export_import_blueprint.route('/rivony', methods=['GET'])
 def rivony():
+    current_month=date.today().month
+    month4index=current_month%3
+    start_Of_Rivon = datetime.today() - timedelta(days=30*month4index)
     all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
@@ -220,6 +252,18 @@ def rivony():
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices) == 0:
             continue
+        professional_2monthly = db.session.query(Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId,Visit.visit_date>start_Of_Rivon).limit(2).all()
+        professional_2monthly_score = 0
+        if len(professional_2monthly) > 2:
+            professional_2monthly_score += 6.6
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=melaveId,
+            type="professional_2monthly_rivon",
+            value=len(professional_2monthly),
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
     try:
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -238,8 +282,8 @@ def yearly():
             continue
 
         cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).all()
-        gap = (date.today() - cenes_yearly.visit_date).days if group_meeting is not None else 400
+            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).first()
+        gap = (date.today() - cenes_yearly.visit_date).days if cenes_yearly is not None else 400
         cenes_yearly_score = 0
         if gap < 365:
             cenes_yearly_score += 6.6

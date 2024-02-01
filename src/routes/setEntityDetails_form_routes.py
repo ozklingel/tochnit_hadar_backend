@@ -82,23 +82,7 @@ def setEntityDetailsByType():
                 return jsonify({'result': 'success'}), HTTPStatus.OK
        return jsonify({'result': 'error'}), HTTPStatus.OK
 
-@setEntityDetails_form_blueprint.route("/uploadPhoto", methods=["POST"])
-def upload_file():
-    if "user_file" not in request.files:
-        return "No user_file key in request.files"
 
-    file = request.files["user_file"]
-
-    if file.filename == "":
-        return "Please select a file"
-
-    if file:
-        file.filename = secure_filename(file.filename)
-        output = upload_file_to_s3(file, app.config["S3_BUCKET"])
-        return str(output)
-
-    else:
-        return redirect("/")
 
 def upload_file_to_s3(file, bucket_name, acl="public-read"):
     """

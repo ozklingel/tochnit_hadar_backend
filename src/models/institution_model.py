@@ -20,5 +20,7 @@ class Institution(db.Model):
     admin_phone = db.Column("admin_phone", db.String(50), nullable=False)
     roshYeshiva_name = db.Column("roshyeshiva_name", db.String(50), nullable=False)
     roshYeshiva_phone = db.Column("roshyeshiva_phone", db.String(50), nullable=False)
-    shluha = db.Column("shluha", db.String(50), nullable=False)
+    eshcol_id = db.Column("eshcol_id",db.String(50), nullable=False)
+
+    #eshcol_id = db.Column("eshcol_id",db.Integer,ForeignKey(get_forgein_key_source("eshcol", ID_COL)), nullable=False)
 

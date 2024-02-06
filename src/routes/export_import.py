@@ -11,17 +11,15 @@ from datetime import datetime,date,timedelta
 
 from sqlalchemy import func
 
-import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.gift import gift
-from src.models.notification_model import notifications
 from src.models.system_report import system_report
 from src.models.user_model import user1
 from src.models.visit_model import Visit
-from src.routes.notification_form_routes import getAll_notification_form
+import src.routes.madadim as md
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
 @export_import_blueprint.route('/upload_CitiesDB', methods=['PUT'])
@@ -123,128 +121,68 @@ def monthly():
         melaveId = melave[0]
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == melaveId).all()
-        if len(all_melave_Apprentices) == 0:
-            system_report1 = system_report(
-                id=int(str(uuid.uuid4().int)[:5]),
-                related_id=melaveId,
-                type="melave_Score",
-                value=100,
-                creation_date=date.today(),
-            )
-            db.session.add(system_report1)
-            continue
-        visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
-        call_score ,visitcalls_melave_avg= compute_visit_score(all_melave_Apprentices, visitcalls, 12, 21)
-        system_report1 = system_report(
-            id=int(str(uuid.uuid4().int)[:5]),
-            related_id=melaveId,
-            type="visitcalls_melave_avg",
-            value=visitcalls_melave_avg,
-            creation_date=date.today(),
-        )
-        db.session.add(system_report1)
-        visitmeetings = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
-        personal_meet_score ,visitmeet_melave_avg= compute_visit_score(all_melave_Apprentices, visitmeetings, 12, 90)
-        system_report1 = system_report(
-            id=int(str(uuid.uuid4().int)[:5]),
-            related_id=melaveId,
-            type="visitmeets_melave_avg",
-            value=visitmeet_melave_avg,
-            creation_date=date.today(),
-        )
-        db.session.add(system_report1)
-        group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
-        gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
-        group_meeting_score = 0
-        if gap <= 60:
-            group_meeting_score += 12
-        cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).all()
-        gap = (date.today() - cenes_yearly.visit_date).days if group_meeting is not None else 400
-        cenes_yearly_score = 0
-        if gap < 365:
-            cenes_yearly_score += 6.6
-        yeshiva_monthly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "ישיבת_מלוים", Visit.user_id == melaveId).first()
-        gap = (date.today() - yeshiva_monthly.visit_date).days if group_meeting is not None else 100
-        yeshiva_monthly_score = 0
-        if gap < 30:
-            yeshiva_monthly_score += 6.6
-        professional_2monthly = db.session.query(Visit.user_id,
-                                                 func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId).first()
-        gap = (date.today() - professional_2monthly.visit_date).days if group_meeting is not None else 100
-        professional_2monthly_score = 0
-        if gap < 60:
-            professional_2monthly_score += 6.6
-        too_old = datetime.today() - timedelta(days=365)
-        Horim_meeting = db.session.query(Visit.apprentice_id,func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.apprentice_id).filter(Visit.title == "מפגש_הורים",Visit.user_id == melaveId,Visit.visit_date>too_old).all()
-        Horim_meeting_score = 0
-        if len(Horim_meeting) == len(all_melave_Apprentices):
-            Horim_meeting_score += 10
-        too_old = datetime.today() - timedelta(days=365)
-        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",
-                                                                                            Visit.visit_in_army == True,
-                                                                                            Visit.visit_date > too_old,
-                                                                                            Visit.user_id == melaveId).group_by(
-            Visit.visit_date).count()
-        base_meeting_score = 0
-        if base_meeting >= 2:
-            base_meeting_score += 10
-        print(base_meeting_score)
-        print(cenes_yearly_score)
-        print(yeshiva_monthly_score)
-        print(professional_2monthly_score)
-        print(Horim_meeting_score)
-        print(group_meeting_score)
-        print(personal_meet_score)
-        print(call_score)
-
-        melave_score = base_meeting_score + Horim_meeting_score + professional_2monthly_score + yeshiva_monthly_score + \
-                       cenes_yearly_score + \
-                       group_meeting_score + personal_meet_score + call_score
+        melave_score1, call_gap_avg, meet_gap_avg = md.melave_score(melaveId)
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
             type="melave_Score",
-            value=melave_score,
+            value=melave_score1,
             creation_date=date.today(),
         )
         db.session.add(system_report1)
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=melaveId,
+            type="call_gap_avg",
+            value=call_gap_avg,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=melaveId,
+            type="meet_gap_avg",
+            value=meet_gap_avg,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        # mosad Madadim:
+        all_MosadCoordinator = db.session.query(user1.id, user1.institution_id).filter(user1.role_id == "1").all()
+        for mosadCoord in all_MosadCoordinator:
+            mosadCoord_id = mosadCoord[0]
+            res = md.mosadCoordinator(mosadCoord_id)[0].json
+            print("res", res['avg_apprenticeCall_gap'])
+            system_report1 = system_report(
+                id=int(str(uuid.uuid4().int)[:5]),
+                related_id=mosadCoord_id,
+                type="avg_apprenticeCall_gap_mosad",
+                value=res['avg_apprenticeCall_gap'],
+                creation_date=date.today(),
+            )
+            db.session.add(system_report1)
+            system_report1 = system_report(
+                id=int(str(uuid.uuid4().int)[:5]),
+                related_id=mosadCoord_id,
+                type="avg_apprenticeMeeting_gap",
+                value=res['avg_apprenticeMeeting_gap'],
+                creation_date=date.today(),
+            )
+            db.session.add(system_report1)
+
     try:
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
     except Exception as e:
         return jsonify({'result': 'error'+str(e)}), HTTPStatus.BAD_REQUEST
-
-
-@export_import_blueprint.route('/two_monthly', methods=['GET'])
-def two_monthly():
-    all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
-    for melave in all_melave:
-        melaveId = melave[0]
-        all_melave_Apprentices = db.session.query(Apprentice.id).filter(
-            Apprentice.accompany_id == melaveId).all()
-        if len(all_melave_Apprentices) == 0:
-            continue
-
-    try:
-        db.session.commit()
-        return jsonify({'result': 'success'}), HTTPStatus.OK
-
-    except Exception as e:
-        return jsonify({'result': 'error'+str(e)}), HTTPStatus.BAD_REQUEST
-
 
 @export_import_blueprint.route('/rivony', methods=['GET'])
 def rivony():
     current_month=date.today().month
     month4index=current_month%3
     start_Of_Rivon = datetime.today() - timedelta(days=30*month4index)
+    #melave Madadim:
     all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
@@ -252,18 +190,54 @@ def rivony():
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices) == 0:
             continue
-        professional_2monthly = db.session.query(Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId,Visit.visit_date>start_Of_Rivon).limit(2).all()
-        professional_2monthly_score = 0
-        if len(professional_2monthly) > 2:
-            professional_2monthly_score += 6.6
+        #מפגש מקצועי מלווה
+        newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id == melaveId,
+                                                                       Visit.title == "מפגש_מקצועי",
+                                                                       Visit.visit_date > start_Of_Rivon).all()
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
-            type="professional_2monthly_rivon",
-            value=len(professional_2monthly),
+            type="professionalmeeting",
+            value=len(newvisit_professional),
             creation_date=date.today(),
         )
         db.session.add(system_report1)
+    too_old = datetime.today() - timedelta(days=100)
+    Oldvisitcalls = db.session.query(Visit.apprentice_id).distinct(Visit.apprentice_id).filter(Visit.user_id==melaveId,Apprentice.id==Visit.apprentice_id,Visit.title == "שיחה",
+                                                                 Visit.visit_date > too_old).all()
+    forgotenApprentices_count=len(all_melave_Apprentices)-len(Oldvisitcalls)
+    system_report1 = system_report(
+        id=int(str(uuid.uuid4().int)[:5]),
+        related_id=melaveId,
+        type="forgotenApprentices_count",
+        value=forgotenApprentices_count,
+        creation_date=date.today(),
+    )
+    db.session.add(system_report1)
+
+    #mosad Madadim:
+    all_MosadCoordinator = db.session.query(user1.id,user1.institution_id).filter(user1.role_id=="1").all()
+    for mosadCoord in all_MosadCoordinator:
+        mosadCoord_id=mosadCoord[0]
+        res=md.mosadCoordinator(mosadCoord_id)[0].json
+        print("res",res['avg_apprenticeCall_gap'])
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=mosadCoord_id,
+            type="avg_apprenticeCall_gap_mosad",
+            value=res['avg_apprenticeCall_gap'],
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=mosadCoord_id,
+            type="Apprentice_forgoten_count",
+            value=res['Apprentice_forgoten_count'],
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
     try:
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -273,6 +247,8 @@ def rivony():
 
 @export_import_blueprint.route('/yearly', methods=['GET'])
 def yearly():
+    current_month=date.today().month
+    start_Of_year = datetime.today() - timedelta(days=30*current_month)
     all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
@@ -282,11 +258,8 @@ def yearly():
             continue
 
         cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).first()
-        gap = (date.today() - cenes_yearly.visit_date).days if cenes_yearly is not None else 400
-        cenes_yearly_score = 0
-        if gap < 365:
-            cenes_yearly_score += 6.6
+            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId,Visit.visit_date>start_Of_year).first()
+        if cenes_yearly:
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
@@ -295,21 +268,18 @@ def yearly():
                 creation_date=date.today(),
             )
             db.session.add(system_report1)
-        too_old = datetime.today() - timedelta(days=365)
         Horim_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.apprentice_id).filter(Visit.title == "מפגש_הורים", Visit.user_id == melaveId,
-                                        Visit.visit_date >too_old).all()
-        Horim_meeting_score = 0
-        if len(Horim_meeting) == len(all_melave_Apprentices):
-            Horim_meeting_score += 10
-        system_report1 = system_report(
-            id=int(str(uuid.uuid4().int)[:5]),
-            related_id=melaveId,
-            type="Horim_meeting",
-            value=Horim_meeting_score,
-            creation_date=date.today(),
-        )
-        db.session.add(system_report1)
+                                        Visit.visit_date >start_Of_year).all()
+        if Horim_meeting:
+            system_report1 = system_report(
+                id=int(str(uuid.uuid4().int)[:5]),
+                related_id=melaveId,
+                type="Horim_meeting",
+                value=Horim_meeting,
+                creation_date=date.today(),
+            )
+            db.session.add(system_report1)
         too_old = datetime.today() - timedelta(days=365)
         base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",
                                                                                             Visit.visit_in_army == True,

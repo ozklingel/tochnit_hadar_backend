@@ -136,7 +136,6 @@ def getmyApprentices_form():
 
 @institutionProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
-    print(request.headers.get('Authorization'))
     institution_id = request.args.get('institution_id')
     institution_Ent = Institution.query.get(institution_id)
     if institution_Ent:
@@ -191,4 +190,10 @@ def add_mosad():
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
-
+@institutionProfile_form_blueprint.route('/getAll', methods=['GET'])
+def getAll():
+    inst_List = db.session.query(Institution.id).all()
+    if inst_List==[]:
+        return jsonify([]), HTTPStatus.OK
+    print(inst_List)
+    return jsonify([r[0] for r in inst_List]), HTTPStatus.OK

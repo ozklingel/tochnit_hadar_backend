@@ -8,7 +8,7 @@ from os import sys, path
 
 from sqlalchemy import func, or_
 
-from .user_apprentice_Profile import toISO
+from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
 from ..models.user_model import user1
 from ..models.visit_model import Visit
@@ -74,13 +74,21 @@ def getAll_notification_form():
         my_dict = []
         for noti in notiList:
             daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
-
+            if noti.event=='מפגש_קבוצתי':
+                apprenticeids=[]
+            else:
+                apprenticeids=str(noti.apprenticeid)
             if noti.numoflinesdisplay==2:
                 ApprenticeName = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                     Apprentice.id == noti.apprenticeid).first()
+                print(ApprenticeName)
+                if ApprenticeName ==None:
+                    apprenticeName=[]
+                else:
+                    apprenticeName=ApprenticeName.last_name + " " + ApprenticeName.name
                 noti.details = noti.event if noti.details is None else noti.details
                 my_dict.append(
-                    {"id": str(noti.id),"apprenticeId":[str(noti.apprenticeid)], "apprenticeName": ApprenticeName.last_name + " " + ApprenticeName.name if ApprenticeName is not None else None,
+                    {"id": str(noti.id),"apprenticeId":apprenticeids, "apprenticeName": apprenticeName,
                      "date": toISO(noti.date),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,"description": noti.details,"frequency": noti.frequency if  noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
@@ -309,9 +317,9 @@ def setSetting_notification_form():
     print("notifyDayBeforeval:",notifyDayBeforeval)
     print("notifyStartWeekval:",notifyStartWeekval)
     user = user1.query.get(user)
-    user.notifyStartWeek = notifyStartWeekval== 'true'
-    user.notifyDayBefore = notifyDayBeforeval== 'true'
-    user.notifyMorning = notifyMorningval== 'true'
+    user.notifyStartWeek = notifyStartWeekval== 'true' or notifyStartWeekval== 'True'
+    user.notifyDayBefore = notifyDayBeforeval== 'true' or notifyDayBeforeval== 'True'
+    user.notifyMorning = notifyMorningval== 'true' or notifyMorningval== 'True'
     try:
         db.session.commit()
     except:
@@ -327,6 +335,7 @@ def setSetting_notification_form():
 def getNotificationSetting_form():
     user = request.args.get('userId')[3:]
     notiSettingList = db.session.query(user1.notifyMorning,user1.notifyDayBefore,user1.notifyStartWeek).filter(user1.id == user).first()
+    print("notiSettingList",notiSettingList)
     if not notiSettingList :
         # acount not found
         return jsonify(["Wrong id or emty list"])
@@ -338,6 +347,33 @@ def getNotificationSetting_form():
                         ,"notifyStartWeek":notiSettingList.notifyStartWeek}), HTTPStatus.OK
 
 
+@notification_form_blueprint.route('/delete', methods=['POST'])
+def delete():
+    try:
+        data = request.json
+        NotificationId = data['NotificationId']
+        res = db.session.query(notifications).filter(notifications.id == NotificationId).delete()
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
+    return jsonify({"result":"success"}), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+@notification_form_blueprint.route("/update", methods=['put'])
+def updateTask():
+    # get tasksAndEvents
+    NotificationId = request.args.get("NotificationId")
+    data = request.json
+
+
+    updatedEnt = notifications.query.get(NotificationId)
+    for key in data:
+        setattr(updatedEnt, key, data[key])
+    db.session.commit()
+    if updatedEnt:
+        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+        # TODO: add contact form to DB
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    return jsonify({'result': 'error'}), HTTPStatus.OK
 
 import datetime
 import sqlalchemy as sa

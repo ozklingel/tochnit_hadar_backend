@@ -363,7 +363,7 @@ def getlists(userId):
        # print("res1=" ,res[0].json[i])
         ent=res[0].json[i]
         if ent["numOfLinesDisplay"]==3:
-            ent["date"]=toISO(ent["date"])
+            ent["date"]=ent["date"]
             event_dict.append(ent)
         else :
             task_dict.append(ent)
@@ -373,6 +373,7 @@ def getlists(userId):
 def toISO(d):
     if d:
         Date=d.split(".")
+        print(d)
         return datetime(int(Date[2]),int(Date[0]), int(Date[1])).isoformat()
     else:
         return None

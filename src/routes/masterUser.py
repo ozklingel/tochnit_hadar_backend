@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
+from werkzeug.utils import secure_filename
 
 import config
 from app import db
@@ -98,8 +99,11 @@ def search_entities():
 @master_user_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
     #/home/ubuntu/flaskapp/
-    path = 'apprentice_enter.xlsx'
-    wb = load_workbook(filename=path)
+    file = request.files['file']
+    filename = secure_filename(file.filename)
+    print(filename)
+    file.save(filename)
+    wb = load_workbook(filename=filename)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         first_name = row[0].value

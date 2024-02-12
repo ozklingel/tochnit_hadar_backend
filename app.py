@@ -17,13 +17,15 @@ from src.routes.reports_routes import reports_form_blueprint
 from src.routes.onboarding_form_routes import onboarding_form_blueprint
 from src.routes.notification_form_routes import notification_form_blueprint
 from src.routes.setEntityDetails_form_routes import setEntityDetails_form_blueprint
-from src.routes.user_apprentice_Profile import userProfile_form_blueprint
+from src.routes.user_Profile import userProfile_form_blueprint
 from src.routes.homepage import homepage_form_blueprint
 from src.routes.madadim import madadim_form_blueprint
 from src.routes.tasks import tasks_form_blueprint
 from src.routes.masterUser import master_user_form_blueprint
 from src.routes.export_import import export_import_blueprint
 from src.routes.institutionProfile_routes import institutionProfile_form_blueprint
+from src.routes.base import base_blueprint
+from src.routes.apprentice_Profile import apprentice_Profile_form_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -37,6 +39,8 @@ app.register_blueprint(tasks_form_blueprint)
 app.register_blueprint(export_import_blueprint)
 app.register_blueprint(master_user_form_blueprint)
 app.register_blueprint(institutionProfile_form_blueprint)
+app.register_blueprint(base_blueprint)
+app.register_blueprint(apprentice_Profile_form_blueprint)
 
 if __name__ == '__main__':
 

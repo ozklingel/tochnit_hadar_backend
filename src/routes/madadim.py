@@ -15,7 +15,7 @@ from src.models.system_report import system_report
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 from src.routes.export_import import compute_visit_score
-from src.routes.user_apprentice_Profile import toISO
+from src.routes.user_Profile import toISO
 
 madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 
@@ -67,7 +67,7 @@ def missingCalleApprentice():
     missingCallApprentice_total=0
     for i in visitcalls:
         vIsDate=i.visit_date
-        now=datetime.date.today()
+        now=date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
         if gap>21:
             missingCallApprentice_total+=1
@@ -104,7 +104,7 @@ def missingMeetingApprentice():
     missingmeetApprentice_total=0
     for i in visitcalls:
         vIsDate=i.visit_date
-        now=datetime.date.today()
+        now=date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
         if gap>21:
             missingmeetApprentice_total+=1
@@ -141,7 +141,7 @@ def forgotenApprentice():
         forgotenApprentice_total=0
         for i in visitcalls:
             vIsDate = i.visit_date
-            now = datetime.date.today()
+            now = date.today()
             gap = (now - vIsDate).days if vIsDate is not None else 0
             if gap > 100:
                 forgotenApprentice_total+=1
@@ -179,7 +179,7 @@ def missingMeetingApprentice_Mosad():
     counts = dict()
     for i in visitcalls:
         vIsDate = i.visit_date
-        now = datetime.date.today()
+        now = date.today()
         gap = (now - vIsDate).days if vIsDate is not None else 0
         if gap > 100:
             counts[ent[1]+" "+ent[2]] = gap
@@ -195,7 +195,7 @@ def missingMeetingApprentice_Mosad():
 def missingCallsApprentice_Mosad():
     institution = request.args.get("institutionId")
     print(institution)
-    too_old = datetime.datetime.today() - datetime.timedelta(days=45)
+    too_old = datetime.today() - datetime.timedelta(days=45)
     Oldvisitcalls = db.session.query(Visit,Apprentice).filter(Visit.apprentice_id==Apprentice.id,Visit.title == "שיחה",
                                                                  Visit.visit_date < too_old).filter(Apprentice.institution_id==institution).all()
     print(Oldvisitcalls[0])
@@ -203,7 +203,7 @@ def missingCallsApprentice_Mosad():
     for ent in Oldvisitcalls:
         print(type(ent[0].visit_date))
         vIsDate=ent[0].visit_date
-        now=datetime.date.today()
+        now=date.today()
         gap = (now-vIsDate).days if vIsDate is not None else 0
         list.append({"apprentice":ent[1].name+ent[1].last_name,"gap":gap})
 
@@ -272,7 +272,7 @@ def getMelaveMadadim():
         if i[0] in  Apprentice_ids_meet:
             Apprentice_ids_meet.remove(i[0])
 #מפגש_מקצועי
-    current_month=date.today().month
+    current_month=datetime.today().month
     start_Of_year = datetime.today() - timedelta(days=30*current_month)
     numOfQuarter_passed=int(current_month/3)
     newvisitProffesionalMeet_year = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש_מקצועי",

@@ -23,9 +23,8 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if request.method == "POST":
-        print(request.form.to_dict())
-        data = request.form.to_dict()
-        created_by_id = data['userId'][3:]
+        created_by_id = request.args.get('userId')[3:]
+        print(created_by_id)
         print(request.files)
         imagefile = request.files['image']
         #filename = werkzeug.utils.secure_filename(imagefile.filename)
@@ -58,8 +57,14 @@ def uploadPhoto_form():
 def getmyApprentices_form():
     created_by_id = request.args.get('userId')[3:]
     print(created_by_id)
+    user1ent = db.session.query(user1.role_id,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
+    if user1ent.role_id=="0":
+        apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
+    if user1ent.role_id=="1":
+        apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
+    if user1ent.role_id == "2":
+        apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
 
-    apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
     print(apprenticeList)
     my_dict = []
 
@@ -96,7 +101,7 @@ def getmyApprentices_form():
                     "entrance": "a",
                     "floor": "1",
                     "postalCode": "12131",
-                    "lat": 32.04282620026557,
+                    "lat": 32.04282620026557,#no need city cord
                     "lng": 34.75186193813887
                 },
              "contact1_first_name": noti.contact1_first_name,

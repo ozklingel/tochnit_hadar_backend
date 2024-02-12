@@ -37,25 +37,26 @@ def add_reports_form():
                 ent_id_list=[str(key['id'])[3:] for key in List_of_apprentices],
             )
             db.session.add(ent_group1)
-
-        files = request.files.getlist('file[]')
-        for file in files:
-            print(file)
-            new_filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[1].lower()
-            bucket_name = "th01-s3"
-            session = boto3.Session()
-            s3_client = session.client('s3',
-                                       aws_access_key_id=AWS_access_key_id,
-                                       aws_secret_access_key=AWS_secret_access_key)
-            s3 = boto3.resource('s3',
-                                aws_access_key_id=AWS_access_key_id,
-                                aws_secret_access_key=AWS_secret_access_key)
-            print(new_filename)
-            try:
-                s3_client.upload_fileobj(file, bucket_name, new_filename)
-                attachments.append(new_filename)
-            except:
-                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+        # print("files")
+        # files =request.files['file']
+        # print(files)
+        # for file in files:
+        #     print(file)
+        #     new_filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[1].lower()
+        #     bucket_name = "th01-s3"
+        #     session = boto3.Session()
+        #     s3_client = session.client('s3',
+        #                                aws_access_key_id=AWS_access_key_id,
+        #                                aws_secret_access_key=AWS_secret_access_key)
+        #     s3 = boto3.resource('s3',
+        #                         aws_access_key_id=AWS_access_key_id,
+        #                         aws_secret_access_key=AWS_secret_access_key)
+        #     print(new_filename)
+        #     try:
+        #         s3_client.upload_fileobj(file, bucket_name, new_filename)
+        #         attachments.append(new_filename)
+        #     except:
+        #         return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
 
         for key in List_of_apprentices:
             Visit1 = Visit(
@@ -79,7 +80,7 @@ def add_reports_form():
 
     except Exception as e:
         return jsonify({'result': 'error'+str(e)}), HTTPStatus.BAD_REQUEST
-    return jsonify({'result': 'success'}), HTTPStatus.OK
+    return jsonify({'result': str(visitId)}), HTTPStatus.OK
 
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])
@@ -134,3 +135,60 @@ def toISO(d):
         return datetime(d.year, d.month, d.day).isoformat()
     else:
         return None
+
+@reports_form_blueprint.route('/uploadPhoto', methods=['post'])
+def uploadPhoto_form():
+        reportId = request.args.get('reportId')
+        print(reportId)
+        updatedEnt = Visit.query.get(reportId)
+
+        images_list=[]
+        for imagefile in request.files.getlist('image'):
+            new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
+            bucket_name = "th01-s3"
+            session = boto3.Session()
+            s3_client = session.client('s3',
+                                aws_access_key_id=AWS_access_key_id,
+                                aws_secret_access_key=AWS_secret_access_key)
+            s3 = boto3.resource('s3',
+                                aws_access_key_id=AWS_access_key_id,
+                                aws_secret_access_key=AWS_secret_access_key)
+            print(new_filename)
+            try:
+                s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
+            except:
+                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+            images_list.append("https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename)
+        if updatedEnt:
+            updatedEnt.attachments=images_list
+            db.session.commit()
+        #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
+            return jsonify({'result': 'success', 'image path': updatedEnt.attachments}), HTTPStatus.OK
+        return jsonify({"result": "error"}),HTTPStatus.BAD_REQUEST
+
+@reports_form_blueprint.route('/delete', methods=['POST'])
+def delete():
+    try:
+        data = request.json
+        reportId = data['reportId']
+        res = db.session.query(Visit).filter(Visit.id == reportId).delete()
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
+    return jsonify({"result":"success"}), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+
+@reports_form_blueprint.route("/update", methods=['put'])
+def updateTask():
+    # get tasksAndEvents
+    reportId = request.args.get("reportId")
+    data = request.json
+    updatedEnt = Visit.query.get(reportId)
+    for key in data:
+        setattr(updatedEnt, key, data[key])
+    db.session.commit()
+    if updatedEnt:
+        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+        # TODO: add contact form to DB
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    return jsonify({'result': 'error'}), HTTPStatus.OK

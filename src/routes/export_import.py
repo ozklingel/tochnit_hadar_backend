@@ -80,7 +80,7 @@ def export_dict():
 @export_import_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():
     from openpyxl import workbook
-    path = '/home/ubuntu/flaskapp/gift.xlsx'
+    path = 'gift.xlsx'
     wb = load_workbook(filename=path)
     ws = wb.get_sheet_by_name('Sheet1')
     for row in ws.iter_rows(min_row=2):
@@ -104,8 +104,8 @@ def getGift():
     giftCode = db.session.query(gift).filter(gift.was_used == False).first()
     print(giftCode)
     if giftCode is not None:
-        res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
-        print("res",res)
+        giftCode.was_used=True
+        #res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
         db.session.commit()
 
     if not giftCode:

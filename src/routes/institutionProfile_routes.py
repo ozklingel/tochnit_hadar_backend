@@ -23,9 +23,8 @@ institutionProfile_form_blueprint = Blueprint('institutionProfile_form', __name_
 @institutionProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if request.method == "POST":
-        print(request.form.to_dict())
-        data = request.form.to_dict()
-        created_by_id = data['institution_id'][3:]
+        institution_id = request.args.get('institution_id')
+        print(institution_id)
         print(request.files)
         imagefile = request.files['image']
         #filename = werkzeug.utils.secure_filename(imagefile.filename)
@@ -45,11 +44,12 @@ def uploadPhoto_form():
             s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
         except:
             return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
-        updatedEnt = Institution.query.get(id)
-        updatedEnt.photo_path=new_filename
+        updatedEnt = Institution.query.get(institution_id)
+        updatedEnt.logo_path="https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename
         db.session.commit()
         #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
         return jsonify({'result': 'success', 'image path': new_filename}), HTTPStatus.OK
+
 
 
 
@@ -196,4 +196,4 @@ def getAll():
     if inst_List==[]:
         return jsonify([]), HTTPStatus.OK
     print(inst_List)
-    return jsonify([r[0] for r in inst_List]), HTTPStatus.OK
+    return jsonify([str(r[0]) for r in inst_List]), HTTPStatus.OK

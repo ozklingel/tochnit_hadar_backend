@@ -203,7 +203,7 @@ def rivony():
         )
         db.session.add(system_report1)
     too_old = datetime.today() - timedelta(days=100)
-    Oldvisitcalls = db.session.query(Visit.apprentice_id).distinct(Visit.apprentice_id).filter(Visit.user_id==melaveId,Apprentice.id==Visit.apprentice_id,Visit.title == "שיחה",
+    Oldvisitcalls = db.session.query(Visit.ent_reported).distinct(Visit.ent_reported).filter(Visit.user_id==melaveId,Apprentice.id==Visit.ent_reported,Visit.title == "שיחה",
                                                                  Visit.visit_date > too_old).all()
     forgotenApprentices_count=len(all_melave_Apprentices)-len(Oldvisitcalls)
     system_report1 = system_report(
@@ -268,8 +268,8 @@ def yearly():
                 creation_date=date.today(),
             )
             db.session.add(system_report1)
-        Horim_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.apprentice_id).filter(Visit.title == "מפגש_הורים", Visit.user_id == melaveId,
+        Horim_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
+            Visit.ent_reported).filter(Visit.title == "מפגש_הורים", Visit.user_id == melaveId,
                                         Visit.visit_date >start_Of_year).all()
         if Horim_meeting:
             system_report1 = system_report(

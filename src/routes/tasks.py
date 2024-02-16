@@ -46,7 +46,7 @@ def getTasks():
             Apprentice.accompany_id == userId).all()
         all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
 
-        visitHorim = db.session.query(Visit.apprentice_id).filter(Visit.user_id == userId,
+        visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
                                                     Visit.title == "מפגש_הורים").all()
         for i in visitHorim:
             if i[0] in all_ApprenticeList_Horim:
@@ -55,7 +55,7 @@ def getTasks():
             #Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
             todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-        done_visits = db.session.query(Visit.apprentice_id,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
+        done_visits = db.session.query(Visit.ent_reported,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
                                                     Visit.id.not_in(todo_ids),Visit.visit_date>too_old).all()
         done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
         "description": str(row[4]),'status':'done',"apprenticeId": [str(row[0])], "title": str(row[1])

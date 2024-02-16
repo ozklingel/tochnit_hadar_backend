@@ -34,14 +34,14 @@ def melave_score(all_Apprentices):
             counts[100] = counts.get(100, 0) + 1
             score_melaveProfile.append({"id":melave.id, "name":melave.name,"institution_id": melave.institution_id, "score":100})
             continue
-        visitcalls = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+        visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title == "שיחה", Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
         call_score=compute_visit_score(all_melave_Apprentices,visitcalls,12,21)
-        visitmeetings = db.session.query(Visit.apprentice_id, Visit.visit_date).filter(
+        visitmeetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
         personal_meet_score=compute_visit_score(all_melave_Apprentices,visitmeetings,12,90)
-        group_meeting = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.apprentice_id).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
+        group_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
+            Visit.ent_reported).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
         group_meeting_score = 0
         if gap <= 60:
@@ -65,7 +65,7 @@ def melave_score(all_Apprentices):
         professional_2monthly_score = 0
         if gap < 60:
             professional_2monthly_score += 6.6
-        Horim_meeting = db.session.query(Visit.apprentice_id).filter(Visit.title == "מפגש_הורים",
+        Horim_meeting = db.session.query(Visit.ent_reported).filter(Visit.title == "מפגש_הורים",
                                                                      Visit.user_id == melaveId).all()
         Horim_meeting_score = 0
         if len(Horim_meeting) == len(all_melave_Apprentices):
@@ -234,8 +234,8 @@ def red_green_orange_status(all_Apprentices):
     forgotenApprenticCount = 0
     forgotenApprenticeList = []
     # update apprentices call
-    visitcalls = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.apprentice_id).filter(Visit.title == "שיחה").all()
+    visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
+        Visit.ent_reported).filter(Visit.title == "שיחה").all()
     ids = [r[0] for r in visitcalls]
     # handle no record
     for ent in all_Apprentices:
@@ -246,7 +246,7 @@ def red_green_orange_status(all_Apprentices):
     for ent in visitcalls:
         gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
         if gap > 100:
-            forgotenApprenticeList.append(ent.apprentice_id)
+            forgotenApprenticeList.append(ent.ent_reported)
         if gap >= 60:
             redvisitcalls += 1
         if 60 > gap > 21:
@@ -254,8 +254,8 @@ def red_green_orange_status(all_Apprentices):
         if 21 > gap:
             greenvisitcalls += 1
     # update apprentices meetings
-    visitmeetings = db.session.query(Visit.apprentice_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.apprentice_id).filter(Visit.title == "מפגש").all()
+    visitmeetings = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
+        Visit.ent_reported).filter(Visit.title == "מפגש").all()
     redvisitmeetings = 0
     orangevisitmeetings = 0
     greenvisitmeetings = 0
@@ -270,7 +270,7 @@ def red_green_orange_status(all_Apprentices):
     for ent in visitmeetings:
         gap = (date.today() - ent.visit_date).days if ent.visit_date is not None else 0
         if gap > 100:
-            if ent.apprentice_id in forgotenApprenticeList:
+            if ent.ent_reported in forgotenApprenticeList:
                 forgotenApprenticCount += 1
         if gap > 100:
             redvisitmeetings += 1
@@ -380,7 +380,7 @@ def toISO(d):
 
 
     #
-    # visitfailors = db.session.query(Visit.apprentice_id,func.count(Visit.title)).filter(Visit.title == "נסיון_שכשל").group_by(Visit.apprentice_id).all()
+    # visitfailors = db.session.query(Visit.ent_reported,func.count(Visit.title)).filter(Visit.title == "נסיון_שכשל").group_by(Visit.ent_reported).all()
     # print(visitfailors)
     # count_1t5 = 0
     # count_6t10 = 0

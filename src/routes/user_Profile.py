@@ -14,12 +14,43 @@ from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
+from src.models.contact_form_model import ContactForm
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
+@userProfile_form_blueprint.route('/delete', methods=['POST'])
+def delete():
+    try:
+        data = request.json
+        userId = data['userId'][3:]
+        res = db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
+        res = db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
+        res = db.session.query(notifications).filter(notifications.userid == userId, ).delete()
 
+        res = db.session.query(user1).filter(user1.id == userId).delete()
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
+    return jsonify({"result":"success"}), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+
+@userProfile_form_blueprint.route("/update", methods=['put'])
+def updateTask():
+    # get tasksAndEvents
+    userId = request.args.get('userId')[3:]
+    print(userId)
+    data = request.json
+    updatedEnt = user1.query.get(userId)
+    for key in data:
+        setattr(updatedEnt, key, data[key])
+    db.session.commit()
+    if updatedEnt:
+        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+        # TODO: add contact form to DB
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    return jsonify({'result': 'error'}), HTTPStatus.OK
 @userProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if request.method == "POST":
@@ -72,7 +103,7 @@ def getmyApprentices_form():
         print(noti.city_id)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         print(city)
-        reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
+        reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
         eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
                                                                            notifications.apprenticeid == noti.id,
                                                                            notifications.numoflinesdisplay == 3).all()
@@ -195,7 +226,7 @@ def getmyApprentice_form():
     my_dict = []
     if noti:
         city = db.session.query(City).filter(City.id == noti.city_id).first()
-        reportList = db.session.query(Visit.id).filter(Visit.apprentice_id == noti.id).all()
+        reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
         eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
             notifications.apprenticeid == noti.id,
             notifications.numoflinesdisplay == 3).all()

@@ -66,5 +66,5 @@ class Apprentice(db.Model):
     teacher_grade_b_email=db.Column(teacher_grade_b_email_col, db.String(50), nullable=False,default="")
     teudatZehut = db.Column("teudatzehut", db.String(20), nullable=False,default="")
     institution_mahzor = db.Column("institution_mahzor", db.String(10), nullable=False,default="")
-    photo_path=db.Column("photo_path", db.String(50), nullable=False,default="")
+    photo_path=db.Column("photo_path", db.String(50), nullable=False,default="https://www.gravatar.com/avatar")
     militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")

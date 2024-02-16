@@ -2,6 +2,8 @@ import uuid
 import time
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
+
+from openpyxl.reader.excel import load_workbook
 from twilio.rest import Client
 
 from app import red, db
@@ -85,3 +87,18 @@ def get_CitiesDB():
     CityList = db.session.query(City.name).all()
     print(CityList)
     return jsonify([i[0] for i in [tuple(row) for row in CityList]])
+
+@onboarding_form_blueprint.route('/upload_CitiesDB', methods=['GET'])
+def upload_CitiesDB():
+    import csv
+    my_list = []
+    #/home/ubuntu/flaskapp/src/routes/
+    path = '/home/ubuntu/flaskapp/citiesToAdd.xlsx'
+    wb = load_workbook(filename=path)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+            my_list.append(City(int(row[2].value), row[1].value.strip(), int(row[0].value)))
+    for ent in my_list:
+        db.session.add(ent)
+    db.session.commit()
+    return jsonify({"result": "success"}), HTTPStatus.OK

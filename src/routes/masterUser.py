@@ -100,14 +100,12 @@ def search_entities():
 def add_apprentice_excel():
     #/home/ubuntu/flaskapp/
     file = request.files['file']
-    filename = secure_filename(file.filename)
-    print(filename)
-    file.save(filename)
-    wb = load_workbook(filename=filename)
+
+    wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        first_name = row[0].value
-        last_name = row[0].value
+        first_name = row[2].value
+        last_name = str(row[0].value).split(" ")[0]
         phone = row[1].value
         city = row[3].value
         address = row[4].value
@@ -121,18 +119,27 @@ def add_apprentice_excel():
         teacher_grade_a = row[12].value
         teacher_grade_b = row[13].value
         contact1_email = row[15].value
+        eshcol = row[14].value
         birthday_ivry = row[16].value
         marriage_status = row[17].value
         army_role = row[18].value#מפקד?
+        unit_name = row[19].value#מפקד?
         teudatZehut = row[20].value#מפקד?
         birthday_loazi = row[21].value#מפקד?
         accompany_id = row[22].value#מפקד?
+        militaryCompoundId=row[23].value
+        print(city)
+        CityId = db.session.query(City.id).filter(City.name==city).first()[0]
+        print(CityId)
 
-        print(birthday_ivry)
         try:
-            institution_id = db.session.query(Institution).filter(Institution.name == str(institution_name)).first()
+            institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
             Apprentice1 = Apprentice(
                 id=phone,
+                base_address=militaryCompoundId,
+                institution_id=institution_id[0] if institution_id is not None else 0,
+                address=address,
+                serve_type=serve_type,
                 name=first_name,
                 last_name=last_name,
                 phone=str(phone),
@@ -148,6 +155,8 @@ def add_apprentice_excel():
                 contact1_first_name=contact1_first_name,
                 teudatZehut=teudatZehut,
                 birthday=birthday_loazi,
+                unit_name=unit_name,
+                eshcol=eshcol,
                 accompany_id=accompany_id,
 
             )
@@ -212,7 +221,7 @@ def deleteEnt():
            if typeOfSet == "apprentice":
                entityId = str(data['entityId'])[3:]
                res = db.session.query(notifications).filter(notifications.apprenticeid == entityId,).delete()
-               res = db.session.query(Visit).filter(Visit.apprentice_id == entityId,).delete()
+               res = db.session.query(Visit).filter(Visit.ent_reported == entityId,).delete()
                res = db.session.query(Apprentice).filter(Apprentice.id == entityId).delete()
            if typeOfSet == "gift":
                entityId = str(data['entityId'])

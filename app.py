@@ -26,6 +26,9 @@ from src.routes.export_import import export_import_blueprint
 from src.routes.institutionProfile_routes import institutionProfile_form_blueprint
 from src.routes.base import base_blueprint
 from src.routes.apprentice_Profile import apprentice_Profile_form_blueprint
+from src.routes.eshcol import eshcol_blueprint
+from src.routes.Hativa import Hativa_blueprint
+from src.routes.hadar_plan_session import hadar_plan_session_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -41,6 +44,9 @@ app.register_blueprint(master_user_form_blueprint)
 app.register_blueprint(institutionProfile_form_blueprint)
 app.register_blueprint(base_blueprint)
 app.register_blueprint(apprentice_Profile_form_blueprint)
+app.register_blueprint(eshcol_blueprint)
+app.register_blueprint(Hativa_blueprint)
+app.register_blueprint(hadar_plan_session_blueprint)
 
 if __name__ == '__main__':
 

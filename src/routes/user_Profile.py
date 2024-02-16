@@ -3,6 +3,8 @@ import pickle
 from datetime import datetime
 import time
 import uuid
+from enum import Enum
+
 import boto3
 
 import werkzeug
@@ -16,10 +18,12 @@ from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.contact_form_model import ContactForm
 from src.models.notification_model import notifications
+from src.models.role import role_dict
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
+role_name = Enum('Color', ['melave', 'racaz_mosad', 'racaz_eshcol'])
 @userProfile_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
@@ -123,12 +127,12 @@ def getmyApprentices_form():
                  "thRavMelamedYearB_email": noti.teacher_grade_b_email,
                 "address": {
                     "country": "IL",
-                    "city": city.name,
+                    "city": city.name if city else "",
                     "cityId": noti.city_id,
                     "street": noti.address,
                     "houseNumber": "1",
                     "apartment": "1",
-                    "region": str(city.cluster_id),
+                    "region": str(city.cluster_id) if city else "",
                     "entrance": "a",
                     "floor": "1",
                     "postalCode": "12131",
@@ -183,7 +187,7 @@ def getmyApprentices_form():
         return jsonify({"result":"Wrong id"})
     if apprenticeList ==[]:
         # acount not found
-        return jsonify({"result":"empty"})
+        return jsonify([])
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
@@ -200,7 +204,7 @@ def getProfileAtributes_form():
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         city = db.session.query(City).filter(City.id == userEnt.city_id).first()
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                       "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                       "city":city.name, "region":str(userEnt.cluster_id), "role":role_dict[str(userEnt.role_id)], "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
                        "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
         return jsonify(list), HTTPStatus.OK
     else:
@@ -303,7 +307,7 @@ def getmyApprentice_form():
 
     if noti is None or len(my_dict) == 0:
         # acount not found
-        return jsonify(["Wrong id"])
+        return jsonify({"result": "no such id"}), HTTPStatus.OK
     else:
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB

@@ -531,7 +531,7 @@ def melave_score(melaveId):
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices)==0:
-            return 100,21,60
+            return 100,0,0
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title == "שיחה", Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
         call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,12,21)
@@ -592,7 +592,7 @@ def mosad_Coordinators_score(mosadCoord_id):
                                                          user1.institution_id == institution_id[0]).all()
 
     if len(all_Mosad_Melave) == 0:
-        return 100
+        return 100,0,0,0,0
     all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
     total_avg_call=0
     total_avg_meet=0
@@ -699,7 +699,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     all_eshcol_apprentices = db.session.query(Apprentice.id).filter(
                                                          Apprentice.eshcol == eshcol).all()
     if len(all_eshcol_mosadCoord) == 0:
-        return 100
+        return 100,0
     all_eshcol_mosadCoord_list = [r[0] for r in all_eshcol_mosadCoord]
     total_eshcol_mosad_gap=0
     for mosadCoordId in all_eshcol_mosadCoord_list:

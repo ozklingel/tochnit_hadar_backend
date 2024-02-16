@@ -30,6 +30,7 @@ from ..models.visit_model import Visit
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
+
 #from chat box
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():

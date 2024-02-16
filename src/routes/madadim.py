@@ -549,21 +549,21 @@ def melave_score(melaveId):
         professional_2monthly = db.session.query(Visit.user_id,
                                                  func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId).first()
-        gap = (date.today() - professional_2monthly.visit_date).days if group_meeting is not None else 100
+        gap = (date.today() - professional_2monthly.visit_date).days if professional_2monthly is not None else 100
         professional_2monthly_score = 0
         if gap < 90:
             professional_2monthly_score += 6.6
 
         cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).all()
-        gap = (date.today() - cenes_yearly.visit_date).days if group_meeting is not None else 400
+            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).first()
+        gap = (date.today() - cenes_yearly.visit_date).days if cenes_yearly is not None else 400
         cenes_yearly_score = 0
         if gap < 365:
             cenes_yearly_score += 6.6
 
         yeshiva_monthly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.user_id).filter(Visit.title == "ישיבת_מלוים", Visit.user_id == melaveId).first()
-        gap = (date.today() - yeshiva_monthly.visit_date).days if group_meeting is not None else 100
+        gap = (date.today() - yeshiva_monthly.visit_date).days if yeshiva_monthly is not None else 100
         yeshiva_monthly_score = 0
         if gap < 30:
             yeshiva_monthly_score += 6.6

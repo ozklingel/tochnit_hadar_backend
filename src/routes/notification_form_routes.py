@@ -31,11 +31,14 @@ def getAll_notification_form():
         visitEvent = db.session.query(Visit).filter(Visit.user_id == user,
                                                     Visit.title == "מפגש_קבוצתי").order_by(Visit.visit_date.desc()).first()
         # handle no row so insert need a meeting notification
+        id1=0
         if visitEvent is None:
-            add_visit_notification(user, None, "מפגש_קבוצתי", '2023-01-01')
+            id1=add_visit_notification(user, None, "מפגש_קבוצתי", '2023-01-01')
         gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-        if gap > 30:
+        if gap > 60:
             add_visit_notification(visitEvent.user_id, visitEvent.ent_reported, visitEvent.title, visitEvent.visit_date)
+        else:
+            res=db.session.query(notifications).filter(notifications.userid == user, notifications.event=="מפגש_קבוצתי",notifications.id!=id1).delete()
 
         #update notification table  birthday and events
         ApprenticeList = db.session.query(Apprentice.birthday,Apprentice.id,Apprentice.accompany_id).filter(Apprentice.accompany_id == user).all()
@@ -55,19 +58,28 @@ def getAll_notification_form():
             visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title=="שיחה").order_by(Visit.visit_date.desc()).first()
             #handle no row so insert need a call notification
             if visitEvent is None:
-                add_visit_notification(user, Apprentice1.id,"שיחה", '2023-01-01')
+                id1=add_visit_notification(user, Apprentice1.id,"שיחה", '2023-01-01')
 
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             if gap > 30:
                 add_visit_notification(visitEvent.user_id, visitEvent.ent_reported,visitEvent.title, visitEvent.visit_date)
+            else :
+                res = db.session.query(notifications).filter(notifications.userid == user,
+                                                             notifications.apprenticeid ==Apprentice1.id ,
+                                                             notifications.event == "שיחה",notifications.id!=id1).delete()
+
             # update notification created by system=apprentices meetings
-            visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title=="מפגש").order_by(Visit.visit_date.desc()).first()
+            visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,or_(Visit.title=="מפגש",Visit.title=="מפגש_קבוצתי")).order_by(Visit.visit_date.desc()).first()
             #handle no row so insert need a meeting notification
             if visitEvent is None:
-                add_visit_notification(user, Apprentice1.id,"מפגש", '2023-01-01')
+                id1=add_visit_notification(user, Apprentice1.id,"מפגש", '2023-01-01')
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-            if gap > 30:
+            if gap > 90:
                 add_visit_notification(visitEvent.user_id, visitEvent.ent_reported,visitEvent.title, visitEvent.visit_date)
+            else :
+                res = db.session.query(notifications).filter(notifications.userid == user,
+                                                             notifications.apprenticeid ==Apprentice1.id ,notifications.id!=id1,
+                                                             notifications.event == "מפגש").delete()
         #send  notifications.
         userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter_by(id=user).first()
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
@@ -262,7 +274,7 @@ def add_visit_notification(user,apprenticeid,event,date):
     allreadyread=db.session.query(notifications.allreadyread).filter(notifications.userid == user, notifications.apprenticeid == apprenticeid,notifications.event==event).first()
     res=db.session.query(notifications).filter(notifications.userid == user, notifications.apprenticeid == apprenticeid,notifications.event==event).delete()
     notification1=None
-
+    id1=int(str(uuid.uuid4().int)[:5]),
     if res==0:
         notification1 = notifications(
                     userid=user,
@@ -271,7 +283,7 @@ def add_visit_notification(user,apprenticeid,event,date):
                     date=date,
                     allreadyread=False,
                     numoflinesdisplay=2,
-                    id=int(str(uuid.uuid4().int)[:5]),
+                    id=id1
 
         )
     else:
@@ -282,11 +294,12 @@ def add_visit_notification(user,apprenticeid,event,date):
                     date=date,
                     allreadyread=allreadyread.allreadyread,
                     numoflinesdisplay=2,
-                    id=int(str(uuid.uuid4().int)[:5]),
+                    id=id1,
 
         )
     db.session.add(notification1)
     db.session.commit()
+    return  id1
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():

@@ -21,10 +21,11 @@ DROP TABLE IF EXISTS apprentice CASCADE ;
 DROP TABLE IF EXISTS notifications CASCADE ;
 DROP TABLE IF EXISTS contact_forms CASCADE ;
 DROP TABLE IF EXISTS visits CASCADE ;
+DROP TABLE IF EXISTS ent_group CASCADE ;
 
 
 CREATE TABLE institutions(
-shluha text DEFAULT '',
+eshcol_id text DEFAULT '',
 roshYeshiva_phone text DEFAULT '',
 roshYeshiva_name text DEFAULT '',
 admin_phone text DEFAULT '',
@@ -133,7 +134,7 @@ contact3_first_name text DEFAULT '',
 contact3_last_name text DEFAULT '',
 contact3_email text DEFAULT '',
 contact3_relation text DEFAULT '',
-militaryCompoundId text DEFAULT '',
+militaryCompoundId text DEFAULT '14509',
 unit_name text DEFAULT '',
 serve_type text DEFAULT '',
 paying boolean DEFAULT False,
@@ -178,9 +179,7 @@ CONSTRAINT fk_3
       REFERENCES clusters(id)
 );
 
-
 CREATE TABLE  contact_forms(
-
 id int,
 created_by_id int  ,
 created_for_id int  ,
@@ -191,8 +190,9 @@ allreadyread boolean DEFAULT False,
 attachments text[] default '{}',
 icon text DEFAULT 'empty',
 description text DEFAULT '',
-
-PRIMARY KEY(id),
+type text DEFAULT 'draft',
+ent_group  text DEFAULT '',  
+PRIMARY KEY(id,created_for_id),
 CONSTRAINT fk_1
       FOREIGN KEY(created_by_id)
       REFERENCES user1(id),
@@ -202,10 +202,11 @@ CONSTRAINT fk_2
 
 
 );
+
 CREATE TABLE  visits(
 
 id int,
-apprentice_id int  ,
+ent_reported int  ,
 user_id int  ,
 visit_in_army boolean DEFAULT False,
 visit_date DATE ,
@@ -214,12 +215,11 @@ title text DEFAULT '',
 attachments text[] default '{}',
 description text DEFAULT '',
 allreadyread boolean DEFAULT False,
+ent_group  text DEFAULT ''  ,
 CONSTRAINT fk_1
       FOREIGN KEY(user_id)
-      REFERENCES user1(id),
-CONSTRAINT fk_2
-      FOREIGN KEY(apprentice_id)
-      REFERENCES apprentice(id)
+      REFERENCES user1(id)
+
 
 );
 CREATE TABLE  notifications(
@@ -246,73 +246,38 @@ CONSTRAINT fk_2
 
 
 
+CREATE TABLE  ent_group(
 
+id int,
+user_id int,
+group_name text DEFAULT '',
+PRIMARY KEY(id),
+CONSTRAINT fk_1
+      FOREIGN KEY(user_id)
+      REFERENCES user1(id)
 
+);
 
+CREATE TABLE  gift(
 
+code text,
+was_used boolean DEFAULT False,
+PRIMARY KEY(code)
 
+);
 
-INSERT INTO institutions (id, address, city_id, phone, contact_name, contact_phone, logo_path, name, owner_id) VALUES
- (0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
- INSERT INTO clusters (id, name) VALUES 
-(0, '');
-INSERT INTO cities (id, name, cluster_id) VALUES
- (0, 'aa', 0);
-INSERT INTO user1 (id, role_id, first_name, last_name, teudatZehut, email, birthday, eshcol, institution_id, address, creationdate, photo_path, city_id, cluster_id, notifystartweek, notifymorning, notifydaybefore) VALUES
- (523301800, '1', 'עוז', 'קלי', '313387', 'o@x.x', '1999-09-09', '', 0, '', '1999-09-09', '', 0, 0, False,False ,False );
+CREATE TABLE  system_report(
 
-INSERT INTO apprentice (id, accompany_id, last_name, maritalstatus, marriage_date, teacher_grade_b_phone, teacher_grade_b, 
-teacher_grade_b_email, teacher_grade_a_phone, teacher_grade_a_email, teacher_grade_a, highschoolinstitution, 
-high_school_teacher_phone, high_school_teacher, high_school_name, high_school_teacher_email, contact1_email,
- contact1_first_name, contact1_last_name, contact1_phone, contact2_email, contact2_phone, contact2_first_name,
-  contact2_last_name, contact3_phone, contact3_first_name, contact3_last_name, contact3_email, militarycompoundid, 
-  unit_name, serve_type, paying, release_date, recruitment_date, onlinestatus, matsber, thperiod, password, phone, email,
-   birthday, eshcol, institution_id, address, creationdate, photo_path, city_id, cluster_id, army_role, militarypositionold,
-    militaryupdateddatetime, educationalinstitution, educationfaculty, workoccupation, worktype, workplace, workstatus,
-     militarypositionnew, first_name) 
-     VALUES (523301801,523301800, 'a', 'b', '1995-09-09', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'l', 'o', 'p', 'q', '', '', '',
-      '', '', '', '', '', '', '', '', '',NULL , '1995-09-09', '1995-09-09', 0, 0, '', 'd', 'f', 'g', '1995-09-09', 'h', 0, 'j', 'k', 'l',
-       0, 0, '0', '0', '1995-09-09', 'r', 't', 'y',
-       'u', 'i', 'o', 'p', 'b');
+id int,
+creation_date DATE DEFAULT '1999-09-09' ,
+type text DEFAULT '',
+related_id int,
+value int,
+PRIMARY KEY(id)
 
-INSERT INTO visits (id, apprentice_id, user_id, visit_in_army, visit_date, note, title, allreadyread) VALUES 
-(0, 523301801, 523301800,False , '1999-09-09', 'hi', 'bi', NULL);
-INSERT INTO contact_forms (id, created_by_id, created_for_id, created_at, subject, content, allreadyread) 
-VALUES (0, 523301800, 523301800, '1999-09-09', 'hi', 'bi', False);
-
-
-
-
-
-        
-
-
-       
-1.download from CMD:
-      git clone <this repo url>
-     
-      
-2. Run below command inside project directory to setup environment
-      ```console
-      python -m venv venv
-      ```
-
-3. Activate enviroment with below command (for Windows):
-      ```console
-      venv\Scripts\activate
-      ```
-
-4. Run below command next to install required modules plus dependencies defined in `requirements.txt`
-      ```console
-      pip install -r requirements.txt
-      ```
-
-5. Run below command to start the app:
-     flask run
-      ```
-
-6. All Done!! [Click Here](http://localhost:5000/) to interact with your app:u will get all user1 table content
-
-
-#post installation 
-for developing ,keep an eye to follow the correct architecture like in https://realpython.com/flask-blueprint/
+);
+CREATE TABLE base (
+id INTEGER NOT NULL,
+ name TEXT DEFAULT ''::text, 
+ cordinatot TEXT DEFAULT ''::text,
+  PRIMARY KEY (id));

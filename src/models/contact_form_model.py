@@ -3,7 +3,6 @@ from sqlalchemy import ARRAY
 from . import *
 from datetime import datetime
 from .user_model import user1
-from .ent_group import ent_group
 #wil be created by support call and by messages page
 class ContactForm(db.Model):
     __tablename__ = CONTACT_FORMS_TBL
@@ -18,6 +17,6 @@ class ContactForm(db.Model):
     attachments=db.Column(ARRAY(db.String), nullable=False)
     icon = db.Column(db.String(20), nullable=False)
     type = db.Column("type",db.String(250), nullable=False)
-    ent_group=db.Column(db.Integer,ForeignKey(ent_group.id), nullable=True)
+    ent_group=db.Column(db.String(100), nullable=True)
 
 

@@ -3,7 +3,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from . import *
 from .apprentice_model import Apprentice
 from .user_model import user1
-from .ent_group import ent_group
 
 
 class Visit(db.Model):
@@ -20,7 +19,7 @@ class Visit(db.Model):
     allreadyread=db.Column(ALLREADYREAD, db.Boolean, nullable=True)
     attachments = db.Column("attachments", nullable=True)
     description = db.Column("description", db.String(100), nullable=True)
-    ent_group=db.Column(db.Integer,ForeignKey(ent_group.id), nullable=True)
+    ent_group=db.Column(db.String(100), nullable=True)
 
 
 

@@ -11,7 +11,6 @@ from config import AWS_access_key_id, AWS_secret_access_key
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
-from ..models.ent_group import ent_group
 from ..models.institution_model import Institution
 from ..models.user_model import user1
 
@@ -67,8 +66,8 @@ def getAll_reports_form():
     reportList = db.session.query(Visit.ent_reported,Visit.ent_group,Visit.note,Visit.visit_date,Visit.id,Visit.title,Visit.description,Visit.attachments,Visit.allreadyread).filter(Visit.user_id == user).all()
     group_report_dict=dict()
     my_dict = []
+    groped_rep=[]
     for noti in reportList:
-        print("ent_group",noti.ent_group)
         daysFromNow = (date.today() - noti.visit_date).days if noti.visit_date is not None else None
         if noti.ent_group !="":
             if noti.ent_group+str(noti.id) in  group_report_dict:
@@ -76,12 +75,12 @@ def getAll_reports_form():
             else:
                 print("created_for_id",noti.ent_reported)
                 group_report_dict[noti.ent_group+str(noti.id)] = [str(noti.ent_reported)]
+            groped_rep.append(noti)
         else:
             my_dict.append(
             {"id": str(noti.id), "reported_on":[str(noti.ent_reported)], "date":toISO(noti.visit_date),        "ent_group": "",
              "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),"attachments": noti.attachments})
-            reportList.remove(noti)
-    for noti in reportList:
+    for noti in groped_rep:
         if group_report_dict[noti.ent_group+str(noti.id)]!=None:
             my_dict.append(
                 {"id": str(noti.id), "reported_on": group_report_dict[noti.ent_group+str(noti.id)], "date": toISO(noti.visit_date),
@@ -103,9 +102,9 @@ def setWasRead_report_form():
     report_id = data['report_id']
     print(report_id)
     try:
-        noti = Visit.query.get(report_id)
-        noti.allreadyread = True
+        num_rows_updated = Visit.query.filter_by(id=report_id).update(dict(allreadyread=True))
         db.session.commit()
+
         if report_id:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB

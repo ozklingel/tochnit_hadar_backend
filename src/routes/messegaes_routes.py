@@ -18,7 +18,6 @@ from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
 from ..models.contact_form_model import ContactForm
-from ..models.ent_group import ent_group
 from ..models.institution_model import Institution
 from ..models.user_model import user1
 
@@ -54,7 +53,7 @@ def add_contact_form():
     for key in created_for_ids:
         try:
             ContactForm1 = ContactForm(
-                id=mess_id,
+                id=mess_id ,#if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                 created_for_id=str(key['id'])[3:],
                 created_by_id=created_by_id,
                 content=content,
@@ -85,24 +84,23 @@ def getAll_messegases_form():
                                       ,ContactForm.ent_group,ContactForm.created_by_id)\
         .filter(or_(ContactForm.created_for_id == user,ContactForm.created_by_id == user)).all()
     my_dict = []
+    groped_mess=[]
     group_report_dict=dict()
-
+    print(messegasesList)
     for mess in messegasesList:
-        print("ent_group", mess.ent_group)
         daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
         if mess.ent_group !="":
             if mess.ent_group+str(mess.id) in  group_report_dict:
                 group_report_dict[mess.ent_group+str(mess.id)].append(str(mess.created_for_id))
             else:
-                print("created_for_id",mess.created_for_id)
                 group_report_dict[mess.ent_group+str(mess.id)] = [str(mess.created_for_id)]
+            groped_mess.append(mess)
         else:
             my_dict.append(
                 {"type":mess.type,"attachments":mess.attachments,"id": str(mess.id),"to":[str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id), "date":toISO(mess.created_at),
                  "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
-            messegasesList.remove(mess)
-    print(group_report_dict)
-    for mess in messegasesList:
+
+    for mess in groped_mess:
         if group_report_dict[mess.ent_group+str(mess.id)]!=None:
             my_dict.append(
                 {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
@@ -110,13 +108,9 @@ def getAll_messegases_form():
                  "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"ent_group":mess.ent_group,
                  "icon": mess.icon})
             group_report_dict[mess.ent_group+str(mess.id)]=None
-    if not messegasesList:
-        # acount not found
-        return jsonify([])
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return jsonify(my_dict), HTTPStatus.OK
+    # print(f' notifications: {my_dict}]')
+    # TODO: get Noti form to DB
+    return jsonify(my_dict), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
@@ -126,15 +120,16 @@ def setWasRead_message_form():
     message_id = data['message_id']
     print(message_id)
     try:
-        noti = ContactForm.query.get(message_id)
-        noti.allreadyread = True
+        #notis =ContactForm.query.filter_by(id=message_id)#db.session.query(ContactForm.id,ContactForm.allreadyread).filter(ContactForm.id==message_id).all()
+        num_rows_updated = ContactForm.query.filter_by(id=message_id).update(dict(allreadyread=True))
         db.session.commit()
+
         if message_id:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
-    except:
-        return jsonify({'result': 'wrong id'}), HTTPStatus.OK
+    except Exception as  e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 
 
 @messegaes_form_blueprint.route('/delete', methods=['DELETE','post'])

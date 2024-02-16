@@ -56,7 +56,7 @@ def getTasks():
             todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
         done_visits = db.session.query(Visit.ent_reported,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
-                                                    Visit.id.not_in(todo_ids),Visit.visit_date>too_old).all()
+                                                    Visit.id.not_in(todo_ids),Visit.visit_date>too_old).distinct(Visit.id).all()
         done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
         "description": str(row[4]),'status':'done',"apprenticeId": [str(row[0])], "title": str(row[1])
              ,"daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []

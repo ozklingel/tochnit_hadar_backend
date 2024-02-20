@@ -31,7 +31,8 @@ def getLocation():
         baseEnt = db.session.query(Base).filter(Base.id==base1).first()
         print(baseEnt)
         if baseEnt:
-            return jsonify({'id': str(baseEnt.id),'cordinatot': baseEnt.cordinatot,'name': baseEnt.name}), HTTPStatus.OK
+            cordArray=str(baseEnt.cordinatot).split(" ")
+            return jsonify({'id': str(baseEnt.id),'LAT': cordArray[0],'LANG':cordArray[1],'name': baseEnt.name}), HTTPStatus.OK
         return jsonify({'result': "error"}), HTTPStatus.OK
 
     except Exception as e:

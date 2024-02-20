@@ -19,79 +19,7 @@ from src.models.visit_model import Visit
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
 
-@master_user_form_blueprint.route("/search_entities", methods=['GET'])
-def search_entities():
-    isMosad_coord = request.args.get("isMosad_coord")
-    isEshcol_coord = request.args.get("isEshcol_coord")
-    isMelave= request.args.get("isMelave")
-    isApprentice = request.args.get("isApprentice")
-    institution_name = request.args.get("institution_name")
-    thpreiodList = request.args.get("thpreiod").split(",") if request.args.get("thpreiod") is not None else None
-    institution_mahzor = request.args.get("institution_mahzor")
-    region = request.args.get("region") if request.args.get("region") is not None and "?"  not in request.args.get("region") else None
-    base_address = request.args.get("base_address")
-    marriage_status = request.args.get("marriage_status").split(",") if request.args.get("marriage_status") is not None else None
-    city_name = request.args.get("city_name") if request.args.get("city_name") is not None else None
-    eshcol = request.args.get("eshcol")
-    entityType=[]
-    #query user table
-    query = None
-    if isMelave=="True":
-        entityType.append("0")
-    if isMosad_coord=="True":
-        entityType.append("1")
-    if isEshcol_coord=="True":
-        entityType.append("2")
-    if len(entityType):
-        query = db.session.query(user1.id)
-        query = query.filter(user1.role_id.in_(entityType))
-        if institution_name:
-            query = query.filter(user1.institution_id==Institution.id,Institution.name==institution_name)
-        if region:
-            query = query.filter(user1.cluster_id==Cluster.id,Cluster.name==region)
-        if city_name:
-            query = query.filter(City.id==user1.city_id,city_name==City.name)
-        if eshcol:
-            query = query.filter(user1.eshcol==eshcol)
 
-    res1=[]
-    if query:
-        res1 = query.all()
-    query=None
-    #query apprentice table
-    if isApprentice=="True":
-        query = db.session.query(Apprentice.id)
-        if thpreiodList:
-            print("thpreiodList",thpreiodList)
-            query = query.filter(Apprentice.hadar_plan_session.in_(list(thpreiodList)))
-            #query = query.filter_by(thpreiod=thpreiod)
-        if institution_mahzor:
-            query = query.filter_by(institution_mahzor=institution_mahzor)
-        if marriage_status:
-            print("marriage_status", marriage_status)
-            query = query.filter(Apprentice.marriage_status.in_(list(marriage_status)))
-        if base_address:
-            query = query.filter_by(base_address=base_address)
-        if institution_name:
-            query = query.filter(Apprentice.institution_id==Institution.id,Institution.name==institution_name)
-        if region:
-            query = query.filter(Apprentice.city_id==City.id,City.cluster_id==Cluster.id,Cluster.name==region)
-        if city_name:
-            query = query.filter(City.id==Apprentice.city_id,city_name==City.name)
-        if eshcol:
-            query = query.filter(Apprentice.eshcol==eshcol)
-    res2=[]
-    if query:
-        res2 = query.all()
-    print("app",res2)
-    print("user",res1)
-
-    return jsonify({"users":
-                        [str(i[0]) for i in [tuple(row) for row in res1]],
-                    "apprentice":
-                        [str(i[0]) for i in [tuple(row) for row in res2]],
-                    }
-        ), HTTPStatus.OK
 
 
 

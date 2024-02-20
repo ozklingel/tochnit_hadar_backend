@@ -38,43 +38,43 @@ def add_contact_form():
     subject = data['subject']
 
     content = data['content']
-    type="פניות_שירות"
-    icon=""
-    ent_group_name=""
+    type = "פניות_שירות"
+    icon = ""
+    attachments=[]
+    ent_group_name = ""
     try:
         type = data['type']
         icon = data['icon']
+        attachments = data['attachments']
+
         ent_group_name = str(data['ent_group'])
 
     except:
-        print("no icon or type or ent_group")
+        print("no icon or type or ent_group or attachments")
     created_by_id = str(data['created_by_id'])[3:]
     created_for_ids = data['created_for_ids']
-    mess_id=str(uuid.uuid1().int)[:5]
+    mess_id = str(uuid.uuid1().int)[:5]
     for key in created_for_ids:
         try:
             ContactForm1 = ContactForm(
-                id=mess_id ,#if ent_group_name!="" else str(uuid.uuid1().int)[:5],
+                id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                 created_for_id=str(key['id'])[3:],
                 created_by_id=created_by_id,
                 content=content,
                 subject=subject,
                 created_at=date.today(),
                 allreadyread=False,
-                attachments=[],
+                attachments=attachments,
                 type=type,
                 ent_group=ent_group_name,
                 icon=icon
             )
             db.session.add(ContactForm1)
             db.session.commit()
-        except Exception as e:
-            return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
+            return jsonify({'result': 'success'}), HTTPStatus.OK
 
-    if ContactForm1:
-        print(f'add contact form: subject: [{subject}, content: {content}, created_by_id: {created_by_id}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': "success"}), HTTPStatus.OK
+        except Exception as e:
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_messegases_form():
     user = request.args.get('userId')[3:]
@@ -145,35 +145,7 @@ def deleteEnt():
            return jsonify({'result': 'error'+str(e)}), HTTPStatus.OK
 
 
-@messegaes_form_blueprint.route('/uploadPhoto', methods=['post'])
-def uploadPhoto_form():
-        message_Id = request.args.get('message_Id')
-        print(message_Id)
-        updatedEnt = ContactForm.query.get(message_Id)
 
-        images_list=[]
-        for imagefile in request.files.getlist('image'):
-            new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
-            bucket_name = "th01-s3"
-            session = boto3.Session()
-            s3_client = session.client('s3',
-                                aws_access_key_id=AWS_access_key_id,
-                                aws_secret_access_key=AWS_secret_access_key)
-            s3 = boto3.resource('s3',
-                                aws_access_key_id=AWS_access_key_id,
-                                aws_secret_access_key=AWS_secret_access_key)
-            print(new_filename)
-            try:
-                s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
-            except:
-                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
-            images_list.append("https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename)
-        if updatedEnt:
-            updatedEnt.attachments=images_list
-            db.session.commit()
-        #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
-            return jsonify({'result': 'success', 'image path': updatedEnt.attachments}), HTTPStatus.OK
-        return jsonify({"result": "error"}),HTTPStatus.BAD_REQUEST
 
 @messegaes_form_blueprint.route("/filter_to", methods=['GET'])
 def filter_to():
@@ -262,16 +234,17 @@ def filter_to():
     res2=[]
     if query:
         res2 = query.all()
-    print("app",res2)
-    print("user",res1)
     users=   [str(i[0]) for i in [tuple(row) for row in res1]]
     apprentice=[str(i[0]) for i in [tuple(row) for row in res2]]
-    ent_group_concat=", ".join(ent_group_dict.values())
+    print("app",apprentice)
+    print("user",users)
+    ent_group_concat=""
+    if apprentice!=[] or users!=[]:
+        ent_group_concat=", ".join(ent_group_dict.values())
+    result = set(users + apprentice)
 
-    return jsonify({"users":
-                        [str(i[0]) for i in [tuple(row) for row in users]],
-                    "apprentice":
-                        [str(i[0]) for i in [tuple(row) for row in apprentice]],
+
+    return jsonify({"filtered":    [str(row) for row in result],
                     "ent_group":ent_group_concat
                     }
         ), HTTPStatus.OK
@@ -369,12 +342,12 @@ def filter_meesages():
     apprentice=[str(i[0]) for i in [tuple(row) for row in res2]]
     mess_user=db.session.query(ContactForm.id).filter(or_(ContactForm.created_by_id.in_(users),ContactForm.created_for_id.in_(users))).all()
     #reports_apprentice=db.session.query(ContactForm.id).filter(ContactForm.created_for_id.in_(apprentice)).all()
-    ent_group_concat=", ".join(ent_group_dict.values())
-    mess_ent_group=db.session.query(ContactForm.id).filter(ContactForm.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
+    #ent_group_concat=", ".join(ent_group_dict.values())
+    #mess_ent_group=db.session.query(ContactForm.id).filter(ContactForm.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
     users_mess=[str(i[0]) for i in [tuple(row) for row in mess_user]]
     #apprentice_mess=[str(i[0]) for i in [tuple(row) for row in reports_apprentice]]
-    ent_group_mess=[str(i[0]) for i in [tuple(row) for row in mess_ent_group]]
-    result=set(ent_group_mess+users_mess)
+    #ent_group_mess=[str(i[0]) for i in [tuple(row) for row in mess_ent_group]]
+    result=users_mess#set(ent_group_mess+users_mess)
     print(result)
     return jsonify( [str(row) for row in result]
         ), HTTPStatus.OK

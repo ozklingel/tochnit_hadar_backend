@@ -29,6 +29,7 @@ from src.routes.apprentice_Profile import apprentice_Profile_form_blueprint
 from src.routes.eshcol import eshcol_blueprint
 from src.routes.Hativa import Hativa_blueprint
 from src.routes.hadar_plan_session import hadar_plan_session_blueprint
+from src.routes.search_ent import search_bar_form_blueprint
 
 app.register_blueprint(userProfile_form_blueprint)
 app.register_blueprint(setEntityDetails_form_blueprint)
@@ -47,6 +48,7 @@ app.register_blueprint(apprentice_Profile_form_blueprint)
 app.register_blueprint(eshcol_blueprint)
 app.register_blueprint(Hativa_blueprint)
 app.register_blueprint(hadar_plan_session_blueprint)
+app.register_blueprint(search_bar_form_blueprint)
 
 if __name__ == '__main__':
 

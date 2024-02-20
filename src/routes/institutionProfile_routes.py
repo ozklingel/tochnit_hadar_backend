@@ -197,3 +197,11 @@ def getAll():
         return jsonify([]), HTTPStatus.OK
     print(inst_List)
     return jsonify([str(r[0]) for r in inst_List]), HTTPStatus.OK
+@institutionProfile_form_blueprint.route('/getMahzors', methods=['get'])
+def getMahzors():
+    try:
+        eshcols_appren = db.session.query(Apprentice.institution_mahzor).distinct(Apprentice.institution_mahzor).all()
+        eshcols_appren_ids=[str(row[0])for row in eshcols_appren]
+        return  eshcols_appren_ids
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK

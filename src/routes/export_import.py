@@ -2,6 +2,7 @@ import csv
 import datetime
 import uuid
 
+import boto3
 from openpyxl.reader.excel import load_workbook
 from pyluach import dates, hebrewcal, parshios
 #sudo pip install pyluach
@@ -12,6 +13,7 @@ from datetime import datetime,date,timedelta
 from sqlalchemy import func
 
 from app import db, red
+from config import AWS_access_key_id, AWS_secret_access_key
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
@@ -333,3 +335,32 @@ def compute_visit_score(all_children,visits,maxScore,expected_gap):
     if call_score<0:
         call_score=0
     return call_score,visitcalls_melave_avg
+
+@export_import_blueprint.route('/uploadPhoto', methods=['post'])
+def uploadPhoto_form():
+        #reportId = request.args.get('reportId')
+        #print(reportId)
+        #updatedEnt = Visit.query.get(reportId)
+
+        images_list=[]
+        for imagefile in request.files.getlist('image'):
+            new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
+            bucket_name = "th01-s3"
+            session = boto3.Session()
+            s3_client = session.client('s3',
+                                aws_access_key_id=AWS_access_key_id,
+                                aws_secret_access_key=AWS_secret_access_key)
+            s3 = boto3.resource('s3',
+                                aws_access_key_id=AWS_access_key_id,
+                                aws_secret_access_key=AWS_secret_access_key)
+            print(new_filename)
+            try:
+                s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
+            except:
+                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+            images_list.append("https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename)
+        #if updatedEnt:
+        #    updatedEnt.attachments=images_list
+        #    db.session.commit()
+            return jsonify({'result': 'success', 'image path': images_list}), HTTPStatus.OK
+        return jsonify({"result": "error"}),HTTPStatus.BAD_REQUEST

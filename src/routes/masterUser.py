@@ -19,11 +19,6 @@ from src.models.visit_model import Visit
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
 
-
-
-
-
-
 @master_user_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
     #/home/ubuntu/flaskapp/

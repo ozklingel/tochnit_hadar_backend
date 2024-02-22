@@ -204,7 +204,7 @@ def getProfileAtributes_form():
         myApprenticesNamesList=getmyApprenticesNames(created_by_id)
         city = db.session.query(City).filter(City.id == userEnt.city_id).first()
         list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                       "city":city.name, "region":str(userEnt.cluster_id), "role":role_dict[str(userEnt.role_id)], "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                       "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
                        "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
         return jsonify(list), HTTPStatus.OK
     else:

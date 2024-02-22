@@ -10,6 +10,7 @@ from sqlalchemy import func, or_
 
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
+from ..models.institution_model import Institution
 from ..models.user_model import user1
 from ..models.visit_model import Visit
 
@@ -149,11 +150,13 @@ def getAll_notification_form():
 
     if user_Role[0]=="3":#ahrai tohhnit
         userEnt = db.session.query(user1.id,user1.notifyStartWeek,user1.notifyMorning,user1.notifyDayBefore,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()
-        too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-        visitEvent_sevev = db.session.query(Visit).filter(Visit.user_id == user,
-                                                    too_old<Visit.visit_date,Visit.title =="סבב_מוסד").first()
-        if visitEvent_sevev==None:
-            add_visit_notification(userEnt.id, None,"סבב_מוסד", None)
+        # too_old = datetime.datetime.today() - datetime.timedelta(days=60)
+        # institotionList= db.session.query(Institution.id).all()
+        # for ins in institotionList:
+        #     visitEvent_sevev = db.session.query(Visit).filter(Visit.user_id == user,Visit.ent_reported==ins[0],
+        #                                                 too_old<Visit.visit_date,Visit.title =="סבב_מוסד").first()
+        #     if visitEvent_sevev==None:
+        #         add_visit_notification(userEnt.id, ins[0],"סבב_מוסד", None)
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
         for noti in notiList:
@@ -186,7 +189,7 @@ def getAll_notification_form():
                      "allreadyread": noti.allreadyread, "frequency": noti.frequency,
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
                 continue
-            if userEnt.notifyMorning == True and daysFromNow == 0:
+            if userEnt.notifyMorning == True and daysFromNow == 0 and noti.event!="דוח שבועי":
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
                     {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
@@ -195,6 +198,16 @@ def getAll_notification_form():
                      "allreadyread": noti.allreadyread,
                      "frequency": noti.frequency if noti.frequency is not None else "never",
                      "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
+            if userEnt.notifyMorning_weekly_report == True and daysFromNow==0 and noti.event=="דוח שבועי":
+                noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                my_dict.append(
+                    {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
+                     "date": noti.date.strftime("%m.%d.%Y"),
+                     "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                     "allreadyread": noti.allreadyread,
+                     "frequency": noti.frequency if noti.frequency is not None else "never",
+                     "numOfLinesDisplay": noti.numoflinesdisplay, "title": noti.details})
+
         if  my_dict is None or my_dict==[]  :
             # acount not found
             return jsonify([])
@@ -215,9 +228,6 @@ def add_notification_form():
         date = json_object["date"]
         details = json_object["details"]
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
-
-
-
         notification1 = notifications(
                         userid=user[3:],
                         apprenticeid = apprenticeid[3:],
@@ -387,6 +397,65 @@ def updateTask():
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
     return jsonify({'result': 'error'}), HTTPStatus.OK
+
+@notification_form_blueprint.route('/add_frequenced_notification', methods=['POST'])
+def add_frequenced_notification():
+    notiList = db.session.query(notifications).filter(notifications.frequency!="never").all()
+    my_dict = []
+    for noti in notiList:
+        daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+        print(daysFromNow)
+        if noti.frequency == "daily" and daysFromNow == 1:
+            notification1 = notifications(
+                userid=noti.userid,
+                apprenticeid=noti.apprenticeid,
+                event=noti.event,
+                date=toISO(noti.date + datetime.timedelta(days=1)),
+                allreadyread=False,
+                numoflinesdisplay=2,
+                id=int(str(uuid.uuid4().int)[:5])
+
+            )
+        if noti.frequency == "weekly" and daysFromNow == 7:
+            notification1 = notifications(
+                userid=noti.userid,
+                apprenticeid=noti.apprenticeid,
+                event=noti.event,
+                date=toISO(noti.date + datetime.timedelta(days=7)),
+                allreadyread=False,
+                numoflinesdisplay=2,
+                id=int(str(uuid.uuid4().int)[:5])
+
+            )
+            if noti.frequency == "monthly" and daysFromNow == 30:
+                notification1 = notifications(
+                    userid=noti.userid,
+                    apprenticeid=noti.apprenticeid,
+                    event=noti.event,
+                    date=toISO(noti.date + 30),
+                    allreadyread=False,
+                    numoflinesdisplay=2,
+                    id=int(str(uuid.uuid4().int)[:5])
+
+                )
+                if noti.frequency == "yearly" and daysFromNow == 365:
+                    notification1 = notifications(
+                        userid=noti.userid,
+                        apprenticeid=noti.apprenticeid,
+                        event=noti.event,
+                        date=toISO(noti.date + 365),
+                        allreadyread=False,
+                        numoflinesdisplay=2,
+                        id=int(str(uuid.uuid4().int)[:5])
+
+                    )
+            db.session.add(notification1)
+    try:
+        db.session.commit()
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    except Exception:
+        return jsonify({'result': str(Exception)}), HTTPStatus.OK
+
 
 import datetime
 import sqlalchemy as sa

@@ -590,14 +590,14 @@ def melave_score(melaveId):
         if len(all_melave_Apprentices)==0:
             return 100,0,0
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
+            Visit.title == config.call_report, Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
         call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,12,21)
 
         visitmeetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title == "מפגש", Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
+            or_(Visit.title == config.personalMeet_report,Visit.title == config.groupMeet_report), Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
         personal_meet_score,personal_meet_gap_avg=compute_visit_score(all_melave_Apprentices,visitmeetings,12,90)
         group_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.ent_reported).filter(Visit.title == "מפגש_קבוצתי", Visit.user_id == melaveId).first()
+            Visit.ent_reported).filter(Visit.title == config.groupMeet_report, Visit.user_id == melaveId).first()
         gap = (date.today() - group_meeting.visit_date).days if group_meeting is not None else 100
         group_meeting_score = 0
         if gap <= 60:
@@ -605,32 +605,32 @@ def melave_score(melaveId):
 
         professional_2monthly = db.session.query(Visit.user_id,
                                                  func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == melaveId).first()
+            Visit.user_id).filter(Visit.title == config.professional_report, Visit.user_id == melaveId).first()
         gap = (date.today() - professional_2monthly.visit_date).days if professional_2monthly is not None else 100
         professional_2monthly_score = 0
         if gap < 90:
             professional_2monthly_score += 6.6
 
         cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "כנס_שנתי", Visit.user_id == melaveId).first()
+            Visit.user_id).filter(Visit.title == config.cenes_report, Visit.user_id == melaveId).first()
         gap = (date.today() - cenes_yearly.visit_date).days if cenes_yearly is not None else 400
         cenes_yearly_score = 0
         if gap < 365:
             cenes_yearly_score += 6.6
 
         yeshiva_monthly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "ישיבת_מלוים", Visit.user_id == melaveId).first()
+            Visit.user_id).filter(Visit.title == config.MelavimMeeting_report, Visit.user_id == melaveId).first()
         gap = (date.today() - yeshiva_monthly.visit_date).days if yeshiva_monthly is not None else 100
         yeshiva_monthly_score = 0
         if gap < 30:
             yeshiva_monthly_score += 6.6
 
-        Horim_meeting = db.session.query(Visit.ent_reported).filter(Visit.title == "מפגש_הורים", Visit.user_id == melaveId).all()
+        Horim_meeting = db.session.query(Visit.ent_reported).filter(Visit.title == config.HorimCall_report, Visit.user_id == melaveId).all()
         Horim_meeting_score = 0
         if len(Horim_meeting) == len(all_melave_Apprentices):
             Horim_meeting_score += 10
         too_old = datetime.today() - timedelta(days=365)
-        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",Visit.visit_in_army==True,
+        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(or_(Visit.title == config.personalMeet_report,Visit.title == config.groupMeet_report),Visit.visit_in_army==True,
                                 Visit.visit_date > too_old, Visit.user_id == melaveId).group_by(Visit.visit_date).count()
 
         base_meeting_score = 0
@@ -663,37 +663,37 @@ def mosad_Coordinators_score(mosadCoord_id):
         good_meet_Apprentice_count=0
         good_call_Apprentice_count=0
         for Apprentice1 in all_melave_Apprentices:
-            visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,Visit.title=="שיחה").order_by(Visit.visit_date.desc()).first()
+            visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,Visit.title==config.call_report).order_by(Visit.visit_date.desc()).first()
             #handle no row
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             if gap > 30 or visitEvent is None:
                 old_call_Apprentice_count+=1
-            visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,Visit.title=="מפגש").order_by(Visit.visit_date.desc()).first()
+            visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,or_(Visit.title==config.groupMeet_report,Visit.title==config.personalMeet_report)).order_by(Visit.visit_date.desc()).first()
             #handle no row
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             if gap > 90 or visitEvent is None:
                 old_meet_Apprentice_count+=1
-            good_meet_Apprentice_count = (len(all_melave_Apprentices) - old_meet_Apprentice_count) / len(
-                all_melave_Apprentices)
-            good_call_Apprentice_count = (len(all_melave_Apprentices) - old_call_Apprentice_count) / len(
-                all_melave_Apprentices)
+        good_meet_Apprentice_count = (len(all_melave_Apprentices) - old_meet_Apprentice_count) / len(
+            all_melave_Apprentices)
+        good_call_Apprentice_count = (len(all_melave_Apprentices) - old_call_Apprentice_count) / len(
+            all_melave_Apprentices)
 
             # group_meeting take only distinct dates
         group_meeting = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.visit_date > config.groupMeet_madad_date, Visit.title == "מפגש_קבוצתי",
+            Visit.visit_date > config.groupMeet_madad_date, Visit.title == config.groupMeet_report,
             Visit.user_id == melaveId).distinct(Visit.visit_date).all()
         group_meeting_score, groupNeeting_gap_avg = compute_visit_score(all_melave_Apprentices, group_meeting, 12,
                                                                         60)
         apprentice_interaction_Score=group_meeting_score+good_call_Apprentice_count*10+good_meet_Apprentice_count*10
         #compute avg
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title == "שיחה", Visit.user_id == melaveId, Visit.visit_date > config.call_madad_date).order_by(
+            Visit.title == config.call_report, Visit.user_id == melaveId, Visit.visit_date > config.call_madad_date).order_by(
             Visit.visit_date).all()
         call_score, call_gap_avg = compute_visit_score(all_melave_Apprentices, visitcalls, 10, 21)
         total_avg_call+=call_gap_avg
         total_call_score_avg+=call_score
         visitmeetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title == "מפגש", Visit.user_id == melaveId, Visit.visit_date > config.meet_madad_date).order_by(
+            or_(Visit.title == config.groupMeet_report,Visit.title==config.personalMeet_report), Visit.user_id == melaveId, Visit.visit_date > config.meet_madad_date).order_by(
             Visit.visit_date).all()
         personal_meet_score, personal_meet_gap_avg = compute_visit_score(all_melave_Apprentices, visitmeetings, 10, 90)
         total_avg_meet+=personal_meet_gap_avg
@@ -704,13 +704,13 @@ def mosad_Coordinators_score(mosadCoord_id):
     Mosad_coord_score=apprentice_interaction_Score
 
     #מצבר=30
-    visit_matzbar_meetings = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.visit_date>config.matzbarmeet_madad_date,Visit.title == "מצבר").filter(
-        Visit.user_id.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
+    visit_matzbar_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.matzbarmeet_madad_date,Visit.title == config.matzbar_report).filter(
+        Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
     visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score(all_Mosad_Melave, visit_matzbar_meetings, 30, 90)
     Mosad_coord_score+=visit_matzbar_meetings_score
     #מפגש_מקצועי=10
-    visit_mosad_professional_meetings = db.session.query(Visit.user_id, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == "מפגש_מקצועי").filter(
-        Visit.user_id.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
+    visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
+        Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
     visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score(all_Mosad_Melave, visit_mosad_professional_meetings, 30, 90)
     Mosad_coord_score+=visit_mosad_professional_meetings_score
 
@@ -723,7 +723,7 @@ def mosad_Coordinators_score(mosadCoord_id):
         too_old = datetime.today() - timedelta(days=31)
         visit_allMelavim_monthly_meetings = db.session.query(Visit.user_id,
                                                          func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == "ישיבת_מלוים", Visit.user_id == mosadCoord_id,
+            Visit.user_id).filter(Visit.title == config.MelavimMeeting_report, Visit.user_id == mosadCoord_id,
                                   Visit.visit_date > too_old).all()
         if visit_allMelavim_monthly_meetings:
             Mosad_coord_score += 10
@@ -731,7 +731,7 @@ def mosad_Coordinators_score(mosadCoord_id):
     #עשייה_לבוגרים=5
     too_old = datetime.today() - timedelta(days=365)
     visit_did_for_apprentice = db.session.query(Visit.user_id,
-                                                     ).filter(Visit.title == "עשייה_לבוגרים", Visit.user_id == mosadCoord_id,
+                                                     ).filter(Visit.title == config.doForBogrim_report, Visit.user_id == mosadCoord_id,
                               Visit.visit_date > too_old).all()
     if len(visit_did_for_apprentice)>=3:
         Mosad_coord_score += 5
@@ -739,7 +739,7 @@ def mosad_Coordinators_score(mosadCoord_id):
     too_old = datetime.today() - timedelta(days=365)
     visit_Hazana_new_THsession = db.session.query(Visit.user_id,
                                                      func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.user_id).filter(Visit.title == "הזנת_מחזור_חדש", Visit.user_id == mosadCoord_id,
+        Visit.user_id).filter(Visit.title == config.hazanatMachzor_report, Visit.user_id == mosadCoord_id,
                               Visit.visit_date > too_old).all()
     if len(visit_Hazana_new_THsession)>=1:
         Mosad_coord_score += 10
@@ -758,7 +758,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     all_eshcol_mosadCoord_list = [r[0] for r in all_eshcol_mosadCoord]
     total_eshcol_mosad_gap=0
     for mosadCoordId in all_eshcol_mosadCoord_list:
-        visitEvent = db.session.query(Visit).filter(Visit.user_id == mosadCoordId,Visit.title=="ישיבת_מוסד_אשכול" ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
+        visitEvent = db.session.query(Visit).filter(Visit.user_id == mosadCoordId,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
         if visitEvent ==[]:
             continue
         mosadCoordId_gap=0
@@ -772,9 +772,9 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     else:
         total_eshcol_mosad_score=0
 
-    tohnit_yeshiva = db.session.query(Visit.user_id,
+    tohnit_yeshiva = db.session.query(Visit.ent_reported,
                                              func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.user_id).filter(Visit.title == "מפגש_מקצועי", Visit.user_id == eshcolCoord_id).first()
+        Visit.user_id).filter(Visit.title == config.tochnitMeeting_report, Visit.ent_reported == eshcolCoord_id).first()
     gap = (date.today() - tohnit_yeshiva.visit_date).days if tohnit_yeshiva is not None else 100
     tohnit_yeshiva_score = 0
     if gap < 30:
@@ -785,7 +785,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     Oldvisitcalls = db.session.query(Visit.ent_reported).filter(
                                                                  Apprentice.id == Visit.ent_reported,
                                                                  eshcol == Apprentice.eshcol,
-                                                                 Visit.title == "שיחה",
+                                                                 or_(Visit.title == config.call_report,Visit.title == config.groupMeet_report,Visit.title == config.personalMeet_report),
                                                                  Visit.visit_date > too_old).all()
     for i in Oldvisitcalls:
         if i[0] in Apprentice_ids_forgoten:

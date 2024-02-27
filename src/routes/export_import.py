@@ -13,7 +13,8 @@ from datetime import datetime,date,timedelta
 from sqlalchemy import func
 
 from app import db, red
-from config import AWS_access_key_id, AWS_secret_access_key
+from config import AWS_access_key_id, AWS_secret_access_key, melave_Score, visitcalls_melave_avg, visitmeets_melave_avg, \
+    proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
@@ -29,7 +30,7 @@ def upload_CitiesDB():
     import csv
     my_list = []
     #/home/ubuntu/flaskapp/
-    with open('/home/ubuntu/flaskapp/cities_add.csv', 'r', encoding="utf8") as f:
+    with open('/home/ubuntu/flaskapp/data/cities_add.csv', 'r', encoding="utf8") as f:
         reader = csv.reader(f)
         print(reader)
         for row in reader:
@@ -49,7 +50,7 @@ def upload_baseDB():
     import csv
     my_list = []
     #/home/ubuntu/flaskapp/
-    with open('/home/ubuntu/flaskapp/base_add.csv', 'r', encoding="utf8") as f:
+    with open('/home/ubuntu/flaskapp/data/base_add.csv', 'r', encoding="utf8") as f:
         reader = csv.reader(f)
         for row in reader:
             print(row[1].strip())
@@ -63,11 +64,11 @@ def export_dict():
     data = request.json
     to_csv = data['list']
     keys = to_csv[0].keys()
-    with open('/home/ubuntu/flaskapp/to_csv.csv', 'w', newline='') as output_file:
+    with open('/home/ubuntu/flaskapp/data/to_csv.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(to_csv)
-    return send_file("/home/ubuntu/flaskapp/to_csv.csv", as_attachment=True, download_name="/home/ubuntu/flaskapp/dict2.csv")
+    return send_file("/home/ubuntu/flaskapp/data/to_csv.csv", as_attachment=True, download_name="/home/ubuntu/flaskapp/dict2.csv")
 
     # data = request.json
     # print(data)
@@ -82,10 +83,14 @@ def export_dict():
 @export_import_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():
     from openpyxl import workbook
-    path = 'gift.xlsx'
-    wb = load_workbook(filename=path)
-    ws = wb.get_sheet_by_name('Sheet1')
-    for row in ws.iter_rows(min_row=2):
+    # path = 'gift.xlsx'
+    # wb = load_workbook(filename=path)
+    # ws = wb.get_sheet_by_name('Sheet1')
+    file = request.files['file']
+
+    wb = load_workbook(file)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
         code = row[0].value
         was_used = row[1].value
         print(code)
@@ -127,7 +132,7 @@ def monthly():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
-            type="melave_Score",
+            type=melave_Score,
             value=melave_score1,
             creation_date=date.today(),
         )
@@ -135,7 +140,7 @@ def monthly():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
-            type="call_gap_avg",
+            type=visitcalls_melave_avg,
             value=call_gap_avg,
             creation_date=date.today(),
         )
@@ -143,7 +148,7 @@ def monthly():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
-            type="meet_gap_avg",
+            type=visitmeets_melave_avg,
             value=meet_gap_avg,
             creation_date=date.today(),
         )
@@ -158,7 +163,7 @@ def monthly():
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=mosadCoord_id,
-                type="avg_apprenticeCall_gap_mosad",
+                type=visitcalls_melave_avg,
                 value=res['avg_apprenticeCall_gap'],
                 creation_date=date.today(),
             )
@@ -166,7 +171,7 @@ def monthly():
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=mosadCoord_id,
-                type="avg_apprenticeMeeting_gap",
+                type=visitmeets_melave_avg,
                 value=res['avg_apprenticeMeeting_gap'],
                 creation_date=date.today(),
             )
@@ -199,7 +204,7 @@ def rivony():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
-            type="professionalmeeting",
+            type=proffesionalMeet_presence,
             value=len(newvisit_professional),
             creation_date=date.today(),
         )
@@ -211,7 +216,7 @@ def rivony():
     system_report1 = system_report(
         id=int(str(uuid.uuid4().int)[:5]),
         related_id=melaveId,
-        type="forgotenApprentices_count",
+        type=forgotenApprentice_cnt,
         value=forgotenApprentices_count,
         creation_date=date.today(),
     )
@@ -226,7 +231,7 @@ def rivony():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=mosadCoord_id,
-            type="avg_apprenticeCall_gap_mosad",
+            type=visitcalls_melave_avg,
             value=res['avg_apprenticeCall_gap'],
             creation_date=date.today(),
         )
@@ -234,7 +239,7 @@ def rivony():
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=mosadCoord_id,
-            type="Apprentice_forgoten_count",
+            type=forgotenApprentice_cnt,
             value=res['Apprentice_forgoten_count'],
             creation_date=date.today(),
         )
@@ -265,7 +270,7 @@ def yearly():
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
-                type="cenes_yearly",
+                type=cenes_presence,
                 value=100,
                 creation_date=date.today(),
             )
@@ -277,7 +282,7 @@ def yearly():
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
-                type="Horim_meeting",
+                type=horim_meeting,
                 value=Horim_meeting,
                 creation_date=date.today(),
             )
@@ -336,31 +341,32 @@ def compute_visit_score(all_children,visits,maxScore,expected_gap):
         call_score=0
     return call_score,visitcalls_melave_avg
 
-@export_import_blueprint.route('/uploadPhoto', methods=['post'])
-def uploadPhoto_form():
+@export_import_blueprint.route('/uploadfile', methods=['post'])
+def uploadfile():
         #reportId = request.args.get('reportId')
         #print(reportId)
         #updatedEnt = Visit.query.get(reportId)
-
-        images_list=[]
-        for imagefile in request.files.getlist('image'):
-            new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
-            bucket_name = "th01-s3"
-            session = boto3.Session()
-            s3_client = session.client('s3',
-                                aws_access_key_id=AWS_access_key_id,
-                                aws_secret_access_key=AWS_secret_access_key)
-            s3 = boto3.resource('s3',
-                                aws_access_key_id=AWS_access_key_id,
-                                aws_secret_access_key=AWS_secret_access_key)
-            print(new_filename)
-            try:
-                s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
-            except:
-                return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
-            images_list.append("https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename)
-        #if updatedEnt:
-        #    updatedEnt.attachments=images_list
-        #    db.session.commit()
+        try:
+            images_list=[]
+            for imagefile in request.files.getlist('file'):
+                new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
+                bucket_name = "th01-s3"
+                session = boto3.Session()
+                s3_client = session.client('s3',
+                                    aws_access_key_id=AWS_access_key_id,
+                                    aws_secret_access_key=AWS_secret_access_key)
+                s3 = boto3.resource('s3',
+                                    aws_access_key_id=AWS_access_key_id,
+                                    aws_secret_access_key=AWS_secret_access_key)
+                print(new_filename)
+                try:
+                    s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
+                except:
+                    return jsonify({'result': 'faild', 'image path': new_filename}), HTTPStatus.OK
+                images_list.append("https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename)
+            #if updatedEnt:
+            #    updatedEnt.attachments=images_list
+            #    db.session.commit()
             return jsonify({'result': 'success', 'image path': images_list}), HTTPStatus.OK
-        return jsonify({"result": "error"}),HTTPStatus.BAD_REQUEST
+        except Exception:
+            return jsonify({"result": str(Exception)}),HTTPStatus.BAD_REQUEST

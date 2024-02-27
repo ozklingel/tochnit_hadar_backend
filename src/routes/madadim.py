@@ -369,8 +369,8 @@ def getMelaveMadadim():
     return jsonify({
         'melave_score': melave_score1,
         "numOfApprentice": len(ApprenticeCount),
-        'oldvisitcalls': len(Apprentice_ids_call),
-        'Oldvisitmeetings': len(Apprentice_ids_meet),
+        'visitcalls': len(ApprenticeCount)-len(Apprentice_ids_call),
+        'visitmeetings': len(ApprenticeCount)-len(Apprentice_ids_meet),
         'numOfQuarter_passed': numOfQuarter_passed,
         'sadna_todo': numOfQuarter_passed,
         'sadna_done': len(newvisitProffesionalMeet_year),
@@ -378,20 +378,20 @@ def getMelaveMadadim():
         'cenes_2year': len(_yearly_cenes),
         'newvisit_cenes': len(newvisit_cenes),
         'cenes_percent': cenes_score,
-        'No_visitHorim': len(Apprentice_ids_Horim),
+        'visitHorim':len(ApprenticeCount)- len(Apprentice_ids_Horim),
         'forgotenApprenticeCount': len(Apprentice_ids_forgoten),
         'new_visitmeeting_Army': len(Apprentice_ids_meetInArmy),
 
         'call_gap_avg': call_gap_avg,
         'meet_gap_avg': meet_gap_avg,
-        'visitCall_monthlyGap_avg': fetch_Diagram_monthly(melaveId,"visitcalls_melave_avg"),
-        'visitMeeting_monthlyGap_avg': fetch_Diagram_monthly(melaveId,"visitmeets_melave_avg"),
+        'visitCall_monthlyGap_avg': fetch_Diagram_monthly(melaveId, config.visitcalls_melave_avg),
+        'visitMeeting_monthlyGap_avg': fetch_Diagram_monthly(melaveId, config.visitmeets_melave_avg),
         'forgotenApprentice_full_details': Apprentice_ids_forgoten,
-        'forgotenApprentice_rivonly': fetch_Diagram_rivonly(melaveId,"forgotenApprentice_cnt"),
+        'forgotenApprentice_rivonly': fetch_Diagram_rivonly(melaveId, config.forgotenApprentice_cnt),
 
-        'visitsadna_presence': fetch_Diagram_rivonly(melaveId,"proffesionalMeet_presence"),
-        'visitCenes_4_yearly_presence': fetch_Diagram_yearly(melaveId,"cenes_presence"),
-        'visitHorim_4_yearly': fetch_Diagram_yearly(melaveId,"horim_meeting"),
+        'visitsadna_presence': fetch_Diagram_rivonly(melaveId, config.proffesionalMeet_presence),
+        'visitCenes_4_yearly_presence': fetch_Diagram_yearly(melaveId, config.cenes_presence),
+        'visitHorim_4_yearly': fetch_Diagram_yearly(melaveId, config.horim_meeting),
     }), HTTPStatus.OK
 
 
@@ -400,6 +400,11 @@ def mosadCoordinator(mosadCoordinator="empty"):
     if mosadCoordinator=="empty":
         mosadCoordinator = request.args.get("mosadCoordinator")[3:]
     print(mosadCoordinator)
+
+    current_month=datetime.today().month
+    start_Of_year = datetime.today() - timedelta(days=30*current_month)
+    numOfQuarter_passed=int(current_month/3)
+
     institutionId = db.session.query(user1.institution_id).filter(user1.id == mosadCoordinator).first()[0]
     all_Melave = db.session.query(user1.id).filter(user1.role_id=="0",user1.institution_id == institutionId).all()
 
@@ -501,6 +506,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         'new_MelavimMeeting': len(new_MelavimMeeting),
         'avg_presence_MelavimMeeting': (len(all_Melave) - len(old_Melave_ids_MelavimMeeting)) / len(all_Melave),
         'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
+        'numOfQuarter_passed': numOfQuarter_passed,
 
         'visitprofessionalMeet_melave_avg': visitprofessionalMeet_melave_avg,
         'avg_matzbarMeeting_gap': avg_matzbarMeeting_gap,
@@ -510,12 +516,14 @@ def mosadCoordinator(mosadCoordinator="empty"):
 
         "visitDoForBogrim_list":[{"visit_date" :toISO(row[0]),"title":row[1],"description":row[2],"daysFromNow":(date.today() - row[0]).days} for row in visitDoForBogrim],
         'forgotenApprentice_full_details': Apprentice_ids_forgoten,
+        'MelavimMeeting_todo': len(numOfQuarter_passed)*3,
 
-        'avg_presence_MelavimMeeting_monthly': fetch_Diagram_monthly(mosadCoordinator,"MelavimMeeting_presence"),
-        'avg_matzbarMeeting_gap_monthly': fetch_Diagram_monthly(mosadCoordinator,"matzbarMeeting_gap"),
-        'avg_apprenticeCall_gap_monthly':fetch_Diagram_monthly(mosadCoordinator,"apprenticeCall_gap"),
-        'avg_apprenticeMeeting_gap_monthly':fetch_Diagram_monthly(mosadCoordinator,"apprenticeMeeting_gap"),
-        'forgotenApprentice_rivonly': fetch_Diagram_rivonly(mosadCoordinator,"forgotenApprentice"),
+        'avg_presence_professionalMeeting_monthly': fetch_Diagram_monthly(mosadCoordinator,
+                                                                          config.proffesionalMeet_presence),
+        'avg_matzbarMeeting_gap_monthly': fetch_Diagram_monthly(mosadCoordinator, config.matzbarMeeting_gap),
+        'avg_apprenticeCall_gap_monthly':fetch_Diagram_monthly(mosadCoordinator, config.apprenticeCall_gap),
+        'avg_apprenticeMeeting_gap_monthly':fetch_Diagram_monthly(mosadCoordinator, config.apprenticeMeeting_gap),
+        'forgotenApprentice_rivonly': fetch_Diagram_rivonly(mosadCoordinator, config.forgotenApprentice_cnt),
     }), HTTPStatus.OK
 
 @madadim_form_blueprint.route("/eshcolCoordinator", methods=['GET'])
@@ -545,9 +553,9 @@ def getEshcolCoordinatorMadadim():
     for i in new_visit_yeshiva:
         if i[0] in all_MosadCoordinator_ids_call:
             all_MosadCoordinator_ids_call.remove(i[0])
-
-    too_old = datetime.today() - timedelta(days=30)
-    newvisit_yeshiva_Tohnit = db.session.query(Visit.visit_date).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_כלל_תוכנית",Visit.visit_date>too_old).all()
+    current_month=datetime.today().month
+    start_Of_year = datetime.today() - timedelta(days=30*current_month)
+    newvisit_yeshiva_Tohnit = db.session.query(Visit.visit_date).filter(Visit.user_id==eshcolCoordinatorId,Visit.title == "מפגש_כלל_תוכנית",Visit.visit_date>start_Of_year).all()
 
     Apprentice_ids_forgoten=[r[0] for r in all_EshcolApprentices]
     too_old = datetime.today() - timedelta(days=100)
@@ -561,14 +569,17 @@ def getEshcolCoordinatorMadadim():
         'eshcolCoordinator_score': eshcolCoordinator_score1,
         'all_MosadCoordinator_count': len(all_MosadCoordinator),
         'good__mosad_racaz_meeting': len(all_MosadCoordinator) - len(all_MosadCoordinator_ids_call),
-        'newvisit_yeshiva_Tohnit': "100" if len(newvisit_yeshiva_Tohnit) > 0 else "0",
+        'newvisit_yeshiva_Tohnit_precent': 100*len(newvisit_yeshiva_Tohnit)/current_month,
+        'yeshiva_Tohnit_todo': current_month,
+        'newvisit_yeshiva_Tohnit': len(newvisit_yeshiva_Tohnit),
         'Apprentice_forgoten_count': len(Apprentice_ids_forgoten),
         'all_EshcolApprentices_count': len(all_EshcolApprentices),
         'avg__mosad_racaz_meeting_monthly': avg__mosad_racaz_meeting_monthly,
-        'avg__mosad_racaz_meeting_monthly_Diagram': fetch_Diagram_monthly(eshcolCoordinatorId, "mosad_racaz_meeting"),
+        'avg__mosad_racaz_meeting_monthly_Diagram': fetch_Diagram_monthly(eshcolCoordinatorId,
+                                                                          config.mosad_racaz_meeting),
 
         'forgotenApprentice_full_details': Apprentice_ids_forgoten,
-        'forgotenApprentice_4_rivonly': fetch_Diagram_rivonly(eshcolCoordinatorId,"forgotenApprentice"),
+        'forgotenApprentice_4_rivonly': fetch_Diagram_rivonly(eshcolCoordinatorId, config.forgotenApprentice_cnt),
 
     }), HTTPStatus.OK
 

@@ -92,7 +92,7 @@ def add_apprentice_excel():
 @master_user_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
     #/home/ubuntu/flaskapp/
-    path = '/home/ubuntu/flaskapp/user_enter.xlsx'
+    path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
     wb = load_workbook(filename=path)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):

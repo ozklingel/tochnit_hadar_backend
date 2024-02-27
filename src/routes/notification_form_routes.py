@@ -8,6 +8,7 @@ from os import sys, path
 
 from sqlalchemy import func, or_
 
+import config
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
 from ..models.institution_model import Institution
@@ -28,18 +29,19 @@ def getAll_notification_form():
     user_Role=db.session.query(user1.role_id).filter(user1.id == user).first()
     print("user role:",user_Role[0])
     if user_Role[0]=="0":#melave
-    # update notification created by system=group meetings
+        # update notification created by system=group meetings
         visitEvent = db.session.query(Visit).filter(Visit.user_id == user,
-                                                    Visit.title == "מפגש_קבוצתי").order_by(Visit.visit_date.desc()).first()
+                                                    Visit.title == config.groupMeet_report).order_by(Visit.visit_date.desc()).first()
         # handle no row so insert need a meeting notification
         id1=0
         if visitEvent is None:
-            id1=add_visit_notification(user, None, "מפגש_קבוצתי", '2023-01-01')
+            id1=add_visit_notification(user, None, config.groupMeet_report, '2023-01-01')
         gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
+        #if gap>60 add else remove if exist such
         if gap > 60:
             add_visit_notification(visitEvent.user_id, visitEvent.ent_reported, visitEvent.title, visitEvent.visit_date)
         else:
-            res=db.session.query(notifications).filter(notifications.userid == user, notifications.event=="מפגש_קבוצתי",notifications.id!=id1).delete()
+            res=db.session.query(notifications).filter(notifications.userid == user, notifications.event==config.groupMeet_report,notifications.id!=id1).delete()
 
         #update notification table  birthday and events
         ApprenticeList = db.session.query(Apprentice.birthday,Apprentice.id,Apprentice.accompany_id).filter(Apprentice.accompany_id == user).all()
@@ -59,7 +61,7 @@ def getAll_notification_form():
             visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title=="שיחה").order_by(Visit.visit_date.desc()).first()
             #handle no row so insert need a call notification
             if visitEvent is None:
-                id1=add_visit_notification(user, Apprentice1.id,"שיחה", '2023-01-01')
+                id1=add_visit_notification(user, Apprentice1.id,config.call_report, '2023-01-01')
 
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             if gap > 30:
@@ -70,24 +72,24 @@ def getAll_notification_form():
                                                              notifications.event == "שיחה",notifications.id!=id1).delete()
 
             # update notification created by system=apprentices meetings
-            visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,or_(Visit.title=="מפגש",Visit.title=="מפגש_קבוצתי")).order_by(Visit.visit_date.desc()).first()
+            visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,or_(Visit.title==config.groupMeet_report,Visit.title==config.personalMeet_report)).order_by(Visit.visit_date.desc()).first()
             #handle no row so insert need a meeting notification
             if visitEvent is None:
-                id1=add_visit_notification(user, Apprentice1.id,"מפגש", '2023-01-01')
+                id1=add_visit_notification(user, Apprentice1.id,config.personalMeet_report, '2023-01-01')
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             if gap > 90:
                 add_visit_notification(visitEvent.user_id, visitEvent.ent_reported,visitEvent.title, visitEvent.visit_date)
             else :
                 res = db.session.query(notifications).filter(notifications.userid == user,
                                                              notifications.apprenticeid ==Apprentice1.id ,notifications.id!=id1,
-                                                             notifications.event == "מפגש").delete()
+                                                             notifications.event == config.personalMeet_report).delete()
         #send  notifications.
         userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter_by(id=user).first()
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
         for noti in notiList:
             daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
-            if noti.event=='מפגש_קבוצתי':
+            if noti.event==config.groupMeet_report:
                 apprenticeids=[]
             else:
                 apprenticeids=str(noti.apprenticeid)
@@ -146,7 +148,6 @@ def getAll_notification_form():
             # print(f' notifications: {my_dict}]')
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
-        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
     if user_Role[0]=="3":#ahrai tohhnit
         userEnt = db.session.query(user1.id,user1.notifyStartWeek,user1.notifyMorning,user1.notifyDayBefore,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()

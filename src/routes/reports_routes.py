@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from os import sys, path
 
+import config
 from config import AWS_access_key_id, AWS_secret_access_key
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
@@ -31,7 +32,7 @@ def add_reports_form():
     try:
         ent_group_name = str(data['ent_group'])
     except:
-        print("no ent_group or attachments")
+        print("no ent_group ")
     try:
         attachments = data['attachments']
     except:
@@ -43,9 +44,8 @@ def add_reports_form():
         for key in List_of_repored:
             Visit1 = Visit(
                 user_id=user,
-                ent_reported=str(key['id'])[3:],
-                note=data['event_details'],
-                visit_in_army=bool(data['event_type']),
+                ent_reported=str(key)[3:],
+                visit_in_army=True if data['event_type']==config.basis_report else False,
                 visit_date=data['date'],
                 allreadyread=False,
                 id=vis_id,
@@ -59,7 +59,6 @@ def add_reports_form():
 
     try:
         db.session.commit()
-
     except Exception as e:
         return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
     return jsonify({'result': "success"}), HTTPStatus.OK

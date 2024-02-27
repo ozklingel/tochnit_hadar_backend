@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from datetime import datetime,date,timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 import config
 from app import db, red
@@ -48,10 +48,10 @@ def get_mosad_Coordinators_score():
     for mosad_coord in all_Mosad_coord:
         Mosad_coord_score=0
         mosadCoordinator = mosad_coord[0]
-        mosad_Coordinators_score1, visitprofessionalMeet_melave_avg, avg_matzbarMeeting_gap, total_avg_call, total_avg_meet = mosad_Coordinators_score(
+        mosad_Coordinators_score1, visitprofessionalMeet_melave_avg, avg_matzbarMeeting_gap, total_avg_call, total_avg_meet ,groupNeeting_gap_avg= mosad_Coordinators_score(
             mosadCoordinator)
         mosad_Cooordinator_score_dict[mosad_Coordinators_score1] = mosad_Cooordinator_score_dict.get(mosad_Coordinators_score1, 0) + 1
-        score_MosadCoordProfile.append({"mosadCoordinator":mosadCoordinator,"mosad_Coordinators_score1":mosad_Coordinators_score1})
+        score_MosadCoordProfile.append({"id":mosadCoordinator,"score":mosad_Coordinators_score1})
     k, v = [], []
     for key, value in mosad_Cooordinator_score_dict.items():
         k.append(key)
@@ -67,7 +67,7 @@ def get_Eshcol_corrdintors_score():
         Eshcol_coord_id = Eshcol_coord[0]
         eshcolCoordinator_score1, avg__mosad_racaz_meeting_monthly = eshcol_Coordinators_score(Eshcol_coord_id)
         eshcol_Cooordinator_score[eshcolCoordinator_score1] = eshcol_Cooordinator_score.get(eshcolCoordinator_score1, 0) + 1
-        score_EshcolCoordProfile.append({"eshcol_Cooordinator_score":eshcol_Cooordinator_score,"Eshcol_coord_id":Eshcol_coord_id})
+        score_EshcolCoordProfile.append({"score":Eshcol_coord_id,"id":Eshcol_coord_id})
     k, v = [], []
     for key, value in eshcol_Cooordinator_score.items():
         k.append(key)
@@ -82,7 +82,7 @@ def red_green_orange_status(all_Apprentices):
     forgotenApprenticeList = []
     # update apprentices call
     visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.ent_reported).filter(Visit.title == "שיחה").all()
+        Visit.ent_reported).filter(Visit.title == config.call_report).all()
     ids = [r[0] for r in visitcalls]
     # handle no record
     for ent in all_Apprentices:
@@ -98,11 +98,11 @@ def red_green_orange_status(all_Apprentices):
             redvisitcalls += 1
         if 60 > gap > 21:
             orangevisitcalls += 1
-        if 21 > gap:
+        if 21 >= gap:
             greenvisitcalls += 1
     # update apprentices meetings
     visitmeetings = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.ent_reported).filter(Visit.title == "מפגש").all()
+        Visit.ent_reported).filter(or_(Visit.title == config.personalMeet_report,Visit.title == config.groupMeet_report)).all()
     redvisitmeetings = 0
     orangevisitmeetings = 0
     greenvisitmeetings = 0
@@ -176,25 +176,8 @@ def homepageMaster():
 
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
-    accessToken =request.headers.get('Authorization')
-    print("accessToken:",accessToken)
     userId = request.args.get("userId")[3:]
-    print("Userid:", str(userId))
-    '''
-    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-    print("redisaccessToken:",redisaccessToken)
-    if not redisaccessToken==accessToken:
-        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
-        '''
-    record = user1.query.filter_by(id=userId).first()
-    '''
-    red.hset(userId, "id", record.id)
-    red.hset(userId, "name", record.name)
-    red.hset(userId, "lastname", record.last_name)
-    red.hset(userId, "email", record.email)
-    red.hset(userId, "role", record.role_id)
-'''
-    tasksAndEvents=getlists(record.id)
+    tasksAndEvents=getlists(userId)
     return jsonify( {"events": tasksAndEvents[0] if tasksAndEvents is not None else []}), HTTPStatus.OK
 
 def getlists(userId):
@@ -223,22 +206,3 @@ def toISO(d):
         return datetime(int(Date[2]),int(Date[0]), int(Date[1])).isoformat()
     else:
         return None
-
-
-    #
-    # visitfailors = db.session.query(Visit.ent_reported,func.count(Visit.title)).filter(Visit.title == "נסיון_שכשל").group_by(Visit.ent_reported).all()
-    # print(visitfailors)
-    # count_1t5 = 0
-    # count_6t10 = 0
-    # count_11t15 = 0
-    # count_15 = 0
-    # multiply=5
-    # for ent in visitfailors:
-    #     if ent[1] > 15*multiply:
-    #         count_15 += 1
-    #     elif 15*multiply >= ent[1] >= 11*multiply:
-    #         count_11t15 += 1
-    #     elif 10*multiply >= ent[1] >= 6*multiply:
-    #         count_6t10 += 1
-    #     elif 5*multiply >= ent[1] >= 1*multiply:
-    #         count_1t5 += 1

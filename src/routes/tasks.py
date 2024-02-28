@@ -5,12 +5,10 @@ import uuid
 from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
 
-from sqlalchemy import func
 
 from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
-from src.models.user_model import user1
 from src.models.visit_model import Visit
 from src.routes.notification_form_routes import getAll_notification_form
 

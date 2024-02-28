@@ -1,4 +1,3 @@
-from enum import Enum
 
 role_dict = {
   "2": "racaz_eshcol",

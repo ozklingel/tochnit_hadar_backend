@@ -17,7 +17,6 @@ call_report="שיחה"
 personalMeet_report="מפגש"
 groupMeet_report="מפגש_קבוצתי"
 basis_report="ביקור בבסיס"
-
 HorimCall_report="שיחת_הורים"
 failCall_report="נסיון_כושל"
 professional_report="מפגש_מקצועי"#2 חודשים

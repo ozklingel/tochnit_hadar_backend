@@ -1,7 +1,5 @@
-from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
-from .apprentice_model import Apprentice
 from .user_model import user1
 
 

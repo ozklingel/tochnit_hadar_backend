@@ -1,21 +1,11 @@
 from http import HTTPStatus
-
 from flask import Blueprint, request, jsonify
-from openpyxl.reader.excel import load_workbook
-from werkzeug.utils import secure_filename
-
-import config
 from app import db
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
-from src.models.contact_form_model import ContactForm
-from src.models.eshcol_model import Eshcol
-from src.models.gift import gift
 from src.models.institution_model import Institution
-from src.models.notification_model import notifications
 from src.models.user_model import user1
-from src.models.visit_model import Visit
 
 search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/search_bar')
 

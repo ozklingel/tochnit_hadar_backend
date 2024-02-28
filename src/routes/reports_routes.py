@@ -1,23 +1,14 @@
 import datetime
-import json
 from datetime import datetime,date
-
-import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from os import sys, path
-
 import config
-from config import AWS_access_key_id, AWS_secret_access_key
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
 from ..models.institution_model import Institution
 from ..models.user_model import user1
-
-pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-sys.path.append(pth)
-from app import app, db
+from app import  db
 import uuid
 from ..models.visit_model import Visit
 
@@ -103,6 +94,7 @@ def getAll_reports_form():
             {"id": str(noti.id), "reported_on":[str(noti.ent_reported)], "date":toISO(noti.visit_date),        "ent_group": "",
              "days_from_now": daysFromNow , "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),"attachments": noti.attachments})
     for noti in groped_rep:
+        daysFromNow = (date.today() - noti.visit_date).days if noti.visit_date is not None else None
         if group_report_dict[noti.ent_group+str(noti.id)]!=None:
             my_dict.append(
                 {"id": str(noti.id), "reported_on": group_report_dict[noti.ent_group+str(noti.id)], "date": toISO(noti.visit_date),
@@ -271,7 +263,6 @@ def filter_report():
     print(result)
     return jsonify( [str(row) for row in result]
         ), HTTPStatus.OK
-    print(ent_group_concat)
 
 
 @reports_form_blueprint.route("/filter_to", methods=['GET'])

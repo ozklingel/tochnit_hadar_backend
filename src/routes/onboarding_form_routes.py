@@ -78,7 +78,6 @@ def verifyOTP_form():
     red.hset(int(str(created_by_phone)[3:]), "accessToken", accessToken)
     return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
 
-    return jsonify({"result": "error"}), HTTPStatus.OK
 
 
 @onboarding_form_blueprint.route('/get_CitiesDB', methods=['GET'])
@@ -90,7 +89,6 @@ def get_CitiesDB():
 
 @onboarding_form_blueprint.route('/upload_CitiesDB', methods=['GET'])
 def upload_CitiesDB():
-    import csv
     my_list = []
     #/home/ubuntu/flaskapp/src/routes/
     path = '/home/ubuntu/flaskapp/citiesToAdd.xlsx'

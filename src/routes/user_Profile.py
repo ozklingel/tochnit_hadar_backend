@@ -1,13 +1,10 @@
-import json
-import pickle
+
 from datetime import datetime
-import time
 import uuid
 from enum import Enum
 
 import boto3
 
-import werkzeug
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
@@ -18,7 +15,6 @@ from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.contact_form_model import ContactForm
 from src.models.notification_model import notifications
-from src.models.role import role_dict
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 
@@ -29,16 +25,15 @@ def delete():
     try:
         data = request.json
         userId = data['userId'][3:]
-        res = db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
-        res = db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
-        res = db.session.query(notifications).filter(notifications.userid == userId, ).delete()
+        db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
+        db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
+        db.session.query(notifications).filter(notifications.userid == userId, ).delete()
 
-        res = db.session.query(user1).filter(user1.id == userId).delete()
+        db.session.query(user1).filter(user1.id == userId).delete()
         db.session.commit()
     except Exception as e:
         return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
     return jsonify({"result":"success"}), HTTPStatus.OK
-        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def updateTask():
@@ -62,16 +57,13 @@ def uploadPhoto_form():
         print(created_by_id)
         print(request.files)
         imagefile = request.files['image']
-        #filename = werkzeug.utils.secure_filename(imagefile.filename)
-        #print("\nReceived image File name : " + imagefile.filename)
-        #imagefile.save( filename)
         new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()
         bucket_name = "th01-s3"
         session = boto3.Session()
         s3_client = session.client('s3',
                             aws_access_key_id=AWS_access_key_id,
                             aws_secret_access_key=AWS_secret_access_key)
-        s3 = boto3.resource('s3',
+        boto3.resource('s3',
                             aws_access_key_id=AWS_access_key_id,
                             aws_secret_access_key=AWS_secret_access_key)
         print(new_filename)
@@ -82,7 +74,6 @@ def uploadPhoto_form():
         updatedEnt = user1.query.get(created_by_id)
         updatedEnt.photo_path="https://th01-s3.s3.eu-north-1.amazonaws.com/"+new_filename
         db.session.commit()
-        #head = s3_client.head_object(Bucket=bucket_name, Key=new_filename)
         return jsonify({'result': 'success', 'image path': new_filename}), HTTPStatus.OK
 
 
@@ -92,6 +83,7 @@ def uploadPhoto_form():
 def getmyApprentices_form():
     created_by_id = request.args.get('userId')[3:]
     print(created_by_id)
+    apprenticeList=[]
     user1ent = db.session.query(user1.role_id,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
     if user1ent.role_id=="0":
         apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
@@ -100,7 +92,6 @@ def getmyApprentices_form():
     if user1ent.role_id == "2":
         apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
 
-    print(apprenticeList)
     my_dict = []
 
     for noti in apprenticeList:

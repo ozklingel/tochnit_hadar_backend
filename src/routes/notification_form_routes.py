@@ -1,23 +1,17 @@
-import json
 
 from datetime import datetime,date
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from os import sys, path
 
 from sqlalchemy import func, or_
 
 import config
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
-from ..models.institution_model import Institution
 from ..models.user_model import user1
 from ..models.visit_model import Visit
-
-pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-sys.path.append(pth)
-from app import app, db
+from app import  db
 import uuid
 from ..models.notification_model import notifications
 
@@ -216,7 +210,6 @@ def getAll_notification_form():
             # print(f' notifications: {my_dict}]')
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
-        return jsonify([])
 
 
 @notification_form_blueprint.route('/add1', methods=['POST'])

@@ -1,16 +1,11 @@
 import datetime
-from pyluach import dates, hebrewcal, parshios
-#sudo pip install pyluach
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from datetime import datetime,date,timedelta
-
+from datetime import datetime,date
 from sqlalchemy import func, or_
-
 import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
-from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 from src.routes.madadim import melave_score, mosad_Coordinators_score, eshcol_Coordinators_score
@@ -22,11 +17,18 @@ homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/home
 
 
 
-def get_melave_score(all_Apprentices):
+def get_melave_score(eshcol="0",mosad="0"):
     # compute score diagram
     counts = dict()
     score_melaveProfile = []
-    all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
+    if eshcol!="0" and mosad!="0":
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.eshcol==eshcol,user1.institution_id==mosad).all()
+    elif eshcol!="0":
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.eshcol==eshcol).all()
+    elif mosad!="0":
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.institution_id==mosad).all()
+    else:
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
     for melave in all_melave:
         melaveId = melave[0]
         melave_score1, call_gap_avg, meet_gap_avg = melave_score(melaveId)
@@ -41,8 +43,12 @@ def get_melave_score(all_Apprentices):
 
 
 
-def get_mosad_Coordinators_score():
-    all_Mosad_coord = db.session.query(user1.id, user1.institution_id,user1.name).filter(user1.role_id == "1").all()
+def get_mosad_Coordinators_score(eshcol="0"):
+    if eshcol!="0":
+        all_Mosad_coord = db.session.query(user1.id, user1.institution_id, user1.name).filter(
+            user1.role_id == "1",user1.eshcol==eshcol).all()
+    else:
+        all_Mosad_coord = db.session.query(user1.id, user1.institution_id,user1.name).filter(user1.role_id == "1").all()
     mosad_Cooordinator_score_dict = dict()
     score_MosadCoordProfile=[]
     for mosad_coord in all_Mosad_coord:
@@ -149,7 +155,7 @@ def homepageMaster():
 '''
     all_Apprentices = db.session.query(Apprentice.id).all()
 
-    counts_melave_score,score_melaveProfile_list=get_melave_score(all_Apprentices)
+    counts_melave_score,score_melaveProfile_list=get_melave_score()
     mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
     eshcol_Cooordinator_score,score_EshcolCoordProfile_list=get_Eshcol_corrdintors_score()
 
@@ -174,13 +180,97 @@ def homepageMaster():
         # 'user_name':record.name,
                    }), HTTPStatus.OK
 
+@homepage_form_blueprint.route("/init_eshcolCoord", methods=['GET'])
+def init_eshcolCoord():
+    accessToken =request.headers.get('Authorization')
+    print("accessToken:",accessToken)
+    userId = request.args.get("userId")[3:]
+    print("Userid:", str(userId))
+    '''
+    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+    print("redisaccessToken:",redisaccessToken)
+    if not redisaccessToken==accessToken:
+        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+        '''
+    record = user1.query.filter_by(id=userId).first()
+    '''
+    red.hset(userId, "id", record.id)
+    red.hset(userId, "name", record.name)
+    red.hset(userId, "lastname", record.last_name)
+    red.hset(userId, "email", record.email)
+    red.hset(userId, "role", record.role_id)
+'''
+    all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.eshcol==record.eshcol).all()
+
+    counts_melave_score,score_melaveProfile_list=get_melave_score(eshcol=record.eshcol)
+    mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
+
+    greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+
+    return jsonify({
+        'score_melaveProfile_list': score_melaveProfile_list,
+        'Mosad_Cooordinator_score': mosad_Cooordinator_score,
+        'melave_score': counts_melave_score ,
+        'totalApprentices': len(all_Apprentices),
+        'forgotenApprenticCount': forgotenApprenticCount,
+        'orangevisitmeetings': orangevisitmeetings,
+        'redvisitmeetings': redvisitmeetings,
+        'greenvisitmeetings': greenvisitmeetings,
+        'greenvisitcalls': greenvisitcalls,
+        'orangevisitcalls': orangevisitcalls,
+        'redvisitcalls': redvisitcalls,
+       # 'user_lastname':record.last_name,
+        # 'user_name':record.name,
+                   }), HTTPStatus.OK
+
+@homepage_form_blueprint.route("/init_mosadCoord", methods=['GET'])
+def init_mosadCoord():
+    print(request)
+    accessToken =request.headers.get('Authorization')
+    print("accessToken:",accessToken)
+    userId = request.args.get("userId")[3:]
+    print("Userid:", str(userId))
+    '''
+    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+    print("redisaccessToken:",redisaccessToken)
+    if not redisaccessToken==accessToken:
+        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+        '''
+    record = user1.query.filter_by(id=userId).first()
+    '''
+    red.hset(userId, "id", record.id)
+    red.hset(userId, "name", record.name)
+    red.hset(userId, "lastname", record.last_name)
+    red.hset(userId, "email", record.email)
+    red.hset(userId, "role", record.role_id)
+'''
+    all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id==record.institution_id).all()
+
+    counts_melave_score,score_melaveProfile_list=get_melave_score(mosad=record.institution_id)
+
+    greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+
+    return jsonify({
+        'score_melaveProfile_list': score_melaveProfile_list,
+        'melave_score': counts_melave_score ,
+        'totalApprentices': len(all_Apprentices),
+        'forgotenApprenticCount': forgotenApprenticCount,
+        'orangevisitmeetings': orangevisitmeetings,
+        'redvisitmeetings': redvisitmeetings,
+        'greenvisitmeetings': greenvisitmeetings,
+        'greenvisitcalls': greenvisitcalls,
+        'orangevisitcalls': orangevisitcalls,
+        'redvisitcalls': redvisitcalls,
+       # 'user_lastname':record.last_name,
+        # 'user_name':record.name,
+                   }), HTTPStatus.OK
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
     userId = request.args.get("userId")[3:]
-    tasksAndEvents=getlists(userId)
+    tasksAndEvents=getlist_from_notification(userId)
     return jsonify( {"events": tasksAndEvents[0] if tasksAndEvents is not None else []}), HTTPStatus.OK
 
-def getlists(userId):
+def getlist_from_notification(userId):
     # get tasksAndEvents
     res=getAll_notification_form()
     if res is None:

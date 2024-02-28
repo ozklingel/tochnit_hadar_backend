@@ -1,18 +1,11 @@
-import datetime
-import json
-import time
-from datetime import datetime,date
 
-import boto3
-import flask
+from datetime import date
+
+
 from sqlalchemy import or_
-from twilio.rest import Client
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-from os import sys, path
-
-from config import AWS_access_key_id, AWS_secret_access_key
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
@@ -21,12 +14,8 @@ from ..models.contact_form_model import ContactForm
 from ..models.institution_model import Institution
 from ..models.user_model import user1
 
-pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-sys.path.append(pth)
-from app import app, db
+from app import db
 import uuid
-
-from ..models.visit_model import Visit
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
@@ -355,30 +344,39 @@ def filter_meesages():
 @messegaes_form_blueprint.route('/getById', methods=['GET'])
 def getById():
     message_id = request.args.get('message_id')
-    user = request.args.get('userId')[3:]
     print(message_id)
-    mess1 = db.session.query(ContactForm).filter(ContactForm.id == message_id).first()
-    ent_group_list = db.session.query(ent_group.group_name).filter(ent_group.user_id == user).all()
-    ent_group_list_name= [r[0] for r in ent_group_list]
+    messegasesList = db.session.query(ContactForm.created_for_id,ContactForm.created_at,ContactForm.id,
+                                      ContactForm.attachments,ContactForm.type,ContactForm.icon,
+                                      ContactForm.allreadyread,ContactForm.subject,ContactForm.content
+                                      ,ContactForm.ent_group,ContactForm.created_by_id)\
+        .filter(or_(ContactForm.id == message_id)).all()
+
     my_dict = []
-    daysFromNow = (date.today() - mess1.created_at).days if mess1.created_at is not None else None
-    if mess1.ent_group in ent_group_list_name:
-            group_name1 = db.session.query(ent_group.group_name).filter(ent_group.id == mess1.ent_group).first()
+    groped_mess=[]
+    group_report_dict=dict()
+    print(messegasesList)
+    for mess in messegasesList:
+        daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
+        if mess.ent_group !="":
+            if mess.ent_group+str(mess.id) in  group_report_dict:
+                group_report_dict[mess.ent_group+str(mess.id)].append(str(mess.created_for_id))
+            else:
+                group_report_dict[mess.ent_group+str(mess.id)] = [str(mess.created_for_id)]
+            groped_mess.append(mess)
+        else:
             my_dict.append(
-                {"type": mess1.type, "attachments": mess1.attachments, "id": str(mess1.id),
-                 "to": group_name1[0] if group_name1 else "לא ידוע", "date": toISO(mess1.created_at),
-                 "content": mess1.content, "title": str(mess1.subject), "allreadyread": str(mess1.allreadyread),
-                 "icon": mess1.icon})
-    else:
-        my_dict.append(
-            {"type": mess1.type, "attachments": mess1.attachments, "id": str(mess1.id), "from": str(mess1.created_by_id),
-             "date": toISO(mess1.created_at),
-             "content": mess1.content, "title": str(mess1.subject), "allreadyread": str(mess1.allreadyread),
-             "icon": mess1.icon})
-    if not mess1 :
-        # acount not found
-        return jsonify([])
-    else:
-        # print(f' notifications: {my_dict}]')
-        # TODO: get Noti form to DB
-        return jsonify(my_dict), HTTPStatus.OK
+                {"type":mess.type,"attachments":mess.attachments,"id": str(mess.id),"to":[str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id), "date":toISO(mess.created_at),
+                 "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
+
+    for mess in groped_mess:
+        if group_report_dict[mess.ent_group+str(mess.id)]!=None:
+            my_dict.append(
+                {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
+                 "from": str(mess.created_by_id), "date": toISO(mess.created_at),"to": group_report_dict[mess.ent_group+str(mess.id)],
+                 "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"ent_group":mess.ent_group,
+                 "icon": mess.icon})
+            group_report_dict[mess.ent_group+str(mess.id)]=None
+    # print(f' notifications: {my_dict}]')
+    # TODO: get Noti form to DB
+    return jsonify(my_dict[0]), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK

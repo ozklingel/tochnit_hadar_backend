@@ -4,17 +4,16 @@ import uuid
 
 import boto3
 from openpyxl.reader.excel import load_workbook
-from pyluach import dates, hebrewcal, parshios
-#sudo pip install pyluach
 from flask import Blueprint, request, jsonify, send_file
 from http import HTTPStatus
 from datetime import datetime,date,timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app import db, red
 from config import AWS_access_key_id, AWS_secret_access_key, melave_Score, visitcalls_melave_avg, visitmeets_melave_avg, \
-    proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence
+    proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence, horim_meeting, call_report, groupMeet_report, \
+    personalMeet_report, professional_report, HorimCall_report
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
@@ -82,10 +81,6 @@ def export_dict():
 
 @export_import_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():
-    from openpyxl import workbook
-    # path = 'gift.xlsx'
-    # wb = load_workbook(filename=path)
-    # ws = wb.get_sheet_by_name('Sheet1')
     file = request.files['file']
 
     wb = load_workbook(file)
@@ -198,8 +193,8 @@ def rivony():
         if len(all_melave_Apprentices) == 0:
             continue
         #מפגש מקצועי מלווה
-        newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id == melaveId,
-                                                                       Visit.title == "מפגש_מקצועי",
+        newvisit_professional = db.session.query(Visit.user_id).filter(Visit.ent_reported == melaveId,
+                                                                       Visit.title == professional_report,
                                                                        Visit.visit_date > start_Of_Rivon).all()
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
@@ -209,38 +204,75 @@ def rivony():
             creation_date=date.today(),
         )
         db.session.add(system_report1)
-    too_old = datetime.today() - timedelta(days=100)
-    Oldvisitcalls = db.session.query(Visit.ent_reported).distinct(Visit.ent_reported).filter(Visit.user_id==melaveId,Apprentice.id==Visit.ent_reported,Visit.title == "שיחה",
-                                                                 Visit.visit_date > too_old).all()
-    forgotenApprentices_count=len(all_melave_Apprentices)-len(Oldvisitcalls)
-    system_report1 = system_report(
-        id=int(str(uuid.uuid4().int)[:5]),
-        related_id=melaveId,
-        type=forgotenApprentice_cnt,
-        value=forgotenApprentices_count,
-        creation_date=date.today(),
-    )
-    db.session.add(system_report1)
+        Apprentice_ids_forgoten = [r[0] for r in all_melave_Apprentices]
+        too_old = datetime.today() - timedelta(days=100)
+        Oldvisitcalls = db.session.query(Visit.ent_reported).filter(
+                                                                     Apprentice.id == Visit.ent_reported,
+                                                                     or_(Visit.title == call_report,Visit.title == groupMeet_report,Visit.title == personalMeet_report),
+                                                                     Visit.visit_date < too_old).all()
+        for i in Oldvisitcalls:
+            if i[0] in Apprentice_ids_forgoten:
+                Apprentice_ids_forgoten.remove(i[0])
+
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=melaveId,
+            type=forgotenApprentice_cnt,
+            value=len(Apprentice_ids_forgoten),
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
 
     #mosad Madadim:
     all_MosadCoordinator = db.session.query(user1.id,user1.institution_id).filter(user1.role_id=="1").all()
     for mosadCoord in all_MosadCoordinator:
         mosadCoord_id=mosadCoord[0]
-        res=md.mosadCoordinator(mosadCoord_id)[0].json
-        print("res",res['avg_apprenticeCall_gap'])
-        system_report1 = system_report(
-            id=int(str(uuid.uuid4().int)[:5]),
-            related_id=mosadCoord_id,
-            type=visitcalls_melave_avg,
-            value=res['avg_apprenticeCall_gap'],
-            creation_date=date.today(),
-        )
-        db.session.add(system_report1)
+        inst=db.session.query(user1.institution_id).filter(user1.id==mosadCoord_id)
+        all_Apprentices = db.session.query(Apprentice.id).filter(
+            Apprentice.institution_id == inst).all()
+        Apprentice_ids_forgoten = [r[0] for r in all_Apprentices]
+
+        too_old = datetime.today() - timedelta(days=100)
+        Oldvisitcalls = db.session.query(Visit.ent_reported).filter(
+            Apprentice.id == Visit.ent_reported,
+            or_(Visit.title == call_report, Visit.title == groupMeet_report, Visit.title == personalMeet_report),
+            Visit.visit_date < too_old).all()
+        for i in Oldvisitcalls:
+            if i[0] in Apprentice_ids_forgoten:
+                Apprentice_ids_forgoten.remove(i[0])
+
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=mosadCoord_id,
             type=forgotenApprentice_cnt,
-            value=res['Apprentice_forgoten_count'],
+            value=len(Apprentice_ids_forgoten),
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+
+    #eshcol Madadim:
+    all_eshcolCoordinator = db.session.query(user1.id,user1.eshcol).filter(user1.role_id=="2").all()
+    for eshcolCoord in all_eshcolCoordinator:
+        eshcolCoord_id=eshcolCoord[0]
+        eshco=eshcolCoord[1]
+        all_Apprentices = db.session.query(Apprentice.id).filter(
+            Apprentice.eshcol == eshco).all()
+        Apprentice_ids_forgoten = [r[0] for r in all_Apprentices]
+        too_old = datetime.today() - timedelta(days=100)
+        Oldvisitcalls = db.session.query(Visit.ent_reported).filter(
+            Apprentice.id == Visit.ent_reported,
+            or_(Visit.title == call_report, Visit.title == groupMeet_report, Visit.title == personalMeet_report),
+            Visit.visit_date < too_old).all()
+        for i in Oldvisitcalls:
+            if i[0] in Apprentice_ids_forgoten:
+                Apprentice_ids_forgoten.remove(i[0])
+
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=eshcolCoord_id,
+            type=forgotenApprentice_cnt,
+            value=len(Apprentice_ids_forgoten),
             creation_date=date.today(),
         )
         db.session.add(system_report1)
@@ -276,7 +308,7 @@ def yearly():
             )
             db.session.add(system_report1)
         Horim_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.ent_reported).filter(Visit.title == "מפגש_הורים", Visit.user_id == melaveId,
+            Visit.ent_reported).filter(Visit.title == HorimCall_report, Visit.user_id == melaveId,
                                         Visit.visit_date >start_Of_year).all()
         if Horim_meeting:
             system_report1 = system_report(
@@ -288,7 +320,7 @@ def yearly():
             )
             db.session.add(system_report1)
         too_old = datetime.today() - timedelta(days=365)
-        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.title == "מפגש",
+        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(or_(Visit.title == personalMeet_report,Visit.title==groupMeet_report),
                                                                                             Visit.visit_in_army == True,
                                                                                             Visit.visit_date > too_old,
                                                                                             Visit.user_id == melaveId).group_by(

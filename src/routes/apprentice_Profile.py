@@ -1,21 +1,12 @@
-import json
-import pickle
-from datetime import datetime
-import time
+
 import uuid
 import boto3
-
-import werkzeug
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
-from src.models.base_model import Base
-from src.models.city_model import City
 from src.models.notification_model import notifications
-from src.models.user_model import user1
 from src.models.visit_model import Visit
 
 apprentice_Profile_form_blueprint = Blueprint('apprentice_Profile_form', __name__, url_prefix='/apprentice_Profile_form')

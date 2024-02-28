@@ -1,8 +1,5 @@
-from sqlalchemy import ForeignKey, ARRAY
 from . import *
-from os import sys, path
-pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-sys.path.append(pth)
+
 from app import db
 class system_report(db.Model):
     __tablename__ = "system_report"

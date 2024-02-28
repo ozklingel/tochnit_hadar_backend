@@ -1,20 +1,15 @@
-import json
 from http import HTTPStatus
-from itertools import product
-from os import sys, path
 
-from flask import Blueprint, request, jsonify, redirect
-import boto3, botocore
+from flask import Blueprint, request, jsonify
+import boto3
 
-from werkzeug.utils import secure_filename
 
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
 from ..models.institution_model import Institution
 
-pth = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-sys.path.append(pth)
+
 from app import db, app
 from ..models.user_model import user1
 setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, url_prefix='/setEntityDetails_form')
@@ -46,9 +41,9 @@ def setEntityDetailsByType():
 
            if typeOfSet == "userProfile":
                    entityId =str(data['entityId'])[3:]
-                   print(entityId);
+                   print(entityId)
                    atrrToBeSet = data['atrrToBeSet']
-                   print(atrrToBeSet);
+                   print(atrrToBeSet)
                    updatedEnt = user1.query.get(entityId)
                    for key in atrrToBeSet:
                        setattr(updatedEnt, key, str(atrrToBeSet[key]))

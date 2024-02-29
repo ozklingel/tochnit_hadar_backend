@@ -1,5 +1,6 @@
 from . import *
 
+from app import db
 class City(db.Model):
     __tablename__ = CITIES_TBL
 

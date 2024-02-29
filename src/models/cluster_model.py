@@ -1,5 +1,6 @@
 from . import *
 
+from app import db
 class Cluster(db.Model):
     __tablename__ = CLUSTERS_TBL
 

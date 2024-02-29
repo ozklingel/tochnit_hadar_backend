@@ -1,5 +1,4 @@
 
-from datetime import datetime
 import uuid
 from enum import Enum
 
@@ -8,6 +7,7 @@ import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
+import config
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
@@ -17,6 +17,7 @@ from src.models.contact_form_model import ContactForm
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
+from datetime import datetime,date
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 role_name = Enum('Color', ['melave', 'racaz_mosad', 'racaz_eshcol'])
@@ -95,6 +96,9 @@ def getmyApprentices_form():
     my_dict = []
 
     for noti in apprenticeList:
+        call_status=visit_gap_color(config.call_report, noti, 30, 15)
+        personalMeet_status=visit_gap_color(config.personalMeet_report, noti, 100, 80)
+        Horim_status=visit_gap_color(config.HorimCall_report, noti, 365, 350)
         print(noti.city_id)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         print(city)
@@ -105,7 +109,10 @@ def getmyApprentices_form():
         base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
         base_id = base_id[0] if base_id else 0
         my_dict.append(
-            {"highSchoolRavMelamed_phone": noti.high_school_teacher_phone
+            {"Horim_status":Horim_status,
+             "personalMeet_status":personalMeet_status,
+             "call_status":call_status,
+             "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
                      ,"highSchoolRavMelamed_name": noti.high_school_teacher,
                   "highSchoolRavMelamed_email": noti.high_school_teacher_email,
 
@@ -210,7 +217,21 @@ def getmyApprenticesNames(created_by_id):
 
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
-
+def visit_gap_color(type,apprentice,redLine,greenLine):
+    # Apprentice_call_status
+    visitEvent = db.session.query(Visit).filter(Visit.ent_reported == apprentice.id,
+                                                Visit.title == type).order_by(Visit.visit_date.desc()).first()
+    print("visitEvent",visitEvent)
+    # handle no row so insert need a call
+    if visitEvent is None:
+        return "red"
+    gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
+    if gap > redLine:
+        return "red"
+    if redLine >= gap > greenLine:
+        return "orange"
+    if greenLine >= gap:
+        return "green"
 @userProfile_form_blueprint.route('/myApprentice', methods=['GET'])
 def getmyApprentice_form():
     created_by_id = request.args.get('userId')[3:]
@@ -220,6 +241,9 @@ def getmyApprentice_form():
     noti = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id,Apprentice.id == apprenticeId).first()
     my_dict = []
     if noti:
+        call_status=visit_gap_color(config.call_report, noti, 30, 15)
+        personalMeet_status=visit_gap_color(config.personalMeet_report, noti, 100, 80)
+        Horim_status=visit_gap_color(config.HorimCall_report, noti, 365, 350)
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
         eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
@@ -230,7 +254,10 @@ def getmyApprentice_form():
 
         print("base_id",base_id)
         my_dict.append(
-            {"highSchoolRavMelamed_phone": noti.high_school_teacher_phone
+            {"Horim_status":Horim_status,
+             "personalMeet_status":personalMeet_status,
+             "call_status":call_status,
+                "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
                 , "highSchoolRavMelamed_name": noti.high_school_teacher,
              "highSchoolRavMelamed_email": noti.high_school_teacher_email,
 

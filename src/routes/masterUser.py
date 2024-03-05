@@ -83,7 +83,7 @@ def add_apprentice_excel():
             )
             db.session.add(Apprentice1)
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
     db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -116,7 +116,7 @@ def add_user_excel():
             )
             db.session.add(user)
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
     db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -133,14 +133,14 @@ def deleteEnt():
                entityId = str(data['entityId'])
                res = db.session.query(Institution).filter(Institution.id == entityId).delete()
            if typeOfSet == "user":
-               entityId = str(data['entityId'])[3:]
+               entityId = str(data['entityId'])
                res = db.session.query(ContactForm).filter(ContactForm.created_for_id == entityId,).delete()
                res = db.session.query(ContactForm).filter(ContactForm.created_by_id == entityId,).delete()
                res = db.session.query(notifications).filter(notifications.userid == entityId,).delete()
 
                res = db.session.query(user1).filter(user1.id == entityId).delete()
            if typeOfSet == "apprentice":
-               entityId = str(data['entityId'])[3:]
+               entityId = str(data['entityId'])
                res = db.session.query(notifications).filter(notifications.apprenticeid == entityId,).delete()
                res = db.session.query(Visit).filter(Visit.ent_reported == entityId,).delete()
                res = db.session.query(Apprentice).filter(Apprentice.id == entityId).delete()
@@ -173,20 +173,21 @@ def setSetting_madadim():
 
 @master_user_form_blueprint.route('/getAllSetting_madadim', methods=['GET'])
 def getNotificationSetting_form():
+    try:
+        return jsonify({"eshcolMosadMeet_madad_date":config.eshcolMosadMeet_madad_date,
+                        "tochnitMeet_madad_date":config.tochnitMeet_madad_date
+                        ,"doForBogrim_madad_date":config.doForBogrim_madad_date,
+                        "matzbarmeet_madad_date": config.matzbarmeet_madad_date,
+                        "professionalMeet_madad_date": config.professionalMeet_madad_date
+                           , "callHorim_madad_date": config.callHorim_madad_date,
+                        "groupMeet_madad_date": config.groupMeet_madad_date,
+                        "meet_madad_date": config.meet_madad_date
+                           , "call_madad_date": config.call_madad_date
+                           , "cenes_report": config.cenes_report
 
-    return jsonify({"eshcolMosadMeet_madad_date":config.eshcolMosadMeet_madad_date,
-                    "tochnitMeet_madad_date":config.tochnitMeet_madad_date
-                    ,"doForBogrim_madad_date":config.doForBogrim_madad_date,
-                    "matzbarmeet_madad_date": config.matzbarmeet_madad_date,
-                    "professionalMeet_madad_date": config.professionalMeet_madad_date
-                       , "callHorim_madad_date": config.callHorim_madad_date,
-                    "groupMeet_madad_date": config.groupMeet_madad_date,
-                    "meet_madad_date": config.meet_madad_date
-                       , "call_madad_date": config.call_madad_date
-                       , "cenes_report": config.cenes_report
-
-                    }), HTTPStatus.OK
-
+                        }), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 @master_user_form_blueprint.route("/add_apprentice_manual", methods=['post'])
 def add_apprentice():
     data = request.json
@@ -248,7 +249,7 @@ def add_apprentice():
         db.session.add(Apprentice1)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.OK
 
     if Apprentice1:
         # TODO: add contact form to DB
@@ -283,7 +284,7 @@ def add_user_manual():
         db.session.add(useEnt)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.OK
 
     if useEnt:
         # TODO: add contact form to DB

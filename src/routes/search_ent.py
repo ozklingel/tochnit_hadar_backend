@@ -11,6 +11,7 @@ search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/searc
 
 @search_bar_form_blueprint.route("/search_entities", methods=['GET'])
 def search_entities():
+    try:
         roles = request.args.get("roles").split(",") if request.args.get("roles") is not None else None
         years = request.args.get("years").split(",") if request.args.get("years") is not None else None
         institutions = request.args.get("institutions").split(",") if request.args.get(
@@ -91,4 +92,5 @@ def search_entities():
                         }
                        ), HTTPStatus.OK
 
-
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK

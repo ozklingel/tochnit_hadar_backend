@@ -198,3 +198,20 @@ def getMahzors():
         return  eshcols_appren_ids
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
+@institutionProfile_form_blueprint.route("/update", methods=['put'])
+def update():
+    try:
+        # get tasksAndEvents
+        mosad_Id = request.args.get("mosad_Id")
+        data = request.json
+        updatedEnt = Institution.query.get(mosad_Id)
+        for key in data:
+            setattr(updatedEnt, key, data[key])
+        db.session.commit()
+        if updatedEnt:
+            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+            # TODO: add contact form to DB
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': 'error'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK

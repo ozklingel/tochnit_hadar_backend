@@ -18,7 +18,7 @@ tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form
 @tasks_form_blueprint.route("/getTasks", methods=['GET'])
 def getTasks():
     # get tasksAndEvents
-    userId = request.args.get("userId")[3:]
+    userId = request.args.get("userId")
     res=getAll_notification_form()
     todo_dict = []
     todo_ids=[]
@@ -28,14 +28,13 @@ def getTasks():
             todo_ids.append(ent["id"])
             if ent["numOfLinesDisplay"]==2:#noti not created by user
                 del ent["numOfLinesDisplay"]
-                del ent["apprenticeName"]
 
                 #print(ent)
                 ent["status"] = "todo"
                 ent["id"] = str(ent["id"])
                 ent["apprenticeId"] = [ent["apprenticeId"]]
 
-                if ent["title"]== "מפגש_קבוצתי" :
+                if ent["event"]== "מפגש_קבוצתי" :
                     ent["apprenticeId"]=[]
 
                 todo_dict.append(ent)
@@ -63,23 +62,26 @@ def getTasks():
 
         return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.OK
 @tasks_form_blueprint.route("/update", methods=['put'])
 def updateTask():
     # get tasksAndEvents
-    taskId = request.args.get("taskId")
-    data = request.json
+    try:
+        taskId = request.args.get("taskId")
+        data = request.json
 
 
-    updatedEnt = notifications.query.get(taskId)
-    for key in data:
-        setattr(updatedEnt, key, data[key])
-    db.session.commit()
-    if updatedEnt:
-        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
-        # TODO: add contact form to DB
-        return jsonify({'result': 'success'}), HTTPStatus.OK
-    return jsonify({'result': 'error'}), HTTPStatus.OK
+        updatedEnt = notifications.query.get(taskId)
+        for key in data:
+            setattr(updatedEnt, key, data[key])
+        db.session.commit()
+        if updatedEnt:
+            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
+            # TODO: add contact form to DB
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': 'error'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 
 @tasks_form_blueprint.route('/add', methods=['POST'])
 def add_task():
@@ -92,8 +94,8 @@ def add_task():
         details = json_object["details"]
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
         notification1 = notifications(
-                        userid=user[3:],
-                        apprenticeid = apprenticeid[3:],
+                        userid=user,
+                        apprenticeid = apprenticeid,
                         event=event,
                         date=date,
                         allreadyread=False,
@@ -108,7 +110,7 @@ def add_task():
         db.session.add(notification1)
         db.session.commit()
     except Exception as e:
-        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
+        return jsonify({"result": str(e)}),HTTPStatus.OK
     return jsonify({"result":"success"}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 @tasks_form_blueprint.route('/delete', methods=['POST'])

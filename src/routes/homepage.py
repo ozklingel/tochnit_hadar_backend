@@ -135,141 +135,150 @@ def red_green_orange_status(all_Apprentices):
 
 @homepage_form_blueprint.route("/initMaster", methods=['GET'])
 def homepageMaster():
-    accessToken =request.headers.get('Authorization')
-    print("accessToken:",accessToken)
-    userId = request.args.get("userId")[3:]
-    print("Userid:", str(userId))
-    '''
-    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-    print("redisaccessToken:",redisaccessToken)
-    if not redisaccessToken==accessToken:
-        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+    try:
+        accessToken =request.headers.get('Authorization')
+        print("accessToken:",accessToken)
+        userId = request.args.get("userId")
+        print("Userid:", str(userId))
         '''
-    record = user1.query.filter_by(id=userId).first()
+        redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+        print("redisaccessToken:",redisaccessToken)
+        if not redisaccessToken==accessToken:
+            return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+            '''
+        record = user1.query.filter_by(id=userId).first()
+        '''
+        red.hset(userId, "id", record.id)
+        red.hset(userId, "name", record.name)
+        red.hset(userId, "lastname", record.last_name)
+        red.hset(userId, "email", record.email)
+        red.hset(userId, "role", record.role_id)
     '''
-    red.hset(userId, "id", record.id)
-    red.hset(userId, "name", record.name)
-    red.hset(userId, "lastname", record.last_name)
-    red.hset(userId, "email", record.email)
-    red.hset(userId, "role", record.role_id)
-'''
-    all_Apprentices = db.session.query(Apprentice.id).all()
+        all_Apprentices = db.session.query(Apprentice.id).all()
 
-    counts_melave_score,score_melaveProfile_list=get_melave_score()
-    mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
-    eshcol_Cooordinator_score,score_EshcolCoordProfile_list=get_Eshcol_corrdintors_score()
+        counts_melave_score,score_melaveProfile_list=get_melave_score()
+        mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
+        eshcol_Cooordinator_score,score_EshcolCoordProfile_list=get_Eshcol_corrdintors_score()
 
-    greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+        greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
 
-    return jsonify({
-        'score_melaveProfile_list': score_melaveProfile_list,
-        'score_Mosad_Eshcol_CoordProfile_list': score_MosadCoordProfile_list+score_EshcolCoordProfile_list,
+        return jsonify({
+            'score_melaveProfile_list': score_melaveProfile_list,
+            'score_Mosad_Eshcol_CoordProfile_list': score_MosadCoordProfile_list+score_EshcolCoordProfile_list,
 
-        'eshcol_Cooordinator_score': eshcol_Cooordinator_score,
-        'Mosad_Cooordinator_score': mosad_Cooordinator_score,
-        'melave_score': counts_melave_score ,
-        'totalApprentices': len(all_Apprentices),
-        'forgotenApprenticCount': forgotenApprenticCount,
-        'orangevisitmeetings': orangevisitmeetings,
-        'redvisitmeetings': redvisitmeetings,
-        'greenvisitmeetings': greenvisitmeetings,
-        'greenvisitcalls': greenvisitcalls,
-        'orangevisitcalls': orangevisitcalls,
-        'redvisitcalls': redvisitcalls,
-       # 'user_lastname':record.last_name,
-        # 'user_name':record.name,
-                   }), HTTPStatus.OK
-
+            'eshcol_Cooordinator_score': eshcol_Cooordinator_score,
+            'Mosad_Cooordinator_score': mosad_Cooordinator_score,
+            'melave_score': counts_melave_score ,
+            'totalApprentices': len(all_Apprentices),
+            'forgotenApprenticCount': forgotenApprenticCount,
+            'orangevisitmeetings': orangevisitmeetings,
+            'redvisitmeetings': redvisitmeetings,
+            'greenvisitmeetings': greenvisitmeetings,
+            'greenvisitcalls': greenvisitcalls,
+            'orangevisitcalls': orangevisitcalls,
+            'redvisitcalls': redvisitcalls,
+           # 'user_lastname':record.last_name,
+            # 'user_name':record.name,
+                       }), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 @homepage_form_blueprint.route("/init_eshcolCoord", methods=['GET'])
 def init_eshcolCoord():
-    accessToken =request.headers.get('Authorization')
-    print("accessToken:",accessToken)
-    userId = request.args.get("userId")[3:]
-    print("Userid:", str(userId))
-    '''
-    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-    print("redisaccessToken:",redisaccessToken)
-    if not redisaccessToken==accessToken:
-        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+    try:
+        accessToken =request.headers.get('Authorization')
+        print("accessToken:",accessToken)
+        userId = request.args.get("userId")
+        print("Userid:", str(userId))
         '''
-    record = user1.query.filter_by(id=userId).first()
+        redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+        print("redisaccessToken:",redisaccessToken)
+        if not redisaccessToken==accessToken:
+            return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+            '''
+        record = user1.query.filter_by(id=userId).first()
+        '''
+        red.hset(userId, "id", record.id)
+        red.hset(userId, "name", record.name)
+        red.hset(userId, "lastname", record.last_name)
+        red.hset(userId, "email", record.email)
+        red.hset(userId, "role", record.role_id)
     '''
-    red.hset(userId, "id", record.id)
-    red.hset(userId, "name", record.name)
-    red.hset(userId, "lastname", record.last_name)
-    red.hset(userId, "email", record.email)
-    red.hset(userId, "role", record.role_id)
-'''
-    all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.eshcol==record.eshcol).all()
+        all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.eshcol==record.eshcol).all()
 
-    counts_melave_score,score_melaveProfile_list=get_melave_score(eshcol=record.eshcol)
-    mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
+        counts_melave_score,score_melaveProfile_list=get_melave_score(eshcol=record.eshcol)
+        mosad_Cooordinator_score,score_MosadCoordProfile_list=get_mosad_Coordinators_score()
 
-    greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+        greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
 
-    return jsonify({
-        'score_melaveProfile_list': score_melaveProfile_list,
-        'Mosad_Cooordinator_score': mosad_Cooordinator_score,
-        'melave_score': counts_melave_score ,
-        'totalApprentices': len(all_Apprentices),
-        'forgotenApprenticCount': forgotenApprenticCount,
-        'orangevisitmeetings': orangevisitmeetings,
-        'redvisitmeetings': redvisitmeetings,
-        'greenvisitmeetings': greenvisitmeetings,
-        'greenvisitcalls': greenvisitcalls,
-        'orangevisitcalls': orangevisitcalls,
-        'redvisitcalls': redvisitcalls,
-       # 'user_lastname':record.last_name,
-        # 'user_name':record.name,
-                   }), HTTPStatus.OK
-
+        return jsonify({
+            'score_melaveProfile_list': score_melaveProfile_list,
+            'Mosad_Cooordinator_score': mosad_Cooordinator_score,
+            'melave_score': counts_melave_score ,
+            'totalApprentices': len(all_Apprentices),
+            'forgotenApprenticCount': forgotenApprenticCount,
+            'orangevisitmeetings': orangevisitmeetings,
+            'redvisitmeetings': redvisitmeetings,
+            'greenvisitmeetings': greenvisitmeetings,
+            'greenvisitcalls': greenvisitcalls,
+            'orangevisitcalls': orangevisitcalls,
+            'redvisitcalls': redvisitcalls,
+           # 'user_lastname':record.last_name,
+            # 'user_name':record.name,
+                       }), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 @homepage_form_blueprint.route("/init_mosadCoord", methods=['GET'])
 def init_mosadCoord():
-    print(request)
-    accessToken =request.headers.get('Authorization')
-    print("accessToken:",accessToken)
-    userId = request.args.get("userId")[3:]
-    print("Userid:", str(userId))
-    '''
-    redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-    print("redisaccessToken:",redisaccessToken)
-    if not redisaccessToken==accessToken:
-        return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+    try:
+        print(request)
+        accessToken =request.headers.get('Authorization')
+        print("accessToken:",accessToken)
+        userId = request.args.get("userId")
+        print("Userid:", str(userId))
         '''
-    record = user1.query.filter_by(id=userId).first()
+        redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+        print("redisaccessToken:",redisaccessToken)
+        if not redisaccessToken==accessToken:
+            return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+            '''
+        record = user1.query.filter_by(id=userId).first()
+        '''
+        red.hset(userId, "id", record.id)
+        red.hset(userId, "name", record.name)
+        red.hset(userId, "lastname", record.last_name)
+        red.hset(userId, "email", record.email)
+        red.hset(userId, "role", record.role_id)
     '''
-    red.hset(userId, "id", record.id)
-    red.hset(userId, "name", record.name)
-    red.hset(userId, "lastname", record.last_name)
-    red.hset(userId, "email", record.email)
-    red.hset(userId, "role", record.role_id)
-'''
-    all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id==record.institution_id).all()
+        all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id==record.institution_id).all()
 
-    counts_melave_score,score_melaveProfile_list=get_melave_score(mosad=record.institution_id)
+        counts_melave_score,score_melaveProfile_list=get_melave_score(mosad=record.institution_id)
 
-    greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
+        greenvisitmeetings,orangevisitmeetings,redvisitmeetings,greenvisitcalls,orangevisitcalls,redvisitcalls,forgotenApprenticCount=red_green_orange_status(all_Apprentices)
 
-    return jsonify({
-        'score_melaveProfile_list': score_melaveProfile_list,
-        'melave_score': counts_melave_score ,
-        'totalApprentices': len(all_Apprentices),
-        'forgotenApprenticCount': forgotenApprenticCount,
-        'orangevisitmeetings': orangevisitmeetings,
-        'redvisitmeetings': redvisitmeetings,
-        'greenvisitmeetings': greenvisitmeetings,
-        'greenvisitcalls': greenvisitcalls,
-        'orangevisitcalls': orangevisitcalls,
-        'redvisitcalls': redvisitcalls,
-       # 'user_lastname':record.last_name,
-        # 'user_name':record.name,
-                   }), HTTPStatus.OK
+        return jsonify({
+            'score_melaveProfile_list': score_melaveProfile_list,
+            'melave_score': counts_melave_score ,
+            'totalApprentices': len(all_Apprentices),
+            'forgotenApprenticCount': forgotenApprenticCount,
+            'orangevisitmeetings': orangevisitmeetings,
+            'redvisitmeetings': redvisitmeetings,
+            'greenvisitmeetings': greenvisitmeetings,
+            'greenvisitcalls': greenvisitcalls,
+            'orangevisitcalls': orangevisitcalls,
+            'redvisitcalls': redvisitcalls,
+           # 'user_lastname':record.last_name,
+            # 'user_name':record.name,
+                       }), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
-    userId = request.args.get("userId")[3:]
-    tasksAndEvents=getlist_from_notification(userId)
-    return jsonify( {"events": tasksAndEvents[0] if tasksAndEvents is not None else []}), HTTPStatus.OK
-
+    try:
+        userId = request.args.get("userId")
+        tasksAndEvents=getlist_from_notification(userId)
+        return jsonify( tasksAndEvents[0] if tasksAndEvents is not None else []), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
 def getlist_from_notification(userId):
     # get tasksAndEvents
     res=getAll_notification_form()

@@ -57,6 +57,8 @@ class SendMessages:
         url: str = 'https://019sms.co.il/api'
         url_test: str = "https://019sms.co.il/api/test"
         username: str = "lirangrovas"
+
         token: str = (
             'eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJmaXJzdF9rZXkiOiI2MjI5MiIsInNlY29uZF9rZXkiOiIzNTM2NDc4IiwiaXNzdWVkQ'
             'XQiOiIxNS0wMi0yMDI0IDEyOjQwOjE3IiwidHRsIjo2MzA3MjAwMH0.1DoH8hc3aS3xI-FdT7hc_E0fBW05rtlcuPdsYfGGoUw')
+        token_expiration_date: '14/02/2026 12:40:17'

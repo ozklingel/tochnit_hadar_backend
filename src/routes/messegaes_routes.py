@@ -58,14 +58,17 @@ def send_whatsapp_through_joni(sources: str, recipients: Union[List[str], str], 
     if isinstance(recipients, str):
         recipients = [recipients]
     webhook = config.SendMessages.Whatsapp.webhook
-    message = config.SendMessages.Whatsapp.messagePrefix + sources + "\n\n" + message
-    for recipient in recipients:
-        data = {config.SendMessages.Whatsapp.joni_to: recipient,
-                config.SendMessages.Whatsapp.joni_text: message}
-        response = requests.post(webhook, json=data)
-        if response.status_code != 200:
-            response_json = response.json()
-            return response_json
+    if not isinstance(sources, list):
+        sources = [sources]
+    for source in sources:
+        message = config.SendMessages.Whatsapp.messagePrefix + source + "\n\n" + message
+        for recipient in recipients:
+            data = {config.SendMessages.Whatsapp.joni_to: recipient,
+                    config.SendMessages.Whatsapp.joni_text: message}
+            response = requests.post(webhook, json=data)
+            if response.status_code != 200:
+                response_json = response.json()
+                return response_json
 
 
 @messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])

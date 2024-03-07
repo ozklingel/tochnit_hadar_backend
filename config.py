@@ -40,3 +40,23 @@ apprenticeMeeting_gap="apprenticeMeeting_gap"
 apprenticeCall_gap="apprenticeCall_gap"
 matzbarMeeting_gap="matzbarMeeting_gap"
 melave_Score="melave_Score"
+
+
+class SendMessages:
+    class Whatsapp:
+        joni_text: str = "text"
+        joni_to: str = "to"
+        messagePrefix: str = "הודעה מאת: "
+        webhook: str = "https://tohnithadar-a7d1e-default-rtdb.firebaseio.com//joni/send.json"
+
+    class Sms:
+        error_message_019: str = "unverified source number - you can verify this number with verify_phone request"
+        at_least_one_error: str = "At least one error cause"
+        message_add_to_019: str = "numbers to add to 019 api: "
+        problem_sms_wasnt_sent: str = "problem, message wasn't sent, please handle this problem"
+        url: str = 'https://019sms.co.il/api'
+        url_test: str = "https://019sms.co.il/api/test"
+        username: str = "lirangrovas"
+        token: str = (
+            'eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJmaXJzdF9rZXkiOiI2MjI5MiIsInNlY29uZF9rZXkiOiIzNTM2NDc4IiwiaXNzdWVkQ'
+            'XQiOiIxNS0wMi0yMDI0IDEyOjQwOjE3IiwidHRsIjo2MzA3MjAwMH0.1DoH8hc3aS3xI-FdT7hc_E0fBW05rtlcuPdsYfGGoUw')

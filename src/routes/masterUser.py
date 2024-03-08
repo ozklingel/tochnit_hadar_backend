@@ -90,29 +90,38 @@ def add_apprentice_excel():
 @master_user_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
     #/home/ubuntu/flaskapp/
-    path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
+    #path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
+    path = 'data/user_enter.xlsx'
     wb = load_workbook(filename=path)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        first_name = row[0].value
-        last_name = row[0].value
+        name=str(row[0].value).split(" ")
+        if row[2].value == "מלווה" :
+            role=0
+        elif row[2].value == "רכז" :
+            role = 1
+        elif row[2].value == "רכז אשכול":
+            role = 2
+        elif row[2].value == "אחראי תוכנית":
+            role = 3
+        first_name =name[0]
+        last_name = name[1]
         institution_name = row[1].value
-        phone = row[4].value
-        role = row[2].value
-        email = row[4].value
-
-        print(first_name)
-
+        phone = str(row[4].value).replace("-","")
+        email = row[3].value
+        eshcol = row[5].value
         try:
-            institution_id = db.session.query(Institution).filter(
+            institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
+            print("institution_id",institution_id)
             user = user1(
-                id=int(str(phone)[1:].replace("-","")),
+                id=int(str(phone).replace("-","")),
                 name=first_name,
                 last_name=last_name,
                 role_id=str(role),
                 email=str(email),
-                institution_id=institution_id,
+                eshcol=eshcol,
+                institution_id=institution_id.id,
             )
             db.session.add(user)
         except Exception as e:

@@ -155,6 +155,8 @@ def add_mosad():
     admin_name = data['admin_name']
     contact_name = data['contact_name']
     contact_phone = data['contact_phone']
+    owner_id = data['owner_id']
+
     city = data['city']+" " if data['city'] is not None else None
     phone = data['phone']
     print(city)
@@ -172,6 +174,7 @@ def add_mosad():
             admin_phone = admin_phone,
             admin_name =admin_name,
             contact_name =contact_name,
+            owner_id=owner_id,
             contact_phone = contact_phone
         )
         db.session.add(Institution1)

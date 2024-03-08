@@ -15,7 +15,7 @@ def getLocation():
         print(baseEnt)
         if baseEnt:
             cordArray=str(baseEnt.cordinatot).split(" ")
-            return jsonify({'id': str(baseEnt.id),'LAT': cordArray[0],'LANG':cordArray[1],'name': baseEnt.name}), HTTPStatus.OK
+            return jsonify({'id': str(baseEnt.id),'LAT': cordArray[0],'LNG':cordArray[1],'name': baseEnt.name,"address":"מישור אדומים"}), HTTPStatus.OK
         return jsonify({'result': "error"}), HTTPStatus.OK
 
     except Exception as e:
@@ -28,7 +28,7 @@ def getAll():
         baseList = db.session.query(Base).all()
         print(baseList)
         if baseList:
-            return  [{"id": str(row.id), "cordinatot": row.cordinatot, "name": row.name} for row in baseList]
+            return  [{"id": str(row.id), 'LAT': str(row.cordinatot).split(" ")[0],'LNG':str(row.cordinatot).split(" ")[1], "name": row.name,"address":"מישור אדומים"} for row in baseList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK

@@ -2,6 +2,7 @@ from http import HTTPStatus
 from flask import Blueprint, request, jsonify
 from app import db
 from src.models.apprentice_model import Apprentice
+from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution
@@ -12,10 +13,25 @@ search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/searc
 @search_bar_form_blueprint.route("/search_entities", methods=['GET'])
 def search_entities():
     try:
+        users, apprentice, ent_group_dict = filter_by_request(request)
+
+        result = set(users + apprentice)
+
+        return jsonify({"filtered": [str(row) for row in result]
+                        }
+                       ), HTTPStatus.OK
+
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
+
+
+
+def filter_by_request(request):
+    try:
+        ent_group_dict = dict()
         roles = request.args.get("roles").split(",") if request.args.get("roles") is not None else None
         years = request.args.get("years").split(",") if request.args.get("years") is not None else None
-        institutions = request.args.get("institutions").split(",") if request.args.get(
-            "institutions") is not None else None
+        institutions = request.args.get("institutions").split(",") if request.args.get("institutions") is not None else None
         preiods = request.args.get("preiods").split(",") if request.args.get("preiods") is not None else None
         eshcols = request.args.get("eshcols").split(",") if request.args.get("eshcols") is not None else None
         statuses = request.args.get("statuses").split(",") if request.args.get("statuses") is not None else None
@@ -26,71 +42,83 @@ def search_entities():
         city = request.args.get("city")
         entityType = []
         # query user table
-        print(roles[0])
         query = None
+
         if "melave" in roles:
+            ent_group_dict["melave"] = "מלוים"
             entityType.append("0")
         if "racazMosad" in roles:
+            ent_group_dict["racazMosad"] = "רכזי מוסד"
             entityType.append("1")
         if "racaz" in roles:
+            ent_group_dict["racaz"] = "רכזי אשכול"
             entityType.append("2")
-        if len(entityType):
+        if len(entityType) > 0:
             query = db.session.query(user1.id)
             query = query.filter(user1.role_id.in_(entityType))
             if institutions:
+                ent_group_dict["institutions"] = str(institutions).replace("[", "").replace("]", "")
                 query = query.filter(user1.institution_id == Institution.id, Institution.name.in_(institutions))
             if region:
+                ent_group_dict["region"] = region
                 query = query.filter(user1.cluster_id == Cluster.id, Cluster.name == region)
             if eshcols:
+                ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
                 query = query.filter(user1.eshcol.in_(eshcols))
             if city:
-                query = query.filter(City.id == user1.city_id, city == City.name)
+                ent_group_dict["city"] = city
+                query = query.filter(user1.city_id == City.id, city == City.name)
 
         res1 = []
-        if query:
+        if query and not (hativa or bases or statuses or preiods or years):
             res1 = query.all()
         query = None
         # query apprentice table
         if "apprentice" in roles:
+            ent_group_dict["apprentice"] = "חניכים"
             query = db.session.query(Apprentice.id)
             if institutions:
+                ent_group_dict["institutions"] = ", ".join(institutions)
                 query = query.filter(Apprentice.institution_id == Institution.id, Institution.name.in_(institutions))
             if years:
+                ent_group_dict["years"] = str(years).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.hadar_plan_session.in_(years))
             if preiods:
+                ent_group_dict["preiods"] = str(preiods).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.institution_mahzor.in_(preiods))
             if statuses:
+                ent_group_dict["statuses"] = str(statuses).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.marriage_status.in_(statuses))
             if bases:
-
-                query = query.filter(Apprentice.base_address.in_(bases))
+                ent_group_dict["bases"] = str(bases).replace("[", "").replace("]", "")
+                print(db.session.query(Base).filter(Base.name.in_(bases)).first())
+                query = query.filter(Base.id==Apprentice.base_address,Base.name.in_(bases))
             if hativa:
+                ent_group_dict["hativa"] = str(hativa).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.unit_name.in_(hativa))
             if region:
-
-                query = query.filter(Apprentice.cluster_id == Cluster.id, Cluster.name == region)
+                ent_group_dict["region"] = region
+                query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id, Cluster.name == region)
             if eshcols:
-
+                ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
                 query = query.filter(Apprentice.eshcol.in_(eshcols))
             if city:
+                ent_group_dict["city"] = city
                 query = query.filter(City.id == Apprentice.city_id, city == City.name)
         res2 = []
         if query:
-            res2 = query.all()
+            try:
+                res2 = query.all()
+            except Exception as e:
+                print(str(e))
+        print("app", res2)
+        print("user", res1)
         users = [str(i[0]) for i in [tuple(row) for row in res1]]
         apprentice = [str(i[0]) for i in [tuple(row) for row in res2]]
-        print("app", apprentice)
-        print("user", users)
-
-        result = set(users + apprentice)
-
-        return jsonify({"filtered": [str(row) for row in result]
-                        }
-                       ), HTTPStatus.OK
-
+        return  users,apprentice,ent_group_dict
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK

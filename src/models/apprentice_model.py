@@ -44,7 +44,7 @@ class Apprentice(db.Model):
     teacher_grade_b_phone = db.Column(TEACHER_GRADE_B_PHONE_COL, db.String(50), nullable=False,default="")
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False,default=0)
     hadar_plan_session = db.Column("thperiod", db.Integer, nullable=False,default=0)#mahzor
-    base_address = db.Column("militarycompoundid", db.Integer, nullable=False,default=0)
+    base_address = db.Column("militarycompoundid", db.Integer, nullable=False,default=14509)
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False,default="")
     army_role = db.Column(ARMY_ROLE_COL, db.Integer, nullable=False,default=0)
     serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False,default=0)

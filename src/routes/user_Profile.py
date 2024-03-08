@@ -13,6 +13,7 @@ from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
+from src.models.cluster_model import Cluster
 from src.models.contact_form_model import ContactForm
 from src.models.notification_model import notifications
 from src.models.user_model import user1
@@ -177,10 +178,12 @@ def getProfileAtributes_form():
         created_by_id = request.args.get('userId')
         userEnt = user1.query.get(created_by_id)
         if userEnt:
+            city = db.session.query(City).filter(City.id == userEnt.city_id).first()
+            regionName=db.session.query(Cluster.name).filter(Cluster.id==city.cluster_id).first()
             myApprenticesNamesList=getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(userEnt.cluster_id), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                           "city":city.name, "region":str(clusterName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
                            "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:

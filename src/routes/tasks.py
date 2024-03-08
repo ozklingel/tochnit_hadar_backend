@@ -22,6 +22,7 @@ def getTasks():
     res=getAll_notification_form()
     todo_dict = []
     todo_ids=[]
+    print(res[0].json)
     try:
         for i in range(0,len(res[0].json)):
             ent=res[0].json[i]

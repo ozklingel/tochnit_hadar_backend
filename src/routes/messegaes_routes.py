@@ -6,6 +6,8 @@ from sqlalchemy import or_
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
+
+from .search_ent import filter_by_request
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
@@ -143,95 +145,7 @@ def deleteEnt():
 @messegaes_form_blueprint.route("/filter_to", methods=['GET'])
 def filter_to():
     try:
-        ent_group_dict=dict()
-        roles = request.args.get("roles").split(",") if request.args.get("roles") is not None else None
-        years = request.args.get("years").split(",") if request.args.get("years") is not None else None
-        institutions = request.args.get("institutions").split(",") if request.args.get("institutions") is not None else None
-        preiods = request.args.get("preiods").split(",") if request.args.get("preiods") is not None else None
-        eshcols = request.args.get("eshcols").split(",") if request.args.get("eshcols") is not None else None
-        statuses = request.args.get("statuses").split(",") if request.args.get("statuses") is not None else None
-        bases = request.args.get("bases").split(",") if request.args.get("bases") is not None else None
-        hativa = request.args.get("hativa").split(",") if request.args.get("hativa") is not None else None
-        region = request.args.get("region") if request.args.get("region") is not None and "?"  not in request.args.get("region") else None
-        city = request.args.get("city")
-        entityType=[]
-        #query user table
-        print(roles[0])
-        query = None
-        if "melave" in roles:
-            ent_group_dict["melave"]="מלוים"
-            entityType.append("0")
-        if "racazMosad" in roles:
-            ent_group_dict["racazMosad"]="רכזי מוסד"
-            entityType.append("1")
-        if "racaz" in roles:
-            ent_group_dict["racaz"]="רכזי אשכול"
-            entityType.append("2")
-        if len(entityType):
-            query = db.session.query(user1.id)
-            query = query.filter(user1.role_id.in_(entityType))
-            if institutions:
-                ent_group_dict["institutions"] = institutions
-                query = query.filter(user1.institution_id==Institution.id,Institution.name.in_(institutions))
-            if region:
-                ent_group_dict["region"] = region
-                query = query.filter(user1.cluster_id==Cluster.id,Cluster.name==region)
-            if eshcols:
-                ent_group_dict["eshcols"] = region
-                query = query.filter(user1.eshcol.in_(eshcols))
-            if city:
-                ent_group_dict["city"] = city
-                query = query.filter(City.id == user1.city_id, city == City.name)
-
-        res1=[]
-        if query:
-            res1 = query.all()
-        query=None
-        #query apprentice table
-        if "apprentice" in roles:
-            ent_group_dict["apprentice"] = "חניכים"
-            query = db.session.query(Apprentice.id)
-            if institutions:
-                ent_group_dict["institutions"] = ", ".join(institutions)
-                query = query.filter(Apprentice.institution_id == Institution.id, Institution.name.in_(institutions))
-            if years:
-                ent_group_dict["years"] = years
-
-                query = query.filter(Apprentice.hadar_plan_session.in_(years))
-            if preiods:
-                ent_group_dict["preiods"] = preiods
-
-                query = query.filter(Apprentice.institution_mahzor.in_(preiods))
-            if statuses:
-                ent_group_dict["statuses"] = statuses
-
-                query = query.filter(Apprentice.marriage_status.in_(statuses))
-            if bases:
-                ent_group_dict["bases"] = bases
-
-                query = query.filter(Apprentice.base_address.in_(bases))
-            if hativa:
-                ent_group_dict["hativa"] = hativa
-
-                query = query.filter(Apprentice.unit_name.in_(hativa))
-            if region:
-                ent_group_dict["region"] = region
-
-                query = query.filter(Apprentice.cluster_id == Cluster.id, Cluster.name == region)
-            if eshcols:
-                ent_group_dict["eshcols"] = eshcols
-
-                query = query.filter(Apprentice.eshcol.in_(eshcols))
-            if city:
-                ent_group_dict["city"] = city
-                query = query.filter(City.id == Apprentice.city_id, city == City.name)
-        res2=[]
-        if query:
-            res2 = query.all()
-        users=   [str(i[0]) for i in [tuple(row) for row in res1]]
-        apprentice=[str(i[0]) for i in [tuple(row) for row in res2]]
-        print("app",apprentice)
-        print("user",users)
+        users, apprentice, ent_group_dict = filter_by_request(request)
         ent_group_concat=""
         if apprentice!=[] or users!=[]:
             ent_group_concat=", ".join(ent_group_dict.values())
@@ -247,95 +161,7 @@ def filter_to():
 @messegaes_form_blueprint.route("/filter_meesages", methods=['GET'])
 def filter_meesages():
     try:
-        ent_group_dict=dict()
-        roles = request.args.get("roles").split(",") if request.args.get("roles") is not None else None
-        years = request.args.get("years").split(",") if request.args.get("years") is not None else None
-        institutions = request.args.get("institutions").split(",") if request.args.get("institutions") is not None else None
-        preiods = request.args.get("preiods").split(",") if request.args.get("preiods") is not None else None
-        eshcols = request.args.get("eshcols").split(",") if request.args.get("eshcols") is not None else None
-        statuses = request.args.get("statuses").split(",") if request.args.get("statuses") is not None else None
-        bases = request.args.get("bases").split(",") if request.args.get("bases") is not None else None
-        hativa = request.args.get("hativa").split(",") if request.args.get("hativa") is not None else None
-        region = request.args.get("region") if request.args.get("region") is not None and "?"  not in request.args.get("region") else None
-        city = request.args.get("city")
-        entityType=[]
-        #query user table
-        print(roles[0])
-        query = None
-        if "melave" in roles:
-            ent_group_dict["melave"]="מלוים"
-            entityType.append("0")
-        if "racazMosad" in roles:
-            ent_group_dict["racazMosad"]="רכזי מוסד"
-            entityType.append("1")
-        if "racaz" in roles:
-            ent_group_dict["racaz"]="רכזי אשכול"
-            entityType.append("2")
-        if len(entityType):
-            query = db.session.query(user1.id)
-            query = query.filter(user1.role_id.in_(entityType))
-            if institutions:
-                ent_group_dict["institutions"] = institutions
-                query = query.filter(user1.institution_id==Institution.id,Institution.name.in_(institutions))
-            if region:
-                ent_group_dict["region"] = region
-                query = query.filter(user1.cluster_id==Cluster.id,Cluster.name==region)
-            if eshcols:
-                ent_group_dict["eshcols"] = region
-                query = query.filter(user1.eshcol.in_(eshcols))
-            if city:
-                ent_group_dict["city"] = city
-                query = query.filter(City.id == user1.city_id, city == City.name)
-
-        res1=[]
-        if query:
-            res1 = query.all()
-        query=None
-        #query apprentice table
-        if "apprentice" in roles:
-            ent_group_dict["apprentice"] = "חניכים"
-            query = db.session.query(Apprentice.id)
-            if institutions:
-                ent_group_dict["institutions"] = ", ".join(institutions)
-                query = query.filter(Apprentice.institution_id == Institution.id, Institution.name.in_(institutions))
-            if years:
-                ent_group_dict["years"] = years
-
-                query = query.filter(Apprentice.hadar_plan_session.in_(years))
-            if preiods:
-                ent_group_dict["preiods"] = preiods
-
-                query = query.filter(Apprentice.institution_mahzor.in_(preiods))
-            if statuses:
-                ent_group_dict["statuses"] = statuses
-
-                query = query.filter(Apprentice.marriage_status.in_(statuses))
-            if bases:
-                ent_group_dict["bases"] = bases
-
-                query = query.filter(Apprentice.base_address.in_(bases))
-            if hativa:
-                ent_group_dict["hativa"] = hativa
-
-                query = query.filter(Apprentice.unit_name.in_(hativa))
-            if region:
-                ent_group_dict["region"] = region
-
-                query = query.filter(Apprentice.cluster_id == Cluster.id, Cluster.name == region)
-            if eshcols:
-                ent_group_dict["eshcols"] = eshcols
-
-                query = query.filter(Apprentice.eshcol.in_(eshcols))
-            if city:
-                ent_group_dict["city"] = city
-                query = query.filter(City.id == Apprentice.city_id, city == City.name)
-        res2=[]
-        if query:
-            res2 = query.all()
-        print("app",res2)
-        print("user",res1)
-        users=   [str(i[0]) for i in [tuple(row) for row in res1]]
-        apprentice=[str(i[0]) for i in [tuple(row) for row in res2]]
+        users,apprentice,ent_group_dict=filter_by_request(request)
         mess_user=db.session.query(ContactForm.id).filter(or_(ContactForm.created_by_id.in_(users),ContactForm.created_for_id.in_(users))).all()
         #reports_apprentice=db.session.query(ContactForm.id).filter(ContactForm.created_for_id.in_(apprentice)).all()
         #ent_group_concat=", ".join(ent_group_dict.values())

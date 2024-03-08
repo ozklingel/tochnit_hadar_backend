@@ -1,12 +1,12 @@
-
+import uuid
 from datetime import date
-
 
 from sqlalchemy import or_
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
+from app import db
 from .search_ent import filter_by_request
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
@@ -15,9 +15,6 @@ from ..models.cluster_model import Cluster
 from ..models.contact_form_model import ContactForm
 from ..models.institution_model import Institution
 from ..models.user_model import user1
-
-from app import db
-import uuid
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
@@ -31,7 +28,7 @@ def add_contact_form():
         content = data['content']
         type = "פניות_שירות"
         icon = ""
-        attachments=[]
+        attachments = []
         ent_group_name = ""
         try:
             type = data['type']
@@ -84,31 +81,37 @@ def getAll_messegases_form():
         print(messegasesList)
         for mess in messegasesList:
             daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
-            if mess.ent_group !="":
-                if mess.ent_group+str(mess.id) in  group_report_dict:
-                    group_report_dict[mess.ent_group+str(mess.id)].append(str(mess.created_for_id))
+            if mess.ent_group != "":
+                if mess.ent_group + str(mess.id) in group_report_dict:
+                    group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
                 else:
-                    group_report_dict[mess.ent_group+str(mess.id)] = [str(mess.created_for_id)]
+                    group_report_dict[mess.ent_group + str(mess.id)] = [str(mess.created_for_id)]
                 groped_mess.append(mess)
             else:
                 my_dict.append(
-                    {"type":mess.type,"attachments":mess.attachments,"id": str(mess.id),"to":[str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id), "date":toISO(mess.created_at),
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
+                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
+                     "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
+                     "date": toISO(mess.created_at),
+                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
+                     "icon": mess.icon})
 
         for mess in groped_mess:
-            if group_report_dict[mess.ent_group+str(mess.id)]!=None:
+            if group_report_dict[mess.ent_group + str(mess.id)] != None:
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),"to": group_report_dict[mess.ent_group+str(mess.id)],
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"ent_group":mess.ent_group,
+                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),
+                     "to": group_report_dict[mess.ent_group + str(mess.id)],
+                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
+                     "ent_group": mess.ent_group,
                      "icon": mess.icon})
-                group_report_dict[mess.ent_group+str(mess.id)]=None
+                group_report_dict[mess.ent_group + str(mess.id)] = None
         # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
         return jsonify(my_dict), HTTPStatus.OK
-            # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
+        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
+
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_message_form():
@@ -116,7 +119,7 @@ def setWasRead_message_form():
     message_id = data['message_id']
     print(message_id)
     try:
-        #notis =ContactForm.query.filter_by(id=message_id)#db.session.query(ContactForm.id,ContactForm.allreadyread).filter(ContactForm.id==message_id).all()
+        # notis =ContactForm.query.filter_by(id=message_id)#db.session.query(ContactForm.id,ContactForm.allreadyread).filter(ContactForm.id==message_id).all()
         num_rows_updated = ContactForm.query.filter_by(id=message_id).update(dict(allreadyread=True))
         db.session.commit()
 
@@ -124,22 +127,20 @@ def setWasRead_message_form():
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
-    except Exception as  e:
+    except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
 
 
-@messegaes_form_blueprint.route('/delete', methods=['DELETE','post'])
+@messegaes_form_blueprint.route('/delete', methods=['DELETE', 'post'])
 def deleteEnt():
-       data=request.json
-       try:
-           entityId = str(data['entityId'])
-           res = db.session.query(ContactForm).filter(ContactForm.id == entityId).delete()
-           db.session.commit()
-           return jsonify({'result': 'sucess'}), HTTPStatus.OK
-       except Exception as e:
-           return jsonify({'result': 'error'+str(e)}), HTTPStatus.OK
-
-
+    data = request.json
+    try:
+        entityId = str(data['entityId'])
+        res = db.session.query(ContactForm).filter(ContactForm.id == entityId).delete()
+        db.session.commit()
+        return jsonify({'result': 'sucess'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': 'error' + str(e)}), HTTPStatus.OK
 
 
 @messegaes_form_blueprint.route("/filter_to", methods=['GET'])
@@ -151,9 +152,8 @@ def filter_to():
             ent_group_concat=", ".join(ent_group_dict.values())
         result = set(users + apprentice)
 
-
-        return jsonify({"filtered":    [str(row) for row in result],
-                        "ent_group":ent_group_concat
+        return jsonify({"filtered": [str(row) for row in result],
+                        "ent_group": ent_group_concat
                         }
             ), HTTPStatus.OK
     except Exception as e:
@@ -180,37 +180,42 @@ def getById():
     try:
         message_id = request.args.get('message_id')
         print(message_id)
-        messegasesList = db.session.query(ContactForm.created_for_id,ContactForm.created_at,ContactForm.id,
-                                          ContactForm.attachments,ContactForm.type,ContactForm.icon,
-                                          ContactForm.allreadyread,ContactForm.subject,ContactForm.content
-                                          ,ContactForm.ent_group,ContactForm.created_by_id)\
+        messegasesList = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
+                                          ContactForm.attachments, ContactForm.type, ContactForm.icon,
+                                          ContactForm.allreadyread, ContactForm.subject, ContactForm.content
+                                          , ContactForm.ent_group, ContactForm.created_by_id) \
             .filter(or_(ContactForm.id == message_id)).all()
 
         my_dict = []
-        groped_mess=[]
-        group_report_dict=dict()
+        groped_mess = []
+        group_report_dict = dict()
         print(messegasesList)
         for mess in messegasesList:
             daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
-            if mess.ent_group !="":
-                if mess.ent_group+str(mess.id) in  group_report_dict:
-                    group_report_dict[mess.ent_group+str(mess.id)].append(str(mess.created_for_id))
+            if mess.ent_group != "":
+                if mess.ent_group + str(mess.id) in group_report_dict:
+                    group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
                 else:
-                    group_report_dict[mess.ent_group+str(mess.id)] = [str(mess.created_for_id)]
+                    group_report_dict[mess.ent_group + str(mess.id)] = [str(mess.created_for_id)]
                 groped_mess.append(mess)
             else:
                 my_dict.append(
-                    {"type":mess.type,"attachments":mess.attachments,"id": str(mess.id),"to":[str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id), "date":toISO(mess.created_at),
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"icon":mess.icon})
+                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
+                     "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
+                     "date": toISO(mess.created_at),
+                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
+                     "icon": mess.icon})
 
         for mess in groped_mess:
-            if group_report_dict[mess.ent_group+str(mess.id)]!=None:
+            if group_report_dict[mess.ent_group + str(mess.id)] != None:
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),"to": group_report_dict[mess.ent_group+str(mess.id)],
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),"ent_group":mess.ent_group,
+                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),
+                     "to": group_report_dict[mess.ent_group + str(mess.id)],
+                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
+                     "ent_group": mess.ent_group,
                      "icon": mess.icon})
-                group_report_dict[mess.ent_group+str(mess.id)]=None
+                group_report_dict[mess.ent_group + str(mess.id)] = None
         return jsonify(my_dict[0]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK

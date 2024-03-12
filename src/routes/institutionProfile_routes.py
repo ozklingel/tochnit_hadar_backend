@@ -188,11 +188,15 @@ def add_mosad():
 
 @institutionProfile_form_blueprint.route('/getAll', methods=['GET'])
 def getAll():
-    inst_List = db.session.query(Institution.id).all()
+    inst_List = db.session.query(Institution).all()
     if inst_List==[]:
         return jsonify([]), HTTPStatus.OK
-    print(inst_List)
-    return jsonify([str(r[0]) for r in inst_List]), HTTPStatus.OK
+    #print(inst_List)
+    return jsonify([{"id":r.id,"roshYeshiva_phone":r.roshYeshiva_phone,"roshYeshiva_name":r.roshYeshiva_name,
+                     "admin_name":r.admin_name,"admin_phone":r.admin_phone,
+                   "name":r.name,"racaz_id":r.owner_id,"logo_path":r.logo_path or "",
+                     "contact_phone":r.contact_phone,"address":r.address,
+    "phone":r.phone,"city_id":r.city_id }for r in inst_List]), HTTPStatus.OK
 @institutionProfile_form_blueprint.route('/getMahzors', methods=['get'])
 def getMahzors():
     try:

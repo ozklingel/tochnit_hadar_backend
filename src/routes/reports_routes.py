@@ -15,6 +15,7 @@ from ..models.visit_model import Visit
 
 reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/reports_form')
 
+
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
     data = request.json
@@ -33,6 +34,9 @@ def add_reports_form():
         List_of_repored = data['List_of_repored']
         vis_id = int(str(uuid.uuid4().int)[:5])
         print(List_of_repored)
+        event_type=data['event_type']
+        if event_type==config.zoom_report or config.fiveMess_report:
+            event_type=config.call_report
         for key in List_of_repored:
             Visit1 = Visit(
                 user_id=user,
@@ -40,8 +44,8 @@ def add_reports_form():
                 visit_in_army=True if data['event_type']==config.basis_report else False,
                 visit_date=data['date'],
                 allreadyread=False,
-                id=vis_id,
-                title=data['event_type'],
+                id=vis_id if ent_group_name!="" else int(str(uuid.uuid4().int)[:5]),
+                title=event_type,
                 attachments=attachments,
                 ent_group=ent_group_name,
                 description=data['description']

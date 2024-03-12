@@ -93,7 +93,7 @@ def get_data_filled(source: str, recipients: List[str], message: str):
             "user": {
                 "username": config.SendMessages.Sms.username,
             },
-            "source": source,
+            "source": "0"+source,
             "destinations": {
                 "phone":
                     [
@@ -101,7 +101,7 @@ def get_data_filled(source: str, recipients: List[str], message: str):
                             "$": {
                                 "id": ""
                             },
-                            "_": str(recipient)
+                            "_": str("0"+recipient)
                         }
                         for recipient in recipients]
             },

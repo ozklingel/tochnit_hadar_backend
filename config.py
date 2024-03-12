@@ -14,6 +14,9 @@ meet_madad_date='2024-01-01'
 call_madad_date='2024-01-01'
 
 call_report="שיחה"
+zoom_report="שיחת_זום"
+fiveMess_report="חמש_הודעות"
+failCall_report="נסיון_שנכשל"
 personalMeet_report="מפגש"
 groupMeet_report="מפגש_קבוצתי"
 basis_report="ביקור בבסיס"

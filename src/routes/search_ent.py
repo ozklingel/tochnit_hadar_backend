@@ -54,7 +54,7 @@ def filter_by_request(request):
             ent_group_dict["racaz"] = "רכזי אשכול"
             entityType.append("2")
         if len(entityType) > 0:
-            query = db.session.query(user1.id)
+            query = db.session.query(user1.id).distinct(user1.id)
             query = query.filter(user1.role_id.in_(entityType))
             if institutions:
                 ent_group_dict["institutions"] = str(institutions).replace("[", "").replace("]", "")
@@ -76,7 +76,7 @@ def filter_by_request(request):
         # query apprentice table
         if "apprentice" in roles:
             ent_group_dict["apprentice"] = "חניכים"
-            query = db.session.query(Apprentice.id)
+            query = db.session.query(Apprentice.id).distinct(Apprentice.id)
             if institutions:
                 ent_group_dict["institutions"] = ", ".join(institutions)
                 query = query.filter(Apprentice.institution_id == Institution.id, Institution.name.in_(institutions))

@@ -1,12 +1,16 @@
 import uuid
 from datetime import date
 
+import requests
 from sqlalchemy import or_
 
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
+from typing import Union, List
 
+import config
 from app import db
+from .Utils.Sms import send_sms_019
 from .search_ent import filter_by_request
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
@@ -17,6 +21,69 @@ from ..models.institution_model import Institution
 from ..models.user_model import user1
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
+@messegaes_form_blueprint.route('/send_sms', methods=['POST'])
+def send_sms():
+    try:
+        data = request.json
+        message: str = data['message']
+        recipients: List[str] = data['recipients']
+        sources: Union[List[str], str] = data['sources']
+        responses = send_sms_019(sources, recipients, message)
+        if responses is not None:
+            numbers_to_add_to_019 = []
+            for number in responses:
+                if isinstance(responses[number], dict):
+                    if (config.SendMessages.Sms.error_message_019
+                            in responses[number].values()):
+                        numbers_to_add_to_019.append(number)
+                else:
+                    if (config.SendMessages.Sms.error_message_019
+                            in responses[number]):
+                        numbers_to_add_to_019.append(number)
+            if len(numbers_to_add_to_019) > 0:
+                return jsonify({'result': {
+                    "response": str(responses),
+                    config.SendMessages.Sms.at_least_one_error: config.SendMessages.Sms.message_add_to_019 + str(
+                        numbers_to_add_to_019)
+                }
+                }), HTTPStatus.INTERNAL_SERVER_ERROR
+            return jsonify({'result': str(responses)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
+def send_whatsapp_through_joni(sources: str, recipients: Union[List[str], str], message: str):
+    if isinstance(recipients, str):
+        recipients = [recipients]
+    webhook = config.SendMessages.Whatsapp.webhook
+    if not isinstance(sources, list):
+        sources = [sources]
+    for source in sources:
+        message = config.SendMessages.Whatsapp.messagePrefix + source + "\n\n" + message
+        for recipient in recipients:
+            data = {config.SendMessages.Whatsapp.joni_to: recipient,
+                    config.SendMessages.Whatsapp.joni_text: message}
+            response = requests.post(webhook, json=data)
+            if response.status_code != 200:
+                response_json = response.json()
+                return response_json
+
+
+@messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])
+def send_whatsapp():
+    try:
+        data = request.json
+        message = data['message']
+        recipients = data['recipients']
+        sources = data['sources']
+        returned = send_whatsapp_through_joni(sources, recipients, message)
+        if returned:
+            return jsonify({'result': str(returned)}), HTTPStatus.INTERNAL_SERVER_ERROR
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 #from chat box
@@ -44,9 +111,10 @@ def add_contact_form():
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
             try:
+                print(key)
                 ContactForm1 = ContactForm(
                     id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
-                    created_for_id=str(key['id']),
+                    created_for_id=key,
                     created_by_id=created_by_id,
                     content=content,
                     subject=subject,

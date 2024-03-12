@@ -46,7 +46,7 @@ def getAll_notification_form():
 
 
                 # update notification created by system=apprentices call
-                visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title=="שיחה").order_by(Visit.visit_date.desc()).first()
+                visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title==config.call_report).order_by(Visit.visit_date.desc()).first()
                 #handle no row so insert need a call notification
                 if visitEvent is None:
                     id1=add_visit_notification(user, Apprentice1.id,config.call_report, '2023-01-01')

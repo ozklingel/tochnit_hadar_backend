@@ -7,6 +7,8 @@ import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
+from openpyxl.reader.excel import load_workbook
+
 import config
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
@@ -15,6 +17,7 @@ from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.contact_form_model import ContactForm
+from src.models.institution_model import Institution
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
@@ -183,7 +186,7 @@ def getProfileAtributes_form():
             myApprenticesNamesList=getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(clusterName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                           "city":city.name, "region":str(regionName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
                            "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:
@@ -321,3 +324,81 @@ def toISO(d):
         return datetime(d.year, d.month, d.day).isoformat()
     else:
         return None
+
+@userProfile_form_blueprint.route("/add_user_excel", methods=['put'])
+def add_user_excel():
+    #/home/ubuntu/flaskapp/
+    #path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
+    path = 'data/user_enter.xlsx'
+    wb = load_workbook(filename=path)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        name=str(row[0].value).split(" ")
+        if row[2].value == "מלווה" :
+            role=0
+        elif row[2].value == "רכז" :
+            role = 1
+        elif row[2].value == "רכז אשכול":
+            role = 2
+        elif row[2].value == "אחראי תוכנית":
+            role = 3
+        first_name =name[0]
+        last_name = name[1]
+        institution_name = row[1].value
+        phone = str(row[4].value).replace("-","")
+        email = row[3].value
+        eshcol = row[5].value
+        try:
+            institution_id = db.session.query(Institution.id).filter(
+                Institution.name == str(institution_name)).first()
+            print("institution_id",institution_id)
+            user = user1(
+                id=int(str(phone).replace("-","")),
+                name=first_name,
+                last_name=last_name,
+                role_id=str(role),
+                email=str(email),
+                eshcol=eshcol,
+                institution_id=institution_id.id,
+            )
+            db.session.add(user)
+        except Exception as e:
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+    db.session.commit()
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK
+
+@userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
+def add_user_manual():
+    data = request.json
+    print(data)
+    try:
+        first_name = data['first_name']
+        last_name = data['last_name']
+        phone = data['phone']
+        institution_name = data['institution_name']
+        city_name = data['city_name'] if "?" not in data['city_name'] else "עלי"
+
+        role_id = data['role_id']
+        CityId = db.session.query(City).filter(City.name==city_name).first()
+        institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
+        institution_id=institution_id[0] if institution_id else 0
+        print(institution_id)
+        useEnt = user1(
+            id=int(phone[1:]),
+            name=first_name,
+            last_name=last_name,
+            role_id=role_id,
+            institution_id=institution_id,
+            city_id=CityId.id,
+            cluster_id=CityId.cluster_id,
+            photo_path="https://www.gravatar.com/avatar"
+        )
+        db.session.add(useEnt)
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.OK
+
+    if useEnt:
+        # TODO: add contact form to DB
+        return jsonify({'result': 'success'}), HTTPStatus.OK

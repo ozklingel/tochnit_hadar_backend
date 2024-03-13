@@ -107,7 +107,7 @@ def getmyApprentices_form():
                     "address": {
                         "country": "IL",
                         "city": city.name if city else "",
-                        "cityId": noti.city_id,
+                        "cityId": str(noti.city_id),
                         "street": noti.address,
                         "houseNumber": "1",
                         "apartment": "1",
@@ -257,7 +257,7 @@ def getmyApprentice_form():
                  "address": {
                      "country": "IL",
                      "city": city.name,
-                     "cityId": noti.city_id,
+                     "cityId": str(noti.city_id),
                      "street": noti.address,
                      "houseNumber": "1",
                      "apartment": "1",
@@ -329,8 +329,10 @@ def toISO(d):
 def add_user_excel():
     #/home/ubuntu/flaskapp/
     #path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
+    file = request.files['file']
+    print(file)
     path = 'data/user_enter.xlsx'
-    wb = load_workbook(filename=path)
+    wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         name=str(row[0].value).split(" ")

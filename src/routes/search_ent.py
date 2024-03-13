@@ -41,9 +41,10 @@ def filter_by_request(request):
             "region") else None
         city = request.args.get("city")
         entityType = []
+        if not roles :
+            return [],[],ent_group_dict
         # query user table
         query = None
-
         if "melave" in roles:
             ent_group_dict["melave"] = "מלוים"
             entityType.append("0")

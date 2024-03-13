@@ -2,6 +2,9 @@ import datetime
 from datetime import datetime,date
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
+
+from openpyxl.reader.excel import load_workbook
+
 import config
 from .search_ent import filter_by_request
 from ..models.apprentice_model import Apprentice
@@ -149,8 +152,9 @@ def toISO(d):
 def delete():
     try:
         data = request.json
-        reportId = data['reportId']
-        res = db.session.query(Visit).filter(Visit.id == reportId).delete()
+        reportIds = data['reportId']
+        for id in reportIds:
+            res = db.session.query(Visit).filter(Visit.id == id).delete()
         db.session.commit()
     except Exception as e:
         return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
@@ -173,7 +177,7 @@ def update():
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 
@@ -215,3 +219,42 @@ def filter_to():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
 
+@reports_form_blueprint.route("/add_report_excel", methods=['put'])
+def add_report_excel():
+    #/home/ubuntu/flaskapp/
+    file = request.files['file']
+
+    wb = load_workbook(file)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        user_id = row[0].value
+        ent_reported = row[1].value
+        visit_date = row[2].value
+        title = row[3].value
+        visit_in_army = row[4].value
+        description = row[5].value
+        attachments = str(row[6].value).split(",")
+        ent_group = row[7].value
+        if attachments==["None"]:
+            attachments=[]
+        print(row)
+        rep = Visit(
+
+            id=int(str(uuid.uuid4().int)[:5]),
+            user_id=user_id,
+            ent_reported = ent_reported,
+            visit_date = visit_date,
+            title = title,
+            visit_in_army = visit_in_army,
+            description = description,
+            attachments = attachments,
+            allreadyread=False,
+            ent_group = ent_group
+        )
+        db.session.add(rep)
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK

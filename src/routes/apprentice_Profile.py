@@ -120,14 +120,14 @@ def add_apprentice():
 def add_apprentice_excel():
     #/home/ubuntu/flaskapp/
     file = request.files['file']
-
+    print(file)
     wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         first_name = row[2].value
         last_name = str(row[0].value).split(" ")[0]
         phone = row[1].value
-        city = row[3].value
+        city = row[22].value
         address = row[4].value
         serve_type = row[5].value
         institution_name = row[6].value
@@ -146,9 +146,19 @@ def add_apprentice_excel():
         unit_name = row[19].value#מפקד?
         teudatZehut = row[20].value#מפקד?
         birthday_loazi = row[21].value#מפקד?
-        accompany_id = row[22].value#מפקד?
+        accompany_id = row[3].value#מפקד?
         militaryCompoundId=row[23].value
-        print(city)
+        contact3_first_name=row[24].value
+        contact3_last_name=row[25].value
+        contact3_email=row[26].value
+        contact3_relation=row[27].value
+        contact3_phone=row[28].value
+        mail =row[29].value
+        release_date =row[30].value
+        recruitment_date =row[31].value
+        marriage_date =row[32].value
+        spirit_status =row[33].value
+        institution_mahzor =row[34].value
         CityId = db.session.query(City.id).filter(City.name==city).first()[0]
         print(CityId)
 
@@ -178,11 +188,23 @@ def add_apprentice_excel():
                 unit_name=unit_name,
                 eshcol=eshcol,
                 accompany_id=accompany_id,
+                contact3_relation=contact3_relation,
+            contact3_email=contact3_email,
+            contact3_last_name=contact3_last_name,
+            contact3_first_name=contact3_first_name,
+            contact3_phone=contact3_phone,
+                email=mail,
+            release_date=release_date,
+            recruitment_date=recruitment_date,
+            marriage_date=marriage_date,
+            spirit_status=spirit_status,
+            institution_mahzor=institution_mahzor
 
             )
             db.session.add(Apprentice1)
+            db.session.commit()
+
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
-    db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK

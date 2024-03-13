@@ -138,6 +138,7 @@ def send_sms_019(sources: Union[List[str], str], recipients: List[str], message:
     errors = {}
     for source in sources:
         data = get_data_filled(source=source, recipients=recipients, message=message)
+        print("data",data)
         response = send_json_request(data)
         if response is not None:
             errors[source] = response

@@ -1,5 +1,7 @@
 
 import uuid
+from random import randrange
+
 import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
@@ -8,6 +10,7 @@ from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
+from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution
 from src.models.user_model import user1
 
@@ -192,11 +195,41 @@ def getAll():
     if inst_List==[]:
         return jsonify([]), HTTPStatus.OK
     #print(inst_List)
-    return jsonify([{"id":r.id,"roshYeshiva_phone":r.roshYeshiva_phone,"roshYeshiva_name":r.roshYeshiva_name,
+    my_list = []
+    for r in inst_List:
+        city=None
+        region=None
+        if r.city_id !="":
+            city = db.session.query(City).filter(City.id == r.city_id).first()
+            region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
+        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_id == "0").all()
+        apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
+        my_list.append(
+            {"id":str(r.id),"roshYeshiva_phone":r.roshYeshiva_phone,"roshYeshiva_name":r.roshYeshiva_name,
                      "admin_name":r.admin_name,"admin_phone":r.admin_phone,
                    "name":r.name,"racaz_id":r.owner_id,"logo_path":r.logo_path or "",
-                     "contact_phone":r.contact_phone,"address":r.address,
-    "phone":r.phone,"city_id":r.city_id }for r in inst_List]), HTTPStatus.OK
+                     "contact_phone":r.contact_phone,       "address": {
+                     "country": "IL",
+                     "city": city.name if city else "",
+                     "cityId": r.city_id,
+                     "street": r.address,
+                     "houseNumber": "1",
+                     "apartment": "1",
+                    "shluha": "12131",
+
+                    "region": region.name if region else "",
+                     "entrance": "a",
+                     "floor": "1",
+                     "postalCode": "12131",
+                     "lat": 32.04282620026557,
+                     "lng": 34.75186193813887
+                 },
+             "score":randrange(100),
+             "apprenticeList":[row.id for row in apprenticeList],
+             "melave_List": [row.id for row in melave_List],
+
+             "phone":r.phone,"city_id":r.city_id })
+    return jsonify(my_list), HTTPStatus.OK
 @institutionProfile_form_blueprint.route('/getMahzors', methods=['get'])
 def getMahzors():
     try:

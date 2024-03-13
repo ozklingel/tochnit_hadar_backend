@@ -108,6 +108,9 @@ def add_contact_form():
             print("no icon or type or ent_group or attachments")
         created_by_id = str(data['created_by_id'])
         created_for_ids = data['created_for_ids']
+        if created_for_ids==[""]:
+            achrahTohnit = user1.query.filter(user1.role_id=="3").first()
+            created_for_ids=[str(achrahTohnit.id)]
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
             try:

@@ -45,13 +45,13 @@ def filter_by_request(request):
             return [],[],ent_group_dict
         # query user table
         query = None
-        if "melave" in roles:
+        if "מלוים" in roles:
             ent_group_dict["melave"] = "מלוים"
             entityType.append("0")
-        if "racazMosad" in roles:
+        if "רגזי מוסד" in roles:
             ent_group_dict["racazMosad"] = "רכזי מוסד"
             entityType.append("1")
-        if "racaz" in roles:
+        if "רכזי אשכול" in roles:
             ent_group_dict["racaz"] = "רכזי אשכול"
             entityType.append("2")
         if len(entityType) > 0:
@@ -75,7 +75,7 @@ def filter_by_request(request):
             res1 = query.all()
         query = None
         # query apprentice table
-        if "apprentice" in roles:
+        if "חניכים" in roles:
             ent_group_dict["apprentice"] = "חניכים"
             query = db.session.query(Apprentice.id).distinct(Apprentice.id)
             if institutions:
@@ -95,6 +95,7 @@ def filter_by_request(request):
                 query = query.filter(Apprentice.marriage_status.in_(statuses))
             if bases:
                 ent_group_dict["bases"] = str(bases).replace("[", "").replace("]", "")
+                print("bases",bases)
                 print(db.session.query(Base).filter(Base.name.in_(bases)).first())
                 query = query.filter(Base.id==Apprentice.base_address,Base.name.in_(bases))
             if hativa:

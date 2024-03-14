@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 import requests
+from openpyxl.reader.excel import load_workbook
 from sqlalchemy import or_
 
 from flask import Blueprint, request, jsonify
@@ -290,3 +291,42 @@ def getById():
         return jsonify(my_dict[0]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
+@messegaes_form_blueprint.route("/add_message_excel", methods=['put'])
+def add_message_excel():
+    #/home/ubuntu/flaskapp/
+    file = request.files['file']
+
+    wb = load_workbook(file)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        created_by_id = row[0].value
+        created_for_id = row[1].value
+        created_at = row[2].value
+        subject = row[3].value
+        content = row[4].value
+        ent_group = row[6].value
+        attachments = str(row[5].value).split(",")
+        type = row[7].value
+        if attachments==["None"]:
+            attachments=[]
+        print(row)
+        rep = ContactForm(
+
+            id=int(str(uuid.uuid4().int)[:5]),
+            type=type,
+            created_by_id = created_by_id or "",
+            created_at = created_at,
+            ent_group = ent_group or "",
+            content = content or "",
+            subject = subject or "",
+            attachments = attachments,
+            allreadyread=False ,
+            created_for_id = created_for_id or ""
+        )
+        db.session.add(rep)
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK

@@ -157,7 +157,7 @@ def getmyApprentices_form():
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
                  "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus
+                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
 
                  })
 
@@ -305,7 +305,7 @@ def getmyApprentice_form():
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
                  "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus
+                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
 
                  })
 
@@ -327,8 +327,7 @@ def toISO(d):
 
 @userProfile_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
-    #/home/ubuntu/flaskapp/
-    #path = '/home/ubuntu/flaskapp/data/user_enter.xlsx'
+
     file = request.files['file']
     print(file)
     path = 'data/user_enter.xlsx'
@@ -336,21 +335,23 @@ def add_user_excel():
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         name=str(row[0].value).split(" ")
-        if row[2].value == "מלווה" :
+        if row[2].value.strip() == "מלווה" :
             role=0
-        elif row[2].value == "רכז" :
+        elif row[2].value.strip() == "רכז" :
             role = 1
-        elif row[2].value == "רכז אשכול":
+        elif row[2].value.strip() == "רכז אשכול":
             role = 2
-        elif row[2].value == "אחראי תוכנית":
+        elif row[2].value.strip() == "אחראי תוכנית":
             role = 3
-        first_name =name[0]
-        last_name = name[1]
-        institution_name = row[1].value
-        phone = str(row[4].value).replace("-","")
-        email = row[3].value
-        eshcol = row[5].value
+        first_name =name[0].strip()
+        last_name = name[1].strip()
+        institution_name = row[1].value.strip()
+        phone = str(row[4].value).replace("-","").strip()
+        email = row[3].value.strip()
+        eshcol = row[5].value.strip()
         try:
+            print("institution_name",institution_name)
+
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
             print("institution_id",institution_id)
@@ -365,7 +366,7 @@ def add_user_excel():
             )
             db.session.add(user)
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -399,7 +400,7 @@ def add_user_manual():
         db.session.add(useEnt)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
 
     if useEnt:
         # TODO: add contact form to DB

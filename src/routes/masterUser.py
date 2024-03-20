@@ -55,7 +55,7 @@ def getNotificationSetting_form():
 
                         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 

@@ -44,10 +44,10 @@ def add_giftCode_excel():
         try:
             db.session.commit()
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @gift_blueprint.route('/getGift', methods=['GET'])
 def getGift():
     try:
@@ -62,7 +62,7 @@ def getGift():
         else:
             return jsonify({'result': str(giftCode.code)}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @gift_blueprint.route("/delete", methods=['put'])
 def delete():
@@ -76,4 +76,4 @@ def delete():
 
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

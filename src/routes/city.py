@@ -21,7 +21,7 @@ def getLocation():
         return jsonify({'result': "error"}), HTTPStatus.OK
 
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @city_blueprint.route('/getAll', methods=['get'])
@@ -33,7 +33,7 @@ def getAll():
             return  [{"id": str(row.id), "name": row.name,"cluster_id":row.cluster_id} for row in CityList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @city_blueprint.route('/add', methods=['POST'])
 def add():
@@ -51,4 +51,4 @@ def add():
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

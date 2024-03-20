@@ -22,10 +22,10 @@ def getOTP_form():
         # Create a secret key (keep it secret!)̥
         secret_key = pyotp.random_base32()
         # Generate an OTP using TOTP after every 30 seconds
-        send_sms_019(["545536415"],[created_by_phone],"Tochnit Hadar-your otp code is:"+otp.now())
+        send_sms_019(["545536415"],[created_by_phone],"your verify service verification code from tochnit hadar is:"+otp.now())
         return jsonify({"result":"success"}),HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @onboarding_form_blueprint.route('/verifyOTP', methods=['GET'])
 def verifyOTP_form():
     try:
@@ -56,7 +56,7 @@ def verifyOTP_form():
         #red.hset(int(str(created_by_phone)), "accessToken", accessToken)
         return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @onboarding_form_blueprint.route('/get_CitiesDB', methods=['GET'])
@@ -66,7 +66,7 @@ def get_CitiesDB():
         print(CityList)
         return jsonify([i[0] for i in [tuple(row) for row in CityList]])
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @onboarding_form_blueprint.route('/upload_CitiesDB', methods=['GET'])
 def upload_CitiesDB():
     try:
@@ -82,9 +82,10 @@ def upload_CitiesDB():
         db.session.commit()
         return jsonify({"result": "success"}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
-def getOTP_twilo():
+@onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['GET'])
+def getOTP_whatsapp():
     try:
         created_by_phone = request.args.get('created_by_phone')
 
@@ -100,13 +101,13 @@ def getOTP_twilo():
         verification = client.verify.v2.services(verify_sid) \
             .verifications \
             .create(to=created_by_phone, channel="whatsapp")
-        print("done")
         if verification.sid is None:
             return jsonify({"result": "error"}), HTTPStatus.OK
         print(verification.sid)
         return jsonify({"result":"success"}),HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@onboarding_form_blueprint.route('/verifyOTP_whatsapp', methods=['GET'])
 def verifyOTP_twilo():
         account_sid = "AC7e7b44337bff9de0cb3702ad5e23e1e8"
         auth_token = "61caa0e3ab00c4d8928e97fdad1a8d52"
@@ -129,5 +130,23 @@ def verifyOTP_twilo():
         print(verification_check.status)
         time.sleep(2.4)
         if verification_check.status !="approved":
-            return False
-        return True
+            return jsonify({"result": "wrong otp"}), HTTPStatus.OK
+        userEnt = user1.query.get(created_by_phone)
+        if userEnt is None:
+            return jsonify({"result": "not in system"}), HTTPStatus.OK
+        print(userEnt.name)
+        print(userEnt.last_name)
+        print(userEnt.email)
+        print(userEnt.birthday)
+        print(userEnt.cluster_id)
+
+        if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
+            print("not null")
+            red.hdel(int(str(created_by_phone)), "accessToken")
+            accessToken = int(str(uuid.uuid4().int)[:5])
+            red.hset(int(str(created_by_phone)), "accessToken", accessToken)
+            return jsonify({"result": accessToken, "firsOnboarding": False}), HTTPStatus.OK
+        accessToken = int(str(uuid.uuid4().int)[:5])
+        print(accessToken)
+        # red.hset(int(str(created_by_phone)), "accessToken", accessToken)
+        return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK

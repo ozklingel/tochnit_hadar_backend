@@ -5,7 +5,7 @@ import uuid
 from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
 
-
+import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
@@ -35,7 +35,7 @@ def getTasks():
                 ent["id"] = str(ent["id"])
                 ent["apprenticeId"] = [ent["apprenticeId"]]
 
-                if ent["event"]== "מפגש_קבוצתי" :
+                if ent["event"]== config.groupMeet_report :
                     ent["apprenticeId"]=[]
 
                 todo_dict.append(ent)
@@ -45,7 +45,7 @@ def getTasks():
         all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
 
         visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
-                                                    Visit.title == "מפגש_הורים").all()
+                                                    Visit.title == config.HorimCall_report).all()
         for i in visitHorim:
             if i[0] in all_ApprenticeList_Horim:
                 all_ApprenticeList_Horim.remove(i[0])
@@ -63,7 +63,7 @@ def getTasks():
 
         return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
 @tasks_form_blueprint.route("/update", methods=['put'])
 def updateTask():
     # get tasksAndEvents
@@ -82,7 +82,7 @@ def updateTask():
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @tasks_form_blueprint.route('/add', methods=['POST'])
 def add_task():
@@ -111,7 +111,7 @@ def add_task():
         db.session.add(notification1)
         db.session.commit()
     except Exception as e:
-        return jsonify({"result": str(e)}),HTTPStatus.OK
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
     return jsonify({"result":"success"}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 @tasks_form_blueprint.route('/delete', methods=['POST'])

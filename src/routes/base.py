@@ -31,4 +31,4 @@ def getAll():
             return  [{"id": str(row.id), 'LAT': str(row.cordinatot).split(" ")[0],'LNG':str(row.cordinatot).split(" ")[1], "name": row.name,"address":"מישור אדומים"} for row in baseList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

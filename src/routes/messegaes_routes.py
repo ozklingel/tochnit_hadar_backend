@@ -134,9 +134,9 @@ def add_contact_form():
                 return jsonify({'result': 'success'}), HTTPStatus.OK
 
             except Exception as e:
-                return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+                return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_messegases_form():
     try:
@@ -182,7 +182,7 @@ def getAll_messegases_form():
         return jsonify(my_dict), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
@@ -200,7 +200,7 @@ def setWasRead_message_form():
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @messegaes_form_blueprint.route('/delete', methods=['DELETE', 'post'])
@@ -212,7 +212,7 @@ def deleteEnt():
         db.session.commit()
         return jsonify({'result': 'sucess'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': 'error' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @messegaes_form_blueprint.route("/filter_to", methods=['GET'])
@@ -229,7 +229,7 @@ def filter_to():
                         }
             ), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route("/filter_meesages", methods=['GET'])
 def filter_meesages():
     try:
@@ -246,7 +246,7 @@ def filter_meesages():
         return jsonify( [str(row) for row in result]
             ), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route('/getById', methods=['GET'])
 def getById():
     try:
@@ -290,7 +290,7 @@ def getById():
                 group_report_dict[mess.ent_group + str(mess.id)] = None
         return jsonify(my_dict[0]), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route("/add_message_excel", methods=['put'])
 def add_message_excel():
     #/home/ubuntu/flaskapp/
@@ -304,14 +304,16 @@ def add_message_excel():
         created_at = row[2].value
         subject = row[3].value
         content = row[4].value
-        ent_group = row[6].value
+        ent_group = row[6].value.strip() if row[6].value else ""
         attachments = str(row[5].value).split(",")
-        type = row[7].value
+        icon = row[7].value.strip()
+        type = row[8].value.strip()
+
         if attachments==["None"]:
             attachments=[]
         print(row)
         rep = ContactForm(
-
+            icon=icon,
             id=int(str(uuid.uuid4().int)[:5]),
             type=type,
             created_by_id = created_by_id or "",
@@ -327,6 +329,6 @@ def add_message_excel():
     try:
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK

@@ -6,6 +6,8 @@ import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
+from openpyxl.reader.excel import load_workbook
+
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
@@ -62,13 +64,14 @@ def getmyApprentices_form():
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         my_dict.append(
             {
+                "id": str(noti.id),
                 "role": "מלווה",
                 "first_name": noti.name,
                 "last_name": noti.last_name,
                 "address": {
                     "country": "IL",
                     "city": city.name,
-                    "cityId": noti.city_id,
+                    "cityId": str(noti.city_id),
                     "street": noti.address,
                     "houseNumber": "1",
                     "apartment": "1",
@@ -85,11 +88,11 @@ def getmyApprentices_form():
         city = db.session.query(City).filter(City.id == noti.city_id).first()
         my_dict.append(
             {
-
+                "id": str(noti.id),
                 "address": {
                     "country": "IL",
                     "city": city.name if city is  not None else "",
-                    "cityId": noti.city_id,
+                    "cityId": str(noti.city_id),
                     "street": noti.address,
                     "houseNumber": "1",
                     "apartment": "1",
@@ -225,8 +228,8 @@ def getAll():
                      "lng": 34.75186193813887
                  },
              "score":randrange(100),
-             "apprenticeList":[row.id for row in apprenticeList],
-             "melave_List": [row.id for row in melave_List],
+             "apprenticeList":[str(row.id ) for row in apprenticeList],
+             "melave_List": [str(row.id) for row in melave_List],
 
              "phone":r.phone,"city_id":r.city_id })
     return jsonify(my_list), HTTPStatus.OK
@@ -255,3 +258,66 @@ def update():
         return jsonify({'result': 'error'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
+
+@institutionProfile_form_blueprint.route("/add_mosad_excel", methods=['put'])
+def add_mosad_excel():
+
+    file = request.files['file']
+    print(file)
+    wb = load_workbook(file)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        name = row[0].value.strip()
+        phone = str(row[1].value)
+        email = row[2].value.strip()
+        eshcol = row[3].value.strip()
+        roshYeshiva_phone = row[4].value
+        roshYeshiva_name = row[5].value.strip()
+        admin_phone = row[6].value.strip()
+        admin_name = row[7].value.strip()
+        owner_id = row[8].value
+        logo_path = row[9].value.strip() if row[9].value else ""
+        address = row[10].value.strip()
+        city = row[11].value.strip()
+        contact_name = row[12].value.strip()
+        contact_phone = row[13].value
+        try:
+
+            CityId = db.session.query(City.id).filter(City.name == city).first()
+
+            Institution1 = Institution(
+                #email=email,
+                id=int(str(uuid.uuid4().int)[:5]),
+                eshcol_id=eshcol,
+                roshYeshiva_phone=roshYeshiva_phone,
+                roshYeshiva_name=roshYeshiva_name,
+                admin_phone=admin_phone,
+                admin_name=admin_name,
+                name=name,
+                owner_id=owner_id,
+                logo_path=logo_path,
+                contact_phone=str(contact_phone),
+                contact_name=str(contact_name),
+                phone=phone,
+                city_id=CityId.id,
+                address=address
+            )
+            db.session.add(Institution1)
+        except Exception as e:
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+    db.session.commit()
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK
+
+
+
+@institutionProfile_form_blueprint.route('/delete', methods=['DELETE', 'post'])
+def deleteEnt():
+    data = request.json
+    try:
+        entityId = str(data['entityId'])
+        res = db.session.query(Institution).filter(Institution.id == entityId).delete()
+        db.session.commit()
+        return jsonify({'result': 'sucess'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST

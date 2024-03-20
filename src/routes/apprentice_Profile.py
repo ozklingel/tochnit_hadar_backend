@@ -110,7 +110,7 @@ def add_apprentice():
         db.session.add(Apprentice1)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
 
     if Apprentice1:
         # TODO: add contact form to DB
@@ -124,47 +124,50 @@ def add_apprentice_excel():
     wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        first_name = row[2].value
-        last_name = str(row[0].value).split(" ")[0]
+        first_name = row[2].value.strip()
+        last_name = str(row[0].value).split(" ")[1]
         phone = row[1].value
-        city = row[22].value
-        address = row[4].value
-        serve_type = row[5].value
-        institution_name = row[6].value
-        contact1_first_name = row[7].value
-        contact1_phone = row[8].value
-        contact2_first_name = row[9].value
-        contact2_phone = row[10].value
-        hadar_plan_session = row[11].value
-        teacher_grade_a = row[12].value
-        teacher_grade_b = row[13].value
-        contact1_email = row[15].value
-        eshcol = row[14].value
+        city = row[22].value.strip()
+        address = row[4].value.strip()
+        serve_type = row[5].value.strip()
+        institution_name = row[6].value.strip()
+        contact1_first_name = row[7].value.strip()
+        contact1_phone = row[8].value.strip()
+        contact2_first_name = row[9].value.strip()
+        contact2_phone = row[10].value.strip()
+        hadar_plan_session = row[11].value.strip()
+        teacher_grade_a = row[12].value.strip() if row[12].value else ""
+        teacher_grade_b = row[13].value.strip()
+        contact1_email = row[15].value.strip()
+        eshcol = row[14].value.strip()
         birthday_ivry = row[16].value
-        marriage_status = row[17].value
-        army_role = row[18].value#מפקד?
-        unit_name = row[19].value#מפקד?
-        teudatZehut = row[20].value#מפקד?
-        birthday_loazi = row[21].value#מפקד?
+        marriage_status = row[17].value.strip()
+        army_role = row[18].value.strip()#מפקד?
+        unit_name = row[19].value.strip()#מפקד?
+        teudatZehut = row[20].value.strip()#מפקד?
+        birthday_loazi = row[21].value.strip()#מפקד?
         accompany_id = row[3].value#מפקד?
-        militaryCompoundId=row[23].value
-        contact3_first_name=row[24].value
-        contact3_last_name=row[25].value
-        contact3_email=row[26].value
-        contact3_relation=row[27].value
+        base_name=row[23].value.strip()
+        contact3_first_name=row[24].value.strip()
+        contact3_last_name=row[25].value.strip()
+        contact3_email=row[26].value.strip()
+        contact3_relation=row[27].value.strip()
         contact3_phone=row[28].value
-        mail =row[29].value
-        release_date =row[30].value
-        recruitment_date =row[31].value
-        marriage_date =row[32].value
+        mail =row[29].value.strip()
+        release_date =row[30].value.strip()
+        recruitment_date =row[31].value.strip()
+        marriage_date =row[32].value.strip()
         spirit_status =row[33].value
-        institution_mahzor =row[34].value
+        institution_mahzor =row[34].value.strip()
         CityId = db.session.query(City.id).filter(City.name==city).first()[0]
-        print(CityId)
+        militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()[0]
+
+        #print(militaryCompoundId)
 
         try:
             institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
             Apprentice1 = Apprentice(
+                city_id=CityId,
                 id=phone,
                 base_address=militaryCompoundId,
                 institution_id=institution_id[0] if institution_id is not None else 0,
@@ -205,6 +208,6 @@ def add_apprentice_excel():
             db.session.commit()
 
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK

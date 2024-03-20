@@ -25,6 +25,7 @@ def add_reports_form():
     user = str(data['userId'])
     ent_group_name = ""
     attachments=[]
+    description=""
     try:
         ent_group_name = str(data['ent_group'])
     except:
@@ -33,25 +34,30 @@ def add_reports_form():
         attachments = data['attachments']
     except:
         print("no  attachments")
+    try:
+        description = data['description']
+    except:
+        print("no  description")
     if user:
         List_of_repored = data['List_of_repored']
         vis_id = int(str(uuid.uuid4().int)[:5])
         print(List_of_repored)
         event_type=data['event_type']
-        if event_type==config.zoom_report or config.fiveMess_report:
+        if event_type==config.zoom_report or event_type==config.fiveMess_report:
             event_type=config.call_report
+        print(event_type)
         for key in List_of_repored:
             Visit1 = Visit(
                 user_id=user,
                 ent_reported=str(key),
                 visit_in_army=True if data['event_type']==config.basis_report else False,
-                visit_date=data['date'],
+                visit_date=datetime.fromisoformat(data['date']),
                 allreadyread=False,
                 id=vis_id if ent_group_name!="" else int(str(uuid.uuid4().int)[:5]),
                 title=event_type,
                 attachments=attachments,
                 ent_group=ent_group_name,
-                description=data['description']
+                description=description
             )
 
             db.session.add(Visit1)
@@ -83,7 +89,7 @@ def getById():
                 # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
         return jsonify([])
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
@@ -123,7 +129,7 @@ def getAll_reports_form():
             return jsonify(my_dict), HTTPStatus.OK
             # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @reports_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_report_form():
@@ -185,8 +191,14 @@ def update():
 def filter_report():
     try:
         users,apprentice,ent_group_dict=filter_by_request(request)
-        reports_user=db.session.query(Visit.id).filter(Visit.user_id.in_(users)).all()
-        reports_apprentice=db.session.query(Visit.id).filter(Visit.ent_reported.in_(apprentice)).all()
+        types = request.args.get("type").split(",") if request.args.get("type") is not None else None
+        if types:
+            reports_user=db.session.query(Visit.id).filter(Visit.user_id.in_(users)).filter(Visit.title.in_(types)).all()
+            reports_apprentice=db.session.query(Visit.id).filter(Visit.ent_reported.in_(apprentice)).filter(Visit.title.in_(types)).all()
+        else:
+
+            reports_user=db.session.query(Visit.id).filter(Visit.user_id.in_(users)).all()
+            reports_apprentice=db.session.query(Visit.id).filter(Visit.ent_reported.in_(apprentice)).all()
         ent_group_concat=", ".join(ent_group_dict.values())
         print(ent_group_concat)
         #reports_ent_group=db.session.query(Visit.id).filter(Visit.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
@@ -198,7 +210,7 @@ def filter_report():
         return jsonify( [str(row) for row in result]
             ), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @reports_form_blueprint.route("/filter_to", methods=['GET'])
 def filter_to():
@@ -255,6 +267,6 @@ def add_report_excel():
     try:
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK

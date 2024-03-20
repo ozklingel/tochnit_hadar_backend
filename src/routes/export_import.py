@@ -74,7 +74,7 @@ def export_dict():
             dict_writer.writerows(to_csv)
         return send_file("/home/ubuntu/flaskapp/data/to_csv.csv", as_attachment=True, download_name="/home/ubuntu/flaskapp/dict2.csv")
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @export_import_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():
@@ -95,9 +95,9 @@ def add_giftCode_excel():
             db.session.commit()
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.OK
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': 'success'}), HTTPStatus.BAD_REQUEST
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/getGift', methods=['GET'])
 def getGift():
     try:
@@ -116,7 +116,7 @@ def getGift():
         else:
             return jsonify({'result': str(giftCode.code)}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/monthly', methods=['GET'])
 def monthly():
     try:
@@ -179,9 +179,9 @@ def monthly():
             return jsonify({'result': 'success'}), HTTPStatus.OK
 
         except Exception as e:
-            return jsonify({'result': 'error'+str(e)}), HTTPStatus.OK
+            return jsonify({'result': 'error'+str(e)}), HTTPStatus.BAD_REQUEST
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/rivony', methods=['GET'])
 def rivony():
     current_month=date.today().month
@@ -285,7 +285,7 @@ def rivony():
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
     except Exception as e:
-        return jsonify({'result': 'error' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
 
 @export_import_blueprint.route('/yearly', methods=['GET'])
 def yearly():
@@ -344,7 +344,7 @@ def yearly():
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
     except Exception as e:
-        return jsonify({'result': 'error' + str(e)}), HTTPStatus.OK
+        return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
 def compute_visit_score(all_children,visits,maxScore,expected_gap):
     all_children_ids = [r[0] for r in all_children]
 
@@ -404,4 +404,4 @@ def uploadfile():
             #    db.session.commit()
             return jsonify({'result': 'success', 'image path': images_list}), HTTPStatus.OK
         except Exception:
-            return jsonify({"result": str(Exception)}),HTTPStatus.OK
+            return jsonify({"result": str(Exception)}),HTTPStatus.BAD_REQUEST

@@ -48,7 +48,7 @@ def filter_by_request(request):
         if "מלוים" in roles:
             ent_group_dict["melave"] = "מלוים"
             entityType.append("0")
-        if "רגזי מוסד" in roles:
+        if "רכזי מוסד" in roles:
             ent_group_dict["racazMosad"] = "רכזי מוסד"
             entityType.append("1")
         if "רכזי אשכול" in roles:
@@ -123,4 +123,4 @@ def filter_by_request(request):
         apprentice = [str(i[0]) for i in [tuple(row) for row in res2]]
         return  users,apprentice,ent_group_dict
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

@@ -17,6 +17,6 @@ def getAll():
         result = eshcols_user_ids + list(set(eshcols_appren_ids) - set(eshcols_user_ids))
         return  result
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 

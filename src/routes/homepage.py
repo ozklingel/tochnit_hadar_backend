@@ -181,7 +181,7 @@ def homepageMaster():
             # 'user_name':record.name,
                        }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @homepage_form_blueprint.route("/init_eshcolCoord", methods=['GET'])
 def init_eshcolCoord():
     try:
@@ -226,7 +226,7 @@ def init_eshcolCoord():
             # 'user_name':record.name,
                        }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @homepage_form_blueprint.route("/init_mosadCoord", methods=['GET'])
 def init_mosadCoord():
     try:
@@ -270,7 +270,7 @@ def init_mosadCoord():
             # 'user_name':record.name,
                        }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
     try:
@@ -278,7 +278,7 @@ def get_closest_Events():
         tasksAndEvents=getlist_from_notification(userId)
         return jsonify( tasksAndEvents[0] if tasksAndEvents is not None else []), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def getlist_from_notification(userId):
     # get tasksAndEvents
     res=getAll_notification_form()

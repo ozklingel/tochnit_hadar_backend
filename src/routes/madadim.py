@@ -43,7 +43,7 @@ def lowScoreApprentice():
         'lowScoreApprentice_List': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
                    }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @madadim_form_blueprint.route("/missingCalleApprentice", methods=['GET'])
 def missingCalleApprentice():
@@ -83,7 +83,7 @@ def missingCalleApprentice():
 
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/missingMeetingApprentice", methods=['GET'])
 def missingMeetingApprentice():
     try:
@@ -121,7 +121,7 @@ def missingMeetingApprentice():
 
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/forgotenApprentices", methods=['GET'])
 def forgotenApprentice():
     try:
@@ -160,7 +160,7 @@ def forgotenApprentice():
 
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/forgotenApprentice_Mosad", methods=['GET'])
 def forgotenApprentice_Mosad():
     try:
@@ -196,7 +196,7 @@ def forgotenApprentice_Mosad():
 
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/missingCallsApprentice_Mosad", methods=['GET'])
 def missingCallsApprentice_Mosad():
     try:
@@ -217,7 +217,7 @@ def missingCallsApprentice_Mosad():
             'gapList': list,
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/missingMeetingsApprentice_Mosad", methods=['GET'])
 def missingMeetingsApprentice_Mosad():
     try:
@@ -238,7 +238,7 @@ def missingMeetingsApprentice_Mosad():
             'gapList': list,
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/lowScoreApprentice_mosad", methods=['GET'])
 def lowScoreApprentice_mosad():
     try:
@@ -264,7 +264,7 @@ def lowScoreApprentice_mosad():
         'lowScoreApprentice_List': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
                    }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 def fetch_Diagram_monthly(related_id,type="melave_Score"):
     too_old = datetime.today() - timedelta(days=30*12)
@@ -406,7 +406,7 @@ def getMelaveMadadim():
             'visitHorim_4_yearly': fetch_Diagram_yearly(melaveId, config.horim_meeting),
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @madadim_form_blueprint.route("/mosadCoordinator", methods=['GET'])
 def mosadCoordinator(mosadCoordinator="empty"):
@@ -540,7 +540,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
             'forgotenApprentice_rivonly': fetch_Diagram_rivonly(mosadCoordinator, config.forgotenApprentice_cnt),
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/eshcolCoordinator", methods=['GET'])
 def getEshcolCoordinatorMadadim():
     try:
@@ -599,7 +599,7 @@ def getEshcolCoordinatorMadadim():
 
         }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def melave_score(melaveId):
     # compute score diagram
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
@@ -772,7 +772,7 @@ def mosad_Coordinators_score(mosadCoord_id):
 
         return Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,total_avg_call,total_avg_meet,groupNeeting_gap_avg
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def eshcol_Coordinators_score(eshcolCoord_id):
     print("eshcolCoord_id",eshcolCoord_id)
     eshcol = db.session.query( user1.eshcol).filter(user1.id==eshcolCoord_id).first()[0]

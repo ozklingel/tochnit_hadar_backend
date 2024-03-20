@@ -16,6 +16,55 @@ import uuid
 from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')
+
+@notification_form_blueprint.route('/get_outbound', methods=['GET'])
+def get_outbound():
+    # get tasksAndEvents
+    userId = request.args.get("userId")
+    res = getAll_notification_form()
+    todo_dict = []
+    todo_ids = []
+    print(res[0].json)
+    try:
+        for i in range(0, len(res[0].json)):
+            ent = res[0].json[i]
+            todo_ids.append(ent["id"])
+            if ent["numOfLinesDisplay"] == 2:  # noti not created by user
+                del ent["numOfLinesDisplay"]
+                # print(ent)
+                ent["status"] = "todo"
+                ent["id"] = str(ent["id"])
+                ent["apprenticeId"] = [ent["apprenticeId"]]
+
+                if ent["event"] == config.groupMeet_report:
+                    ent["apprenticeId"] = []
+                todo_dict.append(ent)
+
+        ApprenticeList = db.session.query(Apprentice.id).filter(
+            Apprentice.accompany_id == userId).all()
+        all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
+
+        visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
+                                                                 Visit.title == config.HorimCall_report).all()
+        for i in visitHorim:
+            if i[0] in all_ApprenticeList_Horim:
+                all_ApprenticeList_Horim.remove(i[0])
+        for ent in all_ApprenticeList_Horim:
+            # Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
+            todo_dict.append({"frequency": "never", "description": "", 'status': 'todo', "allreadyread": False,
+                              'apprenticeId': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373,
+                              'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5], 'title': 'מפגש הורים'})
+        done_visits_dict = [{"frequency": "never", "allreadyread": False, "event": str(row[1]),
+                             "description": str(row[4]), 'status': 'done', "apprenticeId": [str(row[0])],
+                             "title": str(row[1])
+                                , "daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in
+                            [tuple(row) for row in done_visits]] if done_visits is not None else []
+
+        tasks_list = todo_dict + done_visits_dict
+
+        return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
     try:
@@ -187,7 +236,7 @@ def getAll_notification_form():
                 # TODO: get Noti form to DB
                 return jsonify(my_dict), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @notification_form_blueprint.route('/add1', methods=['POST'])
 def add_notification_form():
@@ -216,7 +265,7 @@ def add_notification_form():
         db.session.add(notification1)
         db.session.commit()
     except Exception as e:
-        return jsonify({"result": str(e)}),HTTPStatus.OK
+        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
     return jsonify({"result":"success"}), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
@@ -332,7 +381,7 @@ def getNotificationSetting_form():
                             "notifyDayBefore":notiSettingList.notifyDayBefore
                             ,"notifyStartWeek":notiSettingList.notifyStartWeek}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @notification_form_blueprint.route('/delete', methods=['POST'])
 def delete():
@@ -363,7 +412,7 @@ def updateTask():
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @notification_form_blueprint.route('/add_frequenced_notification', methods=['POST'])
 def add_frequenced_notification():
     notiList = db.session.query(notifications).filter(notifications.frequency!="never").all()
@@ -420,7 +469,7 @@ def add_frequenced_notification():
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception:
-        return jsonify({'result': str(Exception)}), HTTPStatus.OK
+        return jsonify({'result': str(Exception)}), HTTPStatus.BAD_REQUEST
 
 
 import datetime

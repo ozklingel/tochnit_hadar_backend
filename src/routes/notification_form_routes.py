@@ -1,7 +1,7 @@
-
+import json
 from datetime import datetime,date
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
 
 from sqlalchemy import func, or_
@@ -24,26 +24,26 @@ def get_outbound():
     res = getAll_notification_form()
     todo_dict = []
     todo_ids = []
-    print(res[0].json)
     try:
         for i in range(0, len(res[0].json)):
             ent = res[0].json[i]
             todo_ids.append(ent["id"])
             if ent["numOfLinesDisplay"] == 2:  # noti not created by user
                 del ent["numOfLinesDisplay"]
-                # print(ent)
                 ent["status"] = "todo"
                 ent["id"] = str(ent["id"])
                 ent["apprenticeId"] = [ent["apprenticeId"]]
-
                 if ent["event"] == config.groupMeet_report:
                     ent["apprenticeId"] = []
-                todo_dict.append(ent)
+                if ent["daysfromnow"]==2 or ent["daysfromnow"]==5 or ent["daysfromnow"]==-2:
+                    todo_dict.append(ent)
 
+        too_old = datetime.date.today() - datetime.timedelta(20)
+        print(too_old)
         ApprenticeList = db.session.query(Apprentice.id).filter(
-            Apprentice.accompany_id == userId).all()
+            Apprentice.accompany_id == userId,Apprentice.association_date==too_old).all()
+        print(ApprenticeList)
         all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
-
         visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
                                                                  Visit.title == config.HorimCall_report).all()
         for i in visitHorim:
@@ -54,15 +54,8 @@ def get_outbound():
             todo_dict.append({"frequency": "never", "description": "", 'status': 'todo', "allreadyread": False,
                               'apprenticeId': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373,
                               'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5], 'title': 'מפגש הורים'})
-        done_visits_dict = [{"frequency": "never", "allreadyread": False, "event": str(row[1]),
-                             "description": str(row[4]), 'status': 'done', "apprenticeId": [str(row[0])],
-                             "title": str(row[1])
-                                , "daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in
-                            [tuple(row) for row in done_visits]] if done_visits is not None else []
 
-        tasks_list = todo_dict + done_visits_dict
-
-        return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
+        return Response(json.dumps(todo_dict), mimetype='application/json'), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
 @notification_form_blueprint.route('/getAll', methods=['GET'])
@@ -78,11 +71,12 @@ def getAll_notification_form():
                                                         Visit.title == config.groupMeet_report).order_by(Visit.visit_date.desc()).first()
             # handle no row so insert need a meeting notification
             id1=0
-            if visitEvent is None:
+            if visitEvent is None and date.today().weekday()==6:
                 id1=add_visit_notification(user, None, config.groupMeet_report, '2023-01-01')
             gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
             #if gap>60 add else remove if exist such
-            if gap > 60:
+            print(date.today().weekday())
+            if gap > 53 and date.today().weekday()==6:
                 add_visit_notification(visitEvent.user_id, visitEvent.ent_reported, visitEvent.title, visitEvent.visit_date)
 
             #update notification table  birthday and events
@@ -90,27 +84,25 @@ def getAll_notification_form():
             for Apprentice1 in ApprenticeList:
                 thisYearBirthday=date(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)
                 gap = (date.today() - thisYearBirthday).days
-                if gap >= -7 and gap <= 7:
+                if gap <= 7 and date.today().weekday()==6:
                     update_event_notification(Apprentice1.accompany_id, Apprentice1.id, "יומהולדת", thisYearBirthday,None)
-
-
                 # update notification created by system=apprentices call
                 visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,Visit.title==config.call_report).order_by(Visit.visit_date.desc()).first()
                 #handle no row so insert need a call notification
-                if visitEvent is None:
+                if visitEvent is None and date.today().weekday()==6:
                     id1=add_visit_notification(user, Apprentice1.id,config.call_report, '2023-01-01')
 
                 gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-                if gap > 30:
+                if gap > 14 and date.today().weekday()==6:
                     add_visit_notification(visitEvent.user_id, visitEvent.ent_reported,visitEvent.title, visitEvent.visit_date)
 
                 # update notification created by system=apprentices meetings
                 visitEvent = db.session.query(Visit).filter(Visit.user_id == user, Visit.ent_reported == Apprentice1.id,or_(Visit.title==config.groupMeet_report,Visit.title==config.personalMeet_report)).order_by(Visit.visit_date.desc()).first()
                 #handle no row so insert need a meeting notification
-                if visitEvent is None:
+                if visitEvent is None and date.today().weekday()==6:
                     id1=add_visit_notification(user, Apprentice1.id,config.personalMeet_report, '2023-01-01')
                 gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
-                if gap > 90:
+                if gap > 83 and date.today().weekday()==6:
                     add_visit_notification(visitEvent.user_id, visitEvent.ent_reported,visitEvent.title, visitEvent.visit_date)
 
             #send  notifications.
@@ -135,8 +127,7 @@ def getAll_notification_form():
 
                 if userEnt.notifyStartWeek==True and date(date.today().year, noti.date.month, noti.date.day).weekday()==6:
                     gap = (date.today() - date(date.today().year, noti.date.month, noti.date.day)).days
-                    if gap<7:
-
+                    if gap<=7:
                         noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                         my_dict.append(
                             {"id": str(noti.id), "apprenticeId":str(noti.apprenticeid),
@@ -144,24 +135,26 @@ def getAll_notification_form():
                              "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
                              "numOfLinesDisplay": noti.numoflinesdisplay, })
                         continue
-                if userEnt.notifyDayBefore ==True and daysFromNow==-1:
-
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
-                    my_dict.append(
-                        {"id": str(noti.id),"apprenticeId":str(noti.apprenticeid),
-                         "date": toISO(noti.date),
-                         "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency,
-                         "numOfLinesDisplay": noti.numoflinesdisplay,})
-                    continue
-                if userEnt.notifyMorning ==True and daysFromNow==0:
-
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
-                    my_dict.append(
-                        {"id": str(noti.id),"apprenticeId":str(noti.apprenticeid),
-                         "date": toISO(noti.date),
-                         "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
-                         "numOfLinesDisplay": noti.numoflinesdisplay, })
-                    continue
+                if userEnt.notifyDayBefore ==True :
+                    is_shabat=date(date.today().year, noti.date.month, noti.date.day).weekday()==5
+                    if (is_shabat  and daysFromNow==-2) or  daysFromNow==-1 :
+                        noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                        my_dict.append(
+                            {"id": str(noti.id),"apprenticeId":str(noti.apprenticeid),
+                             "date": toISO(noti.date),
+                             "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency,
+                             "numOfLinesDisplay": noti.numoflinesdisplay,})
+                        continue
+                if userEnt.notifyMorning ==True :
+                    is_shabat=date(date.today().year, noti.date.month, noti.date.day).weekday()==5
+                    if (is_shabat  and daysFromNow==-1) or  daysFromNow==0 :
+                        noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                        my_dict.append(
+                            {"id": str(noti.id),"apprenticeId":str(noti.apprenticeid),
+                             "date": toISO(noti.date),
+                             "daysfromnow": daysFromNow, "event": noti.event.strip(),"description": noti.details, "allreadyread": noti.allreadyread,"frequency": noti.frequency if  noti.frequency is not None else "never",
+                             "numOfLinesDisplay": noti.numoflinesdisplay, })
+                        continue
             if  my_dict is None or my_dict==[]  :
                 # acount not found
                 return jsonify([])
@@ -186,7 +179,7 @@ def getAll_notification_form():
                 if userEnt.notifyStartWeek == True and date(date.today().year, noti.date.month,
                                                             noti.date.day).weekday() == 6:
                     gap = (date.today() - date(date.today().year, noti.date.month, noti.date.day)).days
-                    if gap < 7:
+                    if gap <= 7:
 
                         noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                         my_dict.append(
@@ -198,26 +191,29 @@ def getAll_notification_form():
                              "frequency": noti.frequency if noti.frequency is not None else "never",
                              "numOfLinesDisplay": noti.numoflinesdisplay, })
                         continue
-                if userEnt.notifyDayBefore == True and daysFromNow == -1:
+                if userEnt.notifyDayBefore == True :
+                    is_shabat = date(date.today().year, noti.date.month, noti.date.day).weekday() == 5
+                    if (is_shabat and daysFromNow == -2) or daysFromNow == -1:
+                        noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                        my_dict.append(
+                            {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
 
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
-                    my_dict.append(
-                        {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
-
-                         "date": noti.date.strftime("%m.%d.%Y"),
-                         "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
-                         "allreadyread": noti.allreadyread, "frequency": noti.frequency,
-                         "numOfLinesDisplay": noti.numoflinesdisplay, })
+                             "date": noti.date.strftime("%m.%d.%Y"),
+                             "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                             "allreadyread": noti.allreadyread, "frequency": noti.frequency,
+                             "numOfLinesDisplay": noti.numoflinesdisplay, })
                     continue
-                if userEnt.notifyMorning == True and daysFromNow == 0 and noti.event!="דוח שבועי":
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
-                    my_dict.append(
-                        {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
-                         "date": noti.date.strftime("%m.%d.%Y"),
-                         "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
-                         "allreadyread": noti.allreadyread,
-                         "frequency": noti.frequency if noti.frequency is not None else "never",
-                         "numOfLinesDisplay": noti.numoflinesdisplay, })
+                if userEnt.notifyMorning == True :
+                    is_shabat = date(date.today().year, noti.date.month, noti.date.day).weekday() == 5
+                    if (is_shabat and daysFromNow == -1) or daysFromNow == 0:
+                        noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
+                        my_dict.append(
+                            {"id": noti.id, "apprenticeId": [str(noti.apprenticeid)],
+                             "date": noti.date.strftime("%m.%d.%Y"),
+                             "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
+                             "allreadyread": noti.allreadyread,
+                             "frequency": noti.frequency if noti.frequency is not None else "never",
+                             "numOfLinesDisplay": noti.numoflinesdisplay, })
                 if userEnt.notifyMorning_weekly_report == True and daysFromNow==0 and noti.event=="דוח שבועי":
                     noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                     my_dict.append(
@@ -319,7 +315,6 @@ def add_visit_notification(user,apprenticeid,event,date):
 
         db.session.add(notification1)
         db.session.commit()
-        print("done")
     return  id1
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])

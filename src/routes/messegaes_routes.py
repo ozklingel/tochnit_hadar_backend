@@ -102,7 +102,6 @@ def add_contact_form():
             type = data['type']
             icon = data['icon']
             attachments = data['attachments']
-
             ent_group_name = str(data['ent_group'])
 
         except:
@@ -110,8 +109,8 @@ def add_contact_form():
         created_by_id = str(data['created_by_id'])
         created_for_ids = data['created_for_ids']
         if created_for_ids==[""]:
-            achrahTohnit = user1.query.filter(user1.role_id=="3").first()
-            created_for_ids=[str(achrahTohnit.id)]
+            achrahTohnit = user1.query.filter(user1.role_id=="3").all()
+            created_for_ids=[str(a.id) for a in achrahTohnit]
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
             try:

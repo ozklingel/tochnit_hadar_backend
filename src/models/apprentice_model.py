@@ -1,3 +1,5 @@
+import datetime
+
 from . import *
 
 class Apprentice(db.Model):
@@ -11,7 +13,6 @@ class Apprentice(db.Model):
     email = db.Column(EMAIL_COL, db.String(50), nullable=False,default="")
     birthday = db.Column(BIRTHDAY_COL, db.DateTime, nullable=False)
     eshcol = db.Column("eshcol", db.String(20), nullable=False,default="")
-
     marriage_status = db.Column("maritalstatus", db.String(20), nullable=False,default="")
     marriage_date = db.Column(MARRIAGE_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
     contact1_email =db.Column("contact1_email", db.String(50), nullable=False,default="")
@@ -68,3 +69,4 @@ class Apprentice(db.Model):
     institution_mahzor = db.Column("institution_mahzor", db.String(10), nullable=False,default="")
     photo_path=db.Column("photo_path", db.String(50), nullable=False,default="https://www.gravatar.com/avatar")
     militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")
+    association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())

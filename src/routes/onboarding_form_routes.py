@@ -22,7 +22,7 @@ def getOTP_form():
         # Create a secret key (keep it secret!)̥
         secret_key = pyotp.random_base32()
         # Generate an OTP using TOTP after every 30 seconds
-        send_sms_019(["545536415"],[created_by_phone],"your verify service verification code from tochnit hadar is:"+otp.now())
+        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from tochnit hadar is:"+otp.now())
         return jsonify({"result":"success"}),HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

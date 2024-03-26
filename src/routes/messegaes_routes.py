@@ -1,6 +1,7 @@
 import uuid
 from datetime import date
 
+import arrow as arrow
 import requests
 from openpyxl.reader.excel import load_workbook
 from sqlalchemy import or_
@@ -114,20 +115,20 @@ def add_contact_form():
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
             try:
-                print(key)
                 ContactForm1 = ContactForm(
                     id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                     created_for_id=key,
                     created_by_id=created_by_id,
                     content=content,
                     subject=subject,
-                    created_at=date.today(),
+                    created_at= arrow.now().format('YYYY-MM-DDThh:mm:ss'),
                     allreadyread=False,
                     attachments=attachments,
                     type=type,
                     ent_group=ent_group_name,
                     icon=icon
                 )
+                print(ContactForm1.created_at)
                 db.session.add(ContactForm1)
                 db.session.commit()
                 return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -151,7 +152,6 @@ def getAll_messegases_form():
         group_report_dict=dict()
         print(messegasesList)
         for mess in messegasesList:
-            daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
             if mess.ent_group != "":
                 if mess.ent_group + str(mess.id) in group_report_dict:
                     group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
@@ -162,7 +162,7 @@ def getAll_messegases_form():
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": toISO(mess.created_at),
+                     "date": mess.created_at,
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
 
@@ -170,7 +170,7 @@ def getAll_messegases_form():
             if group_report_dict[mess.ent_group + str(mess.id)] != None:
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),
+                     "from": str(mess.created_by_id), "date": str(mess.created_at).replace(" ","T"),
                      "to": group_report_dict[mess.ent_group + str(mess.id)],
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "ent_group": mess.ent_group,
@@ -273,7 +273,7 @@ def getById():
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": toISO(mess.created_at),
+                     "date": str(mess.created_at).replace(" ","T"),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
 

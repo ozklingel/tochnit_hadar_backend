@@ -162,9 +162,10 @@ def forgotenApprentice():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/forgotenApprentice_Mosad", methods=['GET'])
-def forgotenApprentice_Mosad():
+def forgotenApprentice_Mosad(institution_id='empty'):
     try:
-        institution_id = request.args.get("institutionId")
+        if institution_id=='empty':
+            institution_id = request.args.get("institutionId")
         print(institution_id)
         all_Apprentices = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(
             Apprentice.institution_id == institution_id).all()
@@ -353,7 +354,7 @@ def getMelaveMadadim():
         OldvisitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Visit.title == "מפגש_הורים",
                                             Visit.visit_date>start_Of_year  ).all()
         for i in OldvisitHorim:
-            if i[0] in  Apprentice_ids_call:
+            if i[0] in  Apprentice_ids_Horim:
                 Apprentice_ids_Horim.remove(i[0])
 
         Apprentice_ids_meetInArmy=[r[0] for r in ApprenticeCount]
@@ -819,6 +820,100 @@ def eshcol_Coordinators_score(eshcolCoord_id):
             Apprentice_ids_forgoten.remove(i[0])
     eshcolCoord_score=tohnit_yeshiva_score+total_eshcol_mosad_score
     return eshcolCoord_score,total_eshcol_mosad_gap
+
+def mosad__score(institution_id):
+    try:
+        mosadCoord_id=db.session.query(user1.id).filter(user1.role_id == "1",
+                                                             user1.institution_id == institution_id).first()
+        all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_id == "0",
+                                                             user1.institution_id == institution_id).all()
+
+        if len(all_Mosad_Melave) == 0:
+            return 100,0
+        all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
+        apprentice_interaction_Score=0
+        for melaveId in all_Mosad_Melaves_list:
+            all_melave_Apprentices = db.session.query(Apprentice.id).filter(
+                Apprentice.accompany_id == melaveId).all()
+            old_call_Apprentice_count=0
+            old_meet_Apprentice_count=0
+            good_meet_Apprentice_count=0
+            good_call_Apprentice_count=0
+            forgoten_Apprentice_count=0
+            new_visitHorim_count=0
+            for Apprentice1 in all_melave_Apprentices:
+                visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,Visit.title==config.call_report).order_by(Visit.visit_date.desc()).first()
+                #handle no row
+                gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
+                if gap > 21 or visitEvent is None:
+                    old_call_Apprentice_count+=1
+                if gap > 100 or visitEvent is None:
+                    forgoten_Apprentice_count+=1
+                visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,or_(Visit.title==config.groupMeet_report,Visit.title==config.personalMeet_report)).order_by(Visit.visit_date.desc()).first()
+                #handle no row
+                gap = (date.today() - visitEvent.visit_date).days if visitEvent is not None else 0
+                if gap > 90 or visitEvent is None:
+                    old_meet_Apprentice_count+=1
+                OldvisitHorim = db.session.query(Visit.ent_reported).filter(
+                                                                            Visit.title == config.HorimCall_report,
+                                                                            ).all()
+                if len(OldvisitHorim)>0:
+                    new_visitHorim_count+=1
+        if len(all_melave_Apprentices)==0:
+            good_meet_Apprentice_count=10
+            good_call_Apprentice_count=10
+        else:
+            good_meet_Apprentice_count = (len(all_melave_Apprentices) - old_meet_Apprentice_count) / len(
+                all_melave_Apprentices)
+            good_call_Apprentice_count = (len(all_melave_Apprentices) - old_call_Apprentice_count) / len(
+                all_melave_Apprentices)
+
+        too_old = datetime.today() - timedelta(days=90)
+        base_meeting_score=0
+        base_meeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(
+            or_(Visit.title == config.personalMeet_report, Visit.title == config.groupMeet_report),
+            Visit.visit_in_army == True,
+            Visit.visit_date > too_old, Visit.user_id == melaveId).group_by(Visit.visit_date).all()
+        if len(base_meeting)>1:
+            base_meeting_score=1
+            # group_meeting take only distinct dates
+        too_old = datetime.today() - timedelta(days=60)
+        group_meeting = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
+            Visit.visit_date > too_old, Visit.title == config.groupMeet_report,
+            Visit.user_id == melaveId).distinct(Visit.visit_date).order_by(Visit.visit_date.desc()).first()
+        group_meeting_score=0
+        if len(group_meeting)>0:
+            group_meeting_score=1
+        not_forgoten_presentage=(len(all_melave_Apprentices)-forgoten_Apprentice_count)/len(all_melave_Apprentices)
+        apprentice_interaction_Score=group_meeting_score*8.3+good_call_Apprentice_count*16.6+good_meet_Apprentice_count*8.3+\
+                                     not_forgoten_presentage*16.6+new_visitHorim_count+base_meeting_score*10
+        print("apprentice_interaction_Score",apprentice_interaction_Score)
+
+        #מפגש_מקצועי=10
+        visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
+            Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).distinct(Visit.ent_reported).all()
+        visit_mosad_professional_meetings_presentage=len(visit_mosad_professional_meetings)/len(all_Mosad_Melave)
+
+        #כנס=10
+        current_month = datetime.today().month
+        start_Of_year = datetime.today() - timedelta(days=30 * current_month)
+        visit_CENES= db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>start_Of_year,Visit.title == config.cenes_report).filter(
+            Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).distinct(Visit.ent_reported).all()
+        visit_CENES_presentage=len(visit_CENES)/len(all_Mosad_Melave)
+
+
+        #עשייה_לבוגרים=5
+        too_old = datetime.today() - timedelta(days=365)
+        visit_did_for_apprentice = db.session.query(Visit.user_id,
+                                                         ).filter(Visit.title == config.doForBogrim_report, Visit.user_id == mosadCoord_id[0],
+                                  Visit.visit_date > too_old).all()
+        visit_did_for_apprentice_presantage=len(visit_did_for_apprentice)/3
+        #הזנת_מחזור_חדש=10
+        mosadcoord_score,a,b,c=mosad_Coordinators_score(mosadCoord_id[0])
+        total_score=mosadcoord_score*7/100+visit_did_for_apprentice_presantage*3+visit_CENES_presentage*10+visit_mosad_professional_meetings_presentage*10+apprentice_interaction_Score
+        return total_score,forgoten_Apprentice_count
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 

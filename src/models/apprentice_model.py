@@ -60,7 +60,7 @@ class Apprentice(db.Model):
     workoccupation = db.Column(workOccupation_COL, db.String(50), nullable=False,default="")
     educationfaculty = db.Column(educationFaculty_COL, db.String(50), nullable=False,default="")
     educationalinstitution = db.Column(educationalInstitution_COL, db.String(50), nullable=False,default="")
-    militarypositionold = db.Column(militaryPositionOld_COL, db.String(50), nullable=False,default="")
+    militaryPositionOld = db.Column(militaryPositionOld_COL, db.String(50), nullable=False,default="")
     militaryupdateddatetime=db.Column(militaryUpdatedDateTime_COL, db.DateTime, nullable=False,default="2022-01-01")
     high_school_teacher_email=db.Column(high_school_teacher_email_col, db.String(50), nullable=False,default="")
     teacher_grade_a_email=db.Column(teacher_grade_a_email_col, db.String(50), nullable=False,default="")

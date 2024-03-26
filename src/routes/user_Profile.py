@@ -133,6 +133,7 @@ def getmyApprentices_form():
                  "contact3_phone": noti.contact3_phone,
                  "contact3_email": noti.contact3_email,
                  "contact3_relation": noti.contact3_relation,
+                 "activity_score": len(reportList),
 
                  "reports":
                      [str(i[0]) for i in [tuple(row) for row in reportList]]
@@ -155,7 +156,7 @@ def getmyApprentices_form():
                  "militaryDateOfDischarge": toISO(noti.release_date),
                  "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
-                 "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
+                 "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
                  "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
 
@@ -283,6 +284,7 @@ def getmyApprentice_form():
                  "contact3_phone": noti.contact3_phone,
                  "contact3_email": noti.contact3_email,
                  "contact3_relation": noti.contact3_relation,
+                 "activity_score": len(reportList),
 
                  "reports":
                      [str(i[0]) for i in [tuple(row) for row in reportList]]
@@ -303,7 +305,7 @@ def getmyApprentice_form():
                  "militaryDateOfDischarge": toISO(noti.release_date),
                  "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
-                 "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
+                 "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
                  "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
 

@@ -33,7 +33,7 @@ def delete():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 @apprentice_Profile_form_blueprint.route("/update", methods=['put'])
-def updateTask():
+def update():
     try:
         # get tasksAndEvents
         apprenticetId = request.args.get("apprenticetId")
@@ -43,6 +43,7 @@ def updateTask():
         for key in data:
             setattr(updatedEnt, key, data[key])
         db.session.commit()
+        print(updatedEnt.militaryPositionOld)
         if updatedEnt:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
@@ -206,7 +207,6 @@ def add_apprentice_excel():
             )
             db.session.add(Apprentice1)
             db.session.commit()
-
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 

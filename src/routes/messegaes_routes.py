@@ -105,16 +105,18 @@ def add_contact_form():
             attachments = data['attachments']
             ent_group_name = str(data['ent_group'])
 
-        except:
-            print("no icon or type or ent_group or attachments")
+        except Exception as e:
+            print(str(e))
         created_by_id = str(data['created_by_id'])
         created_for_ids = data['created_for_ids']
-        if created_for_ids==[""]:
+        if created_for_ids==[""] :
             achrahTohnit = user1.query.filter(user1.role_id=="3").all()
             created_for_ids=[str(a.id) for a in achrahTohnit]
+        if type=="draft":
+            created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
-            try:
+
                 ContactForm1 = ContactForm(
                     id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                     created_for_id=key,
@@ -128,13 +130,9 @@ def add_contact_form():
                     ent_group=ent_group_name,
                     icon=icon
                 )
-                print(ContactForm1.created_at)
                 db.session.add(ContactForm1)
-                db.session.commit()
-                return jsonify({'result': 'success'}), HTTPStatus.OK
-
-            except Exception as e:
-                return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+        db.session.commit()
+        return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
@@ -331,3 +329,12 @@ def add_message_excel():
         return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
+
+@messegaes_form_blueprint.route("/get_recipients", methods=['GET'])
+def get_recipients():
+    try:
+        users=db.session.query(user1.id,user1.name,user1.last_name).all()
+        return jsonify( [{"id":str(row.id),"name":row.name,"last_name":row.last_name} for row in users],
+            ), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

@@ -345,36 +345,6 @@ def yearly():
 
     except Exception as e:
         return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
-def compute_visit_score(all_children,visits,maxScore,expected_gap):
-    all_children_ids = [r[0] for r in all_children]
-
-    from collections import defaultdict
-    visitcalls_melave_list = defaultdict(list)
-    # key is apprenticeId and value is list of  gaps visits date
-    for index in range(1, len(visits)):
-        gap = (visits[index][1] - visits[index - 1][1]).days if visits[index] is not None else 21
-        visitcalls_melave_list[visits[index][0]].append(gap)
-    visitcalls_melave_avg = 0
-    for k, v in visitcalls_melave_list.items():
-        if k in all_children_ids:
-            all_children_ids.remove(k)
-        visitcalls_melave_avg += (sum(v) / len(v))
-    #t least one apprentice with no calls
-    if len(all_children_ids) != 0:
-        visitcalls_melave_avg = 0
-    else:
-        visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
-            visitcalls_melave_list) != 0 else 0
-    call_panish = visitcalls_melave_avg - expected_gap
-
-
-    if call_panish > 0:
-        call_score = maxScore - call_panish / 2
-    else:
-        call_score = maxScore
-    if call_score<0:
-        call_score=0
-    return call_score,visitcalls_melave_avg
 
 @export_import_blueprint.route('/uploadfile', methods=['post'])
 def uploadfile():

@@ -41,7 +41,11 @@ def update():
         data = request.json
         updatedEnt = Apprentice.query.get(apprenticetId)
         for key in data:
-            setattr(updatedEnt, key, data[key])
+            if key =="militarycompoundid":
+                print(data[key])
+                setattr(updatedEnt, "base_address", data[key])
+            else:
+                setattr(updatedEnt, key, data[key])
         db.session.commit()
         print(updatedEnt.militaryPositionOld)
         if updatedEnt:

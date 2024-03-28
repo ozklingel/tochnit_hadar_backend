@@ -135,7 +135,6 @@ def red_green_orange_status(all_Apprentices):
 
 @homepage_form_blueprint.route("/initMaster", methods=['GET'])
 def homepageMaster():
-    try:
         accessToken =request.headers.get('Authorization')
         print("accessToken:",accessToken)
         userId = request.args.get("userId")
@@ -180,8 +179,7 @@ def homepageMaster():
            # 'user_lastname':record.last_name,
             # 'user_name':record.name,
                        }), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
 @homepage_form_blueprint.route("/init_eshcolCoord", methods=['GET'])
 def init_eshcolCoord():
     try:

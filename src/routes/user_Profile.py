@@ -85,7 +85,7 @@ def getmyApprentices_form():
             print(city)
             reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
             eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
-                                                                               notifications.apprenticeid == noti.id,
+                                                                               notifications.subject == str(noti.id),
                                                                                notifications.numoflinesdisplay == 3).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
@@ -187,7 +187,7 @@ def getProfileAtributes_form():
             myApprenticesNamesList=getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(regionName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.cluster_id),
+                           "city":city.name, "region":str(regionName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
                            "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:
@@ -234,7 +234,7 @@ def getmyApprentice_form():
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
             eventlist = db.session.query(notifications.id, notifications.event, notifications.details,notifications.date).filter(
-                notifications.apprenticeid == noti.id,
+                notifications.subject == str(noti.id),
                 notifications.numoflinesdisplay == 3).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
@@ -381,12 +381,15 @@ def add_user_manual():
         first_name = data['first_name']
         last_name = data['last_name']
         phone = data['phone']
-        institution_name = data['institution_name']
-        city_name = data['city_name'] if "?" not in data['city_name'] else "עלי"
-
+        institution_id = data['institution_id']
+        city_name="עלי"
+        try:
+            city_name = data['city_name'] or "עלי"
+        except:
+            print("no city")
         role_id = data['role_id']
         CityId = db.session.query(City).filter(City.name==city_name).first()
-        institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
+        #institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
         institution_id=institution_id[0] if institution_id else 0
         print(institution_id)
         useEnt = user1(

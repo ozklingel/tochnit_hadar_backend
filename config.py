@@ -29,6 +29,8 @@ doForBogrim_report="עשיה לבוגרים"
 MelavimMeeting_report="ישיבה מוסדית"#1 חודשים
 MOsadEshcolMeeting_report="ישיבת מוסד אשכול"
 tochnitMeeting_report="ישיבת רכזי תוכנית"
+reports_as_call=[call_report,zoom_report,fiveMess_report]
+report_as_meet=[personalMeet_report,groupMeet_report,basis_report]
 
 #דוחות
 mosad_racaz_meeting="mosad_racaz_meeting"

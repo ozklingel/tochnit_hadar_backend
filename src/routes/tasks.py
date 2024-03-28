@@ -33,10 +33,10 @@ def getTasks():
                 #print(ent)
                 ent["status"] = "todo"
                 ent["id"] = str(ent["id"])
-                ent["apprenticeId"] = [ent["apprenticeId"]]
+                ent["subject"] = [ent["subject"]]
 
                 if ent["event"]== config.groupMeet_report :
-                    ent["apprenticeId"]=[]
+                    ent["subject"]=[]
 
                 todo_dict.append(ent)
 
@@ -96,7 +96,7 @@ def add_task():
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
         notification1 = notifications(
                         userid=user,
-                        apprenticeid = apprenticeid,
+                        subject = apprenticeid,
                         event=event,
                         date=date,
                         allreadyread=False,

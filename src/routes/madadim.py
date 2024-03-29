@@ -736,7 +736,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     all_eshcol_mosadCoord_list = [r[0] for r in all_eshcol_mosadCoord]
     total_eshcol_mosad_gap=0
     for mosadCoordId in all_eshcol_mosadCoord_list:
-        visitEvent = db.session.query(Visit).filter(Visit.user_id == mosadCoordId,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
+        visitEvent = db.session.query(Visit).filter(Visit.ent_reported == mosadCoordId,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
         if visitEvent ==[]:
             continue
         mosadCoordId_gap=0
@@ -750,12 +750,15 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     else:
         total_eshcol_mosad_score=0
 
+    too_old = datetime.today() - timedelta(days=31)
+    is_tochnitMeeting_exist = db.session.query(Visit.user_id,
+                                                     ).filter(Visit.title == config.tochnitMeeting_report,Visit.visit_date > too_old).first()
     tohnit_yeshiva = db.session.query(Visit.ent_reported,
                                              func.max(Visit.visit_date).label("visit_date")).group_by(
         Visit.ent_reported).filter(Visit.title == config.tochnitMeeting_report, Visit.ent_reported == eshcolCoord_id).first()
     gap = (date.today() - tohnit_yeshiva.visit_date).days if tohnit_yeshiva is not None else 100
     tohnit_yeshiva_score = 0
-    if gap < 30:
+    if not is_tochnitMeeting_exist or gap < 30:
         tohnit_yeshiva_score += 40
 
     Apprentice_ids_forgoten = [r[0] for r in all_eshcol_apprentices]

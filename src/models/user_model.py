@@ -4,6 +4,8 @@ from .cluster_model import Cluster
 from .institution_model import Institution
 
 from app import db
+import datetime
+
 class user1(db.Model):
     __tablename__ = USERS_TBL
 
@@ -27,6 +29,7 @@ class user1(db.Model):
     notifyMorning_sevev = db.Column("notifymorning_sevev", db.Boolean, nullable=False,default=True)
     notifyMorning_weekly_report = db.Column("notifymorning_weekly_report", db.Boolean, nullable=False,default=True)
     eshcol = db.Column("eshcol", db.String(50), nullable=False,default="")
+    association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
 
 
     def as_dict(self):

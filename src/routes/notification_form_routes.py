@@ -18,7 +18,7 @@ import uuid
 from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')
-init_weekDay=3
+init_weekDay=4
 
 def add_notificaion_to_melave(user):
     # update notification created by system=group meetings
@@ -132,7 +132,6 @@ def add_notificaion_to_mosad(user):
             under65_dict[melave_.id]=melave_.name+" "+melave_.last_name
     res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                  notifications.event == "ציון מלוים").first()
-
     if res is None and date.today().weekday() == init_weekDay:
         date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
         notification1 = notifications(userid=user.id, subject="", event="ציון מלוים",
@@ -144,22 +143,26 @@ def add_notificaion_to_mosad(user):
     mosad__score1, forgotenApprentice_Mosad1 = mosad_score(user.institution_id)
     res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                  notifications.event == "חניכים נשכחים").first()
-
+    print("forgotenApprentice_Mosad1",forgotenApprentice_Mosad1)
     if res is None and date.today().weekday() == init_weekDay:
         date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
         notification1 = notifications(userid=user.id, subject="", event="חניכים נשכחים",
                                       date=date1,
-                                      details=forgotenApprentice_Mosad1,
+                                      details=str(forgotenApprentice_Mosad1),
                                       allreadyread=False, numoflinesdisplay=2,
                                       id=int(str(uuid.uuid4().int)[:5]))
         db.session.add(notification1)
+    db.session.commit()
 
 
 def add_notificaion_to_eshcol(user):
+    print(user.eshcol)
     institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).filter(Institution.eshcol_id==user.eshcol).all()
+    print("institotionList",institotionList)
     eshcol_dict = dict()
     for institution_ in institotionList:
         mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
+        print(mosad__score1, forgotenApprentice_Mosad1)
         if mosad__score1 < 65:
             res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                          notifications.event == "ציון מוסדות").first()
@@ -207,8 +210,8 @@ def add_notificaion_to_eshcol(user):
                                           allreadyread=False, numoflinesdisplay=2,
                                           id=int(str(uuid.uuid4().int)[:5]))
             db.session.add(notification1)
-
     db.session.commit()
+
 def add_notificaion_to_ahraiTohnit(user):
     institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).all()
     eshcol_dict = dict()
@@ -255,6 +258,8 @@ def add_notificaion_to_ahraiTohnit(user):
 
 @notification_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_notification_form():
+        print("init_weekDay:",init_weekDay)
+        print("weekday ",date.today().weekday())
         user = request.args.get('userId')
         print("user:",user)
         user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id).filter(user1.id == user).first()
@@ -268,7 +273,7 @@ def getAll_notification_form():
         if user_ent[0] == "3":  # ahrah
             add_notificaion_to_ahraiTohnit(user_ent)
         #send  notifications.
-        userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter_by(id=user).first()
+        userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(id==user).first()
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
         for noti in notiList:

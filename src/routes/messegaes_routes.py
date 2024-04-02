@@ -101,7 +101,6 @@ def send_whatsapp():
         message = data['message']
         message += "\n\nנשלח מתוכנית הדר"
         recipients = data['recipients']
-        tohnit_hadar_appendix = "send"
         returned = send_green_whatsapp(message, recipients)
         if returned != 200:
             return jsonify({'result': str(returned)}), HTTPStatus.INTERNAL_SERVER_ERROR

@@ -54,42 +54,44 @@ def send_sms():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-def send_green_whatsapp(message: str, number: str, delay_send_messages_milliseconds: int = 0):
+def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_milliseconds: int = 0):
     APIUrl: str = "https://7103.api.greenapi.com"  # TODO - put in config
     idInstance: str = "7103922187"  # TODO - put in config
     apiTokenInstance: str = "2a53bacca96949e5a92d03125886fd12cefb7415bf974f4a87"  # TODO - put in config
+    responses = []
+    for number in numbers:
+        # number validation, assuming only israeli numbers, without the 0 in the beginning
+        if number.startswith("0"):
+            number = number[1:]
+        if len(number) != 9:
+            print(f"Invalid phone number: {number}, should be only 9 digits long.")
+            return
 
-    # number validation, assuming only israeli numbers, without the 0 in the beginning
-    if number.startswith("0"):
-        number = number[1:]
-    if len(number) != 9:
-        print(f"Invalid phone number: {number}, should be only 9 digits long.")
-        return
+        israel_country_code = "972"
+        number_to_send = israel_country_code + number
 
-    israel_country_code = "972"
-    number_to_send = israel_country_code + number
+        payload = {
+            "chatId": f"{number_to_send}@c.us",
+            "message": message,
+        }
 
-    payload = {
-        "chatId": f"{number_to_send}@c.us",
-        "message": message,
-    }
+        if delay_send_messages_milliseconds > 0:
+            payload["delaySendMessagesMilliseconds"] = delay_send_messages_milliseconds
 
-    if delay_send_messages_milliseconds > 0:
-        payload["delaySendMessagesMilliseconds"] = delay_send_messages_milliseconds
+        payload = json.dumps(payload)
 
-    payload = json.dumps(payload)
+        url = f"{APIUrl}/waInstance{idInstance}/sendMessage/{apiTokenInstance}"
 
-    url = f"{APIUrl}/waInstance{idInstance}/sendMessage/{apiTokenInstance}"
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-    headers = {
-        'Content-Type': 'application/json'
-    }
+        response = requests.request("POST", url, headers=headers, data=payload)
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+        responses.append(response.status_code)
 
-    return response.status_code
-    # print(response.text.encode('utf8'))
-
+    return responses
+    # print(response.text.encode('utf8')) # get message id, for future reference
 
 
 @messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])
@@ -102,12 +104,15 @@ def send_whatsapp():
         message += "\n\n*תוכנית הדר*"
 
         recipients = data['recipients']
-        returned = send_green_whatsapp(message, recipients)
-        if returned != 200:
-            return jsonify({'result': str(returned)}), HTTPStatus.INTERNAL_SERVER_ERROR
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        returned: List[int] = send_green_whatsapp(message, recipients)
+        count_200 = returned.count(200)
+        if count_200 == len(returned):
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+
+        return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
+                HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': str(e), "input:": str(data)}), HTTPStatus.BAD_REQUEST
 
 
 # from chat box

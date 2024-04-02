@@ -99,7 +99,8 @@ def send_whatsapp():
         if 'message' not in data or 'recipients' not in data:
             return jsonify({'result': 'missing message or recipients'}), HTTPStatus.BAD_REQUEST
         message = data['message']
-        message += "\n\nנשלח מתוכנית הדר"
+        message += "\n\n*תוכנית הדר*"
+
         recipients = data['recipients']
         returned = send_green_whatsapp(message, recipients)
         if returned != 200:

@@ -34,7 +34,6 @@ def lowScoreApprentice():
             forgotenApprenticeList[ent[1] ]+=1
 
 
-        print("forgotenApprenticeList:" ,forgotenApprenticeList)
         return jsonify({
         'lowScoreApprentice_Count': forgotenApprenticCount ,
         'lowScoreApprentice_List': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
@@ -789,7 +788,7 @@ def mosad_score(institution_id):
         all_Mosad_apprentices = db.session.query(Apprentice.id).filter(
                                                              Apprentice.institution_id == institution_id).all()
         if len(all_Mosad_Melave) == 0:
-            return 100,0
+            return 100,[]
         all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
         total_melave_score=0
         for melaveId in all_Mosad_Melaves_list:
@@ -803,7 +802,7 @@ def mosad_score(institution_id):
 
         #forgoten apppre
         forgoten_Apprentice_count = forgotenApprentice_Mosad(institution_id)[0].json
-        mosad_score+=forgtenAppren_wight*(len(all_Mosad_apprentices)-len(forgoten_Apprentice_count))/len(all_Mosad_apprentices)
+        mosad_score+=forgtenAppren_wight*(len(all_Mosad_apprentices)-len(forgoten_Apprentice_count))/len(all_Mosad_apprentices) if len(all_Mosad_apprentices) !=0 else 16.6
 
         #עשייה_לבוגרים=5
         too_old = datetime.today() - timedelta(days=365)
@@ -811,7 +810,6 @@ def mosad_score(institution_id):
                                                          ).filter(Visit.title == config.doForBogrim_report, Visit.user_id == mosadCoord_id[0],
                                   Visit.visit_date > too_old).all()
         mosad_score+=bogrim_wight*len(visit_did_for_apprentice)
-
         Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,total_avg_call,total_avg_meet,groupNeeting_gap_avg=mosad_Coordinators_score(mosadCoord_id[0])
         return mosad_score,forgoten_Apprentice_count
     except Exception as e:

@@ -22,7 +22,11 @@ def getTasks():
     res=getAll_notification_form()
     todo_dict = []
     todo_ids=[]
-    print(res[0].json)
+    try:
+        print(res[0])
+    except Exception as e:
+        return jsonify([]), HTTPStatus.OK
+
     try:
         for i in range(0,len(res[0].json)):
             ent=res[0].json[i]
@@ -51,12 +55,12 @@ def getTasks():
                 all_ApprenticeList_Horim.remove(i[0])
         for ent in all_ApprenticeList_Horim:
             #Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
-            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'apprenticeId': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
+            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'subject': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
         done_visits = db.session.query(Visit.ent_reported,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
                                                     Visit.id.not_in(todo_ids),Visit.visit_date>too_old).distinct(Visit.id).all()
         done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
-        "description": str(row[4]),'status':'done',"apprenticeId": [str(row[0])], "title": str(row[1])
+        "description": str(row[4]),'status':'done',"subject": [str(row[0])], "title": str(row[1])
              ,"daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
 
         tasks_list = todo_dict+done_visits_dict

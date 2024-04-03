@@ -54,6 +54,9 @@ def filter_by_request(request):
         if "רכזי אשכול" in roles:
             ent_group_dict["racaz"] = "רכזי אשכול"
             entityType.append("2")
+        if "אחראי תוכנית" in roles:
+            ent_group_dict["achrai tochnit"] = "אחראי תוכנית"
+            entityType.append("3")
         if len(entityType) > 0:
             query = db.session.query(user1.id).distinct(user1.id)
             query = query.filter(user1.role_id.in_(entityType))

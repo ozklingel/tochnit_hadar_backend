@@ -18,9 +18,22 @@ import uuid
 from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')
-init_weekDay=4
+init_weekDay=date.today().weekday()
 
 def add_notificaion_to_melave(user):
+    # update notification created by system=basis meetings
+    visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,
+                                                Visit.title == config.basis_report).order_by(
+                                                Visit.visit_date.desc()).first()
+
+    if visitEvent is None or (date.today() - visitEvent.visit_date).days>90 :
+        res = db.session.query(notifications).filter(notifications.userid == user.id,
+                                                     notifications.event == config.basis_report).first()
+        if res is None and date.today().weekday() == init_weekDay:
+            date1='2023-01-01' if visitEvent is None else visitEvent.visit_date
+            notification1 = notifications(userid=user.id,subject = "",event=config.basis_report,date=date1,
+                                          allreadyread=False,numoflinesdisplay=2,id=int(str(uuid.uuid4().int)[:5]))
+            db.session.add(notification1)
     # update notification created by system=group meetings
     visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,
                                                 Visit.title == config.groupMeet_report).order_by(
@@ -85,7 +98,7 @@ def add_notificaion_to_mosad(user):
     visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,
                                                 Visit.title == config.doForBogrim_report).order_by(
         Visit.visit_date.desc()).first()
-    if visitEvent is None or (date.today() - visitEvent.visit_date).days > 83:
+    if visitEvent is None or (date.today() - visitEvent.visit_date).days > 23:
         res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                      notifications.event == config.doForBogrim_report).first()
         if res is None and date.today().weekday() == init_weekDay:
@@ -128,11 +141,16 @@ def add_notificaion_to_mosad(user):
                                               id=int(str(uuid.uuid4().int)[:5]))
                 db.session.add(notification1)
         melave_score1,call_gap_avg,personal_meet_gap_avg=melave_score(melave_.id)
+
         if melave_score1<65:
             under65_dict[melave_.id]=melave_.name+" "+melave_.last_name
     res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                  notifications.event == "ציון מלוים").first()
-    if res is None and date.today().weekday() == init_weekDay:
+    too_old = datetime.datetime.today() - timedelta(days=23)
+    if res :
+        d=res.date
+        date_noti=datetime.datetime(d.year, d.month, d.day)
+    if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
         date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
         notification1 = notifications(userid=user.id, subject="", event="ציון מלוים",
                                       date=date1,
@@ -143,8 +161,11 @@ def add_notificaion_to_mosad(user):
     mosad__score1, forgotenApprentice_Mosad1 = mosad_score(user.institution_id)
     res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                  notifications.event == "חניכים נשכחים").first()
-    print("forgotenApprentice_Mosad1",forgotenApprentice_Mosad1)
-    if res is None and date.today().weekday() == init_weekDay:
+    too_old = datetime.datetime.today() - timedelta(days=8)
+    if res :
+        d=res.date
+        date_noti=datetime.datetime(d.year, d.month, d.day)
+    if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
         date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
         notification1 = notifications(userid=user.id, subject="", event="חניכים נשכחים",
                                       date=date1,
@@ -162,11 +183,14 @@ def add_notificaion_to_eshcol(user):
     eshcol_dict = dict()
     for institution_ in institotionList:
         mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
-        print(mosad__score1, forgotenApprentice_Mosad1)
         if mosad__score1 < 65:
             res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                          notifications.event == "ציון מוסדות").first()
-            if res is None and date.today().weekday() == init_weekDay:
+            too_old = datetime.datetime.today() - timedelta(days=23)
+            if res:
+                d = res.date
+                date_noti = datetime.datetime(d.year, d.month, d.day)
+            if (res is None or  date_noti<too_old)  and date.today().weekday() == init_weekDay:
                 notification1 = notifications(userid=user.id, subject=str(institution_[0]), event="ציון מוסדות",
                                               date=date.today(),
                                               allreadyread=False, numoflinesdisplay=2,
@@ -183,7 +207,11 @@ def add_notificaion_to_eshcol(user):
                 res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                              notifications.subject == str(mosadCoord_),
                                                              notifications.event == config.MOsadEshcolMeeting_report).first()
-                if res is None and date.today().weekday() == init_weekDay:
+                too_old = datetime.datetime.today() - timedelta(days=23)
+                if res:
+                    d = res.date
+                    date_noti = datetime.datetime(d.year, d.month, d.day)
+                if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
                     date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
                     notification1 = notifications(userid=user.id, subject=str(mosadCoord_), event=config.MOsadEshcolMeeting_report,
                                                   date=date1,
@@ -194,7 +222,11 @@ def add_notificaion_to_eshcol(user):
             if mosad_Coordinators_score1 < 65:
                 res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                              notifications.event == "ציון רכזים").first()
-                if res is None and date.today().weekday() == init_weekDay:
+                too_old = datetime.datetime.today() - timedelta(days=23)
+                if res:
+                    d = res.date
+                    date_noti = datetime.datetime(d.year, d.month, d.day)
+                if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
                     notification1 = notifications(userid=user.id, subject=str(institution_[0]), event="ציון רכזים",
                                                   date=date.today(),
                                                   allreadyread=False, numoflinesdisplay=2,
@@ -204,7 +236,11 @@ def add_notificaion_to_eshcol(user):
     for k, v in eshcol_dict.items():
         res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                      notifications.event == "חניכים נשכחים").first()
-        if res is None and date.today().weekday() == init_weekDay:
+        too_old = datetime.datetime.today() - timedelta(days=8)
+        if res:
+            d = res.date
+            date_noti = datetime.datetime(d.year, d.month, d.day)
+        if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
             notification1 = notifications(userid=user.id, subject=str(k), event="חניכים נשכחים", details=v,
                                           date=date.today(),
                                           allreadyread=False, numoflinesdisplay=2,
@@ -217,10 +253,15 @@ def add_notificaion_to_ahraiTohnit(user):
     eshcol_dict = dict()
     for institution_ in institotionList:
         mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
+        print("forgotenApprentice_Mosad1",forgotenApprentice_Mosad1)
         if mosad__score1 < 65:
-            res = db.session.query(notifications).filter(notifications.userid == user,
+            res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                          notifications.event == "ציון מוסדות").first()
-            if res is None and date.today().weekday() == init_weekDay:
+            too_old = datetime.datetime.today() - timedelta(days=23)
+            if res:
+                d = res.date
+                date_noti = datetime.datetime(d.year, d.month, d.day)
+            if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
                 notification1 = notifications(userid=user.id, subject=str(institution_[0]), event="ציון מוסדות",
                                               date=date.today(),
                                               allreadyread=False, numoflinesdisplay=2,
@@ -233,7 +274,11 @@ def add_notificaion_to_ahraiTohnit(user):
             if mosad_Coordinators_score1 < 65:
                 res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                              notifications.event == "ציון רכזים").first()
-                if res is None and date.today().weekday() == init_weekDay:
+                too_old = datetime.datetime.today() - timedelta(days=23)
+                if res:
+                    d = res.date
+                    date_noti = datetime.datetime(d.year, d.month, d.day)
+                if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
                     notification1 = notifications(userid=user.id, subject=str(institution_[0]), event="ציון רכזים",
                                                   date=date.today(),
                                                   allreadyread=False, numoflinesdisplay=2,
@@ -243,7 +288,11 @@ def add_notificaion_to_ahraiTohnit(user):
     for k, v in eshcol_dict.items():
         res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                      notifications.event == "חניכים נשכחים").first()
-        if res is None and date.today().weekday() == init_weekDay:
+        too_old = datetime.datetime.today() - timedelta(days=14)
+        if res:
+            d = res.date
+            date_noti = datetime.datetime(d.year, d.month, d.day)
+        if (res is None or  date_noti<too_old) and date.today().weekday() == init_weekDay:
             notification1 = notifications(userid=user.id, subject=str(k), event="חניכים נשכחים",details=v,
                                           date=date.today(),
                                           allreadyread=False, numoflinesdisplay=2,
@@ -273,7 +322,8 @@ def getAll_notification_form():
         if user_ent[0] == "3":  # ahrah
             add_notificaion_to_ahraiTohnit(user_ent)
         #send  notifications.
-        userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(id==user).first()
+        userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(user1.id==user).first()
+
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
         for noti in notiList:
@@ -410,7 +460,7 @@ def add_notification_form():
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
         notification1 = notifications(
                         userid=user,
-                        apprenticeid = apprenticeid,
+                        subject = str(apprenticeid),
                         event=event,
                         date=date,
                         allreadyread=False,
@@ -581,7 +631,7 @@ def add_frequenced_notification():
         if noti.frequency == "daily" and daysFromNow == 1:
             notification1 = notifications(
                 userid=noti.userid,
-                apprenticeid=noti.apprenticeid,
+                subject=str(noti.apprenticeid),
                 event=noti.event,
                 date=toISO(noti.date + datetime.timedelta(days=1)),
                 allreadyread=False,

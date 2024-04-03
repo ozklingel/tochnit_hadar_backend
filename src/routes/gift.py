@@ -18,6 +18,7 @@ from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.gift import gift
+from src.models.notification_model import notifications
 from src.models.system_report import system_report
 from src.models.user_model import user1
 from src.models.visit_model import Visit
@@ -68,11 +69,29 @@ def getGift():
 def delete():
     try:
         giftCode1 = request.args.get('giftCode')
+        apprentice_id = request.args.get('')
+
         giftCode = db.session.query(gift).filter(gift.code == giftCode1).first()
         if giftCode is not None:
             giftCode.was_used=True
             #res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
+            res = db.session.query(notifications).filter(
+                                                         notifications.subject == apprentice_id,
+                                                         notifications.event == "יומהולדת",
+                                                         ).delete()
+
             db.session.commit()
+
+        return jsonify({'result': 'success'}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+@gift_blueprint.route("/deleteAll", methods=['put'])
+def deleteAll():
+    try:
+
+        giftCode = db.session.query(gift).delete()
+        db.session.commit()
 
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:

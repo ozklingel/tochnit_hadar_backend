@@ -1,28 +1,26 @@
+import json
 import uuid
 from datetime import date
+from http import HTTPStatus
+from typing import Union, List
 
 import arrow as arrow
 import requests
+from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 from sqlalchemy import or_
-
-from flask import Blueprint, request, jsonify
-from http import HTTPStatus
-from typing import Union, List
 
 import config
 from app import db
 from .Utils.Sms import send_sms_019
 from .search_ent import filter_by_request
 from .user_Profile import toISO
-from ..models.apprentice_model import Apprentice
-from ..models.city_model import City
-from ..models.cluster_model import Cluster
 from ..models.contact_form_model import ContactForm
-from ..models.institution_model import Institution
 from ..models.user_model import user1
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
+
+
 @messegaes_form_blueprint.route('/send_sms', methods=['POST'])
 def send_sms():
     try:
@@ -56,39 +54,68 @@ def send_sms():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-def send_whatsapp_through_joni(sources: str, recipients: Union[List[str], str], message: str):
-    if isinstance(recipients, str):
-        recipients = [recipients]
-    webhook = config.SendMessages.Whatsapp.webhook
-    if not isinstance(sources, list):
-        sources = [sources]
-    for source in sources:
-        message = config.SendMessages.Whatsapp.messagePrefix + source + "\n\n" + message
-        for recipient in recipients:
-            data = {config.SendMessages.Whatsapp.joni_to: recipient,
-                    config.SendMessages.Whatsapp.joni_text: message}
-            response = requests.post(webhook, json=data)
-            if response.status_code != 200:
-                response_json = response.json()
-                return response_json
+def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_milliseconds: int = 0):
+    APIUrl: str = "https://7103.api.greenapi.com"  # TODO - put in config
+    idInstance: str = "7103922187"  # TODO - put in config
+    apiTokenInstance: str = "2a53bacca96949e5a92d03125886fd12cefb7415bf974f4a87"  # TODO - put in config
+    responses = []
+    for number in numbers:
+        # number validation, assuming only israeli numbers, without the 0 in the beginning
+        if number.startswith("0"):
+            number = number[1:]
+        if len(number) != 9:
+            print(f"Invalid phone number: {number}, should be only 9 digits long.")
+            return
+
+        israel_country_code = "972"
+        number_to_send = israel_country_code + number
+
+        payload = {
+            "chatId": f"{number_to_send}@c.us",
+            "message": message,
+        }
+
+        if delay_send_messages_milliseconds > 0:
+            payload["delaySendMessagesMilliseconds"] = delay_send_messages_milliseconds
+
+        payload = json.dumps(payload)
+
+        url = f"{APIUrl}/waInstance{idInstance}/sendMessage/{apiTokenInstance}"
+
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+
+        responses.append(response.status_code)
+
+    return responses
+    # print(response.text.encode('utf8')) # get message id, for future reference
 
 
 @messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])
 def send_whatsapp():
     try:
         data = request.json
+        if 'message' not in data or 'recipients' not in data:
+            return jsonify({'result': 'missing message or recipients'}), HTTPStatus.BAD_REQUEST
         message = data['message']
+        message += "\n\n*תוכנית הדר*"
+
         recipients = data['recipients']
-        sources = data['sources']
-        returned = send_whatsapp_through_joni(sources, recipients, message)
-        if returned:
-            return jsonify({'result': str(returned)}), HTTPStatus.INTERNAL_SERVER_ERROR
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        returned: List[int] = send_green_whatsapp(message, recipients)
+        count_200 = returned.count(200)
+        if count_200 == len(returned):
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+
+        return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
+                HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': str(e), "input:": str(data)}), HTTPStatus.BAD_REQUEST
 
 
-#from chat box
+# from chat box
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():
     try:
@@ -109,45 +136,46 @@ def add_contact_form():
             print(str(e))
         created_by_id = str(data['created_by_id'])
         created_for_ids = data['created_for_ids']
-        if created_for_ids==[""] :
-            achrahTohnit = user1.query.filter(user1.role_id=="3").all()
-            created_for_ids=[str(a.id) for a in achrahTohnit]
-        if type=="draft":
+        if created_for_ids == [""]:
+            achrahTohnit = user1.query.filter(user1.role_id == "3").all()
+            created_for_ids = [str(a.id) for a in achrahTohnit]
+        if type == "draft":
             created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
         for key in created_for_ids:
-
-                ContactForm1 = ContactForm(
-                    id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
-                    created_for_id=key,
-                    created_by_id=created_by_id,
-                    content=content,
-                    subject=subject,
-                    created_at= arrow.now().format('YYYY-MM-DDThh:mm:ss'),
-                    allreadyread=False,
-                    attachments=attachments,
-                    type=type,
-                    ent_group=ent_group_name,
-                    icon=icon
-                )
-                db.session.add(ContactForm1)
+            ContactForm1 = ContactForm(
+                id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
+                created_for_id=key,
+                created_by_id=created_by_id,
+                content=content,
+                subject=subject,
+                created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
+                allreadyread=False,
+                attachments=attachments,
+                type=type,
+                ent_group=ent_group_name,
+                icon=icon
+            )
+            db.session.add(ContactForm1)
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_messegases_form():
     try:
         user = request.args.get('userId')
         print(user)
-        messegasesList = db.session.query(ContactForm.created_for_id,ContactForm.created_at,ContactForm.id,
-                                          ContactForm.attachments,ContactForm.type,ContactForm.icon,
-                                          ContactForm.allreadyread,ContactForm.subject,ContactForm.content
-                                          ,ContactForm.ent_group,ContactForm.created_by_id)\
-            .filter(or_(ContactForm.created_for_id == user,ContactForm.created_by_id == user)).all()
+        messegasesList = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
+                                          ContactForm.attachments, ContactForm.type, ContactForm.icon,
+                                          ContactForm.allreadyread, ContactForm.subject, ContactForm.content
+                                          , ContactForm.ent_group, ContactForm.created_by_id) \
+            .filter(or_(ContactForm.created_for_id == user, ContactForm.created_by_id == user)).all()
         my_dict = []
-        groped_mess=[]
-        group_report_dict=dict()
+        groped_mess = []
+        group_report_dict = dict()
         print(messegasesList)
         for mess in messegasesList:
             if mess.ent_group != "":
@@ -168,7 +196,7 @@ def getAll_messegases_form():
             if group_report_dict[mess.ent_group + str(mess.id)] != None:
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": str(mess.created_at).replace(" ","T"),
+                     "from": str(mess.created_by_id), "date": str(mess.created_at).replace(" ", "T"),
                      "to": group_report_dict[mess.ent_group + str(mess.id)],
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "ent_group": mess.ent_group,
@@ -216,34 +244,39 @@ def deleteEnt():
 def filter_to():
     try:
         users, apprentice, ent_group_dict = filter_by_request(request)
-        ent_group_concat=""
-        if apprentice!=[] or users!=[]:
-            ent_group_concat=", ".join(ent_group_dict.values())
+        ent_group_concat = ""
+        if apprentice != [] or users != []:
+            ent_group_concat = ", ".join(ent_group_dict.values())
         result = set(users + apprentice)
 
         return jsonify({"filtered": [str(row) for row in result],
                         "ent_group": ent_group_concat
                         }
-            ), HTTPStatus.OK
+                       ), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
 @messegaes_form_blueprint.route("/filter_meesages", methods=['GET'])
 def filter_meesages():
     try:
-        users,apprentice,ent_group_dict=filter_by_request(request)
-        mess_user=db.session.query(ContactForm.id).filter(or_(ContactForm.created_by_id.in_(users),ContactForm.created_for_id.in_(users))).all()
-        #reports_apprentice=db.session.query(ContactForm.id).filter(ContactForm.created_for_id.in_(apprentice)).all()
-        #ent_group_concat=", ".join(ent_group_dict.values())
-        #mess_ent_group=db.session.query(ContactForm.id).filter(ContactForm.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
-        users_mess=[str(i[0]) for i in [tuple(row) for row in mess_user]]
-        #apprentice_mess=[str(i[0]) for i in [tuple(row) for row in reports_apprentice]]
-        #ent_group_mess=[str(i[0]) for i in [tuple(row) for row in mess_ent_group]]
-        result=users_mess#set(ent_group_mess+users_mess)
+        users, apprentice, ent_group_dict = filter_by_request(request)
+        mess_user = db.session.query(ContactForm.id).filter(
+            or_(ContactForm.created_by_id.in_(users), ContactForm.created_for_id.in_(users))).all()
+        # reports_apprentice=db.session.query(ContactForm.id).filter(ContactForm.created_for_id.in_(apprentice)).all()
+        # ent_group_concat=", ".join(ent_group_dict.values())
+        # mess_ent_group=db.session.query(ContactForm.id).filter(ContactForm.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
+        users_mess = [str(i[0]) for i in [tuple(row) for row in mess_user]]
+        # apprentice_mess=[str(i[0]) for i in [tuple(row) for row in reports_apprentice]]
+        # ent_group_mess=[str(i[0]) for i in [tuple(row) for row in mess_ent_group]]
+        result = users_mess  # set(ent_group_mess+users_mess)
         print(result)
-        return jsonify( [str(row) for row in result]
-            ), HTTPStatus.OK
+        return jsonify([str(row) for row in result]
+                       ), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
 @messegaes_form_blueprint.route('/getById', methods=['GET'])
 def getById():
     try:
@@ -271,7 +304,7 @@ def getById():
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": str(mess.created_at).replace(" ","T"),
+                     "date": str(mess.created_at).replace(" ", "T"),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
 
@@ -288,9 +321,11 @@ def getById():
         return jsonify(my_dict[0]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
 @messegaes_form_blueprint.route("/add_message_excel", methods=['put'])
 def add_message_excel():
-    #/home/ubuntu/flaskapp/
+    # /home/ubuntu/flaskapp/
     file = request.files['file']
 
     wb = load_workbook(file)
@@ -306,21 +341,21 @@ def add_message_excel():
         icon = row[7].value.strip()
         type = row[8].value.strip()
 
-        if attachments==["None"]:
-            attachments=[]
+        if attachments == ["None"]:
+            attachments = []
         print(row)
         rep = ContactForm(
             icon=icon,
             id=int(str(uuid.uuid4().int)[:5]),
             type=type,
-            created_by_id = created_by_id or "",
-            created_at = created_at,
-            ent_group = ent_group or "",
-            content = content or "",
-            subject = subject or "",
-            attachments = attachments,
-            allreadyread=False ,
-            created_for_id = created_for_id or ""
+            created_by_id=created_by_id or "",
+            created_at=created_at,
+            ent_group=ent_group or "",
+            content=content or "",
+            subject=subject or "",
+            attachments=attachments,
+            allreadyread=False,
+            created_for_id=created_for_id or ""
         )
         db.session.add(rep)
     try:
@@ -330,11 +365,12 @@ def add_message_excel():
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
+
 @messegaes_form_blueprint.route("/get_recipients", methods=['GET'])
 def get_recipients():
     try:
-        users=db.session.query(user1.id,user1.name,user1.last_name).all()
-        return jsonify( [{"id":str(row.id),"name":row.name,"last_name":row.last_name} for row in users],
-            ), HTTPStatus.OK
+        users = db.session.query(user1.id, user1.name, user1.last_name).all()
+        return jsonify([{"id": str(row.id), "name": row.name, "last_name": row.last_name} for row in users],
+                       ), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

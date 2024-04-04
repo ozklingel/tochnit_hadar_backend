@@ -1,5 +1,7 @@
 import uuid
 import time
+from typing import List
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 import pyotp
@@ -11,6 +13,7 @@ from app import red, db
 from src.models.city_model import City
 from src.models.user_model import user1
 from src.routes.Utils.Sms import send_sms_019
+from src.routes.messegaes_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
 otp = pyotp.TOTP(secret_key, interval=60)
@@ -35,10 +38,10 @@ def verifyOTP_form():
         print("current TOTP is: ", otp.now())
         print("created_by_phone",created_by_phone)
         if (otp.verify(user_otp))==False:
-            return jsonify({"result": "wrong otp"}), HTTPStatus.OK
+            return jsonify({"result": "wrong otp","firsOnboarding": True}), HTTPStatus.OK
         userEnt = user1.query.get(created_by_phone)
         if userEnt is None:
-            return jsonify({"result": "not in system"}), HTTPStatus.OK
+            return jsonify({"result": "not in system","firsOnboarding": True}), HTTPStatus.OK
         print(userEnt.name)
         print(userEnt.last_name)
         print(userEnt.email)
@@ -56,7 +59,7 @@ def verifyOTP_form():
         #red.hset(int(str(created_by_phone)), "accessToken", accessToken)
         return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': str(e),"firsOnboarding": True}), HTTPStatus.BAD_REQUEST
 
 
 @onboarding_form_blueprint.route('/get_CitiesDB', methods=['GET'])
@@ -84,8 +87,20 @@ def upload_CitiesDB():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
-@onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['GET'])
+@onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['get'])
 def getOTP_whatsapp():
+    try:
+        created_by_phone = ["0"+request.args.get('created_by_phone')]
+        returned: List[int] = send_green_whatsapp(otp.now(), created_by_phone)
+        count_200 = returned.count(200)
+        if count_200 == len(returned):
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
+                HTTPStatus.INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return jsonify({'result': str(e), "input:": str(created_by_phone)}), HTTPStatus.BAD_REQUEST
+@onboarding_form_blueprint.route('/getOTP_whatsapp_twillo', methods=['GET'])
+def getOTP_whatsapp_twillo():
     try:
         created_by_phone = request.args.get('created_by_phone')
 

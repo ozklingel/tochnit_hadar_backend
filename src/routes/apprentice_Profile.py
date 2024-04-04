@@ -47,6 +47,9 @@ def update():
             if key =="militarycompoundid":
                 print(data[key])
                 setattr(updatedEnt, "base_address", data[key])
+            if key == "avatar":
+                print(data[key])
+                setattr(updatedEnt, "photo_path", data[key])
             else:
                 setattr(updatedEnt, key, data[key])
         db.session.commit()

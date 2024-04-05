@@ -21,11 +21,11 @@ personalMeet_report="פגישה פיזית"
 groupMeet_report="מפגש קבוצתי"
 basis_report="ביקור בבסיס"
 HorimCall_report="שיחת הורים"
-professional_report="כנס מלווים מקצועי חודשי"#2 חודשים
+professional_report="כנס מלווים מקצועי"#2 חודשים
 cenes_report="כנס מלווים שנתי"
 matzbar_report ="ישיבת מצב”ר"#3 חודשים
-hazanatMachzor_report="הזנת מחזור"
-doForBogrim_report="עשיה לבוגרים"
+hazanatMachzor_report="הזנת מחזור חדש"
+doForBogrim_report="עשיה לטובת בוגרים"
 MelavimMeeting_report="ישיבה מוסדית"#1 חודשים
 MOsadEshcolMeeting_report="ישיבת מוסד אשכול"
 tochnitMeeting_report="ישיבת רכזי תוכנית"
@@ -44,8 +44,8 @@ apprenticeMeeting_gap="apprenticeMeeting_gap"
 apprenticeCall_gap="apprenticeCall_gap"
 matzbarMeeting_gap="matzbarMeeting_gap"
 melave_Score="melave_Score"
-
-
+forgotenApprentice_list= "דוח דו שבועי-חניכים נשכחים"
+melave_Score_list=  "דוח  חודשי- ציון מלווים"
 class SendMessages:
     class Whatsapp:
         joni_text: str = "text"

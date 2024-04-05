@@ -296,7 +296,7 @@ def getMelaveMadadim():
         current_month=datetime.today().month
         start_Of_year = datetime.today() - timedelta(days=30*current_month)
         numOfQuarter_passed=int(current_month/3)
-        newvisitProffesionalMeet_year = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title == "מפגש_מקצועי",
+        newvisitProffesionalMeet_year = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title == config.professional_report,
                                                                      Visit.visit_date > start_Of_year).all()
         if numOfQuarter_passed==0:
             sadna_score=100
@@ -389,7 +389,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
 
         old_Melave_ids_professional=[r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=90)
-        newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id==user1.id,user1.institution_id==institutionId,Visit.title == "מפגש_מקצועי",
+        newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id==user1.id,user1.institution_id==institutionId,Visit.title == config.professional_report,
                                                                      Visit.visit_date > too_old).all()
         for i in newvisit_professional:
             if i[0] in  old_Melave_ids_professional:
@@ -437,12 +437,12 @@ def mosadCoordinator(mosadCoordinator="empty"):
 
         too_old = datetime.today() - timedelta(days=365)
         isVisitenterMahzor=False
-        visitenterMahzor = db.session.query(Visit.visit_date).filter(Visit.user_id==mosadCoordinator,Visit.title == "הזנת_מחזור",Visit.visit_date>too_old).all()
+        visitenterMahzor = db.session.query(Visit.visit_date).filter(Visit.user_id==mosadCoordinator,Visit.title == config.hazanatMachzor_report,Visit.visit_date>too_old).all()
         if visitenterMahzor:
             isVisitenterMahzor=True
 
         too_old = datetime.today() - timedelta(days=365)
-        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title == "עשייה_לבוגרים",Visit.visit_date>too_old).all()
+        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title == config.doForBogrim_report,Visit.visit_date>too_old).all()
 
         old_Melave_ids_MelavimMeeting = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=120)

@@ -135,45 +135,46 @@ def add_apprentice_excel():
     wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        first_name = row[2].value.strip()
-        last_name = str(row[0].value).split(" ")[1]
-        phone = row[1].value
-        city = row[22].value.strip()
+        first_name = row[0].value.strip()
+        last_name = str(row[1].value)
+        phone = row[2].value
+        city = row[3].value.strip()
         address = row[4].value.strip()
-        serve_type = row[5].value.strip()
-        institution_name = row[6].value.strip()
-        contact1_first_name = row[7].value.strip()
-        contact1_phone = row[8].value.strip()
-        contact2_first_name = row[9].value.strip()
-        contact2_phone = row[10].value.strip()
-        hadar_plan_session = row[11].value.strip()
-        teacher_grade_a = row[12].value.strip() if row[12].value else ""
-        teacher_grade_b = row[13].value.strip()
-        contact1_email = row[15].value.strip()
-        eshcol = row[14].value.strip()
-        birthday_ivry = row[16].value
-        marriage_status = row[17].value.strip()
-        army_role = row[18].value.strip()#מפקד?
-        unit_name = row[19].value.strip()#מפקד?
-        teudatZehut = row[20].value.strip()#מפקד?
-        birthday_loazi = row[21].value.strip()#מפקד?
-        accompany_id = row[3].value#מפקד?
-        base_name=row[23].value.strip()
-        contact3_first_name=row[24].value.strip()
-        contact3_last_name=row[25].value.strip()
-        contact3_email=row[26].value.strip()
-        contact3_relation=row[27].value.strip()
-        contact3_phone=row[28].value
-        mail =row[29].value.strip()
-        release_date =row[30].value.strip()
-        recruitment_date =row[31].value.strip()
-        marriage_date =row[32].value.strip()
-        spirit_status =row[33].value
-        institution_mahzor =row[34].value.strip()
+        teudatZehut = row[5].value#מפקד?
+        birthday_loazi = row[7].value.strip()#מפקד?
+        marriage_status = row[8].value.strip()
+        serve_type = row[9].value.strip()
+        hadar_plan_session = row[10].value
+        contact1_first_name = row[11].value.strip()
+        contact1_phone = row[12].value.strip()
+        contact1_email = row[13].value.strip()
+        contact2_first_name = row[14].value.strip()
+        contact2_phone = row[15].value.strip()
+        contact2_email = row[16].value.strip()
+        contact3_first_name = row[17].value.strip()
+        contact3_phone = row[18].value
+        contact3_email = row[19].value.strip()
+        marriage_date =row[21].value
+        teacher_grade_a = row[22].value.strip()
+        teacher_grade_b = row[24].value.strip()
+        paying=row[26].value.strip()
+        matzbar=row[27].value.strip()
+        high_school_name=row[28].value.strip()
+        high_school_teacher_phone=row[29].value
+        workstatus=row[30].value.strip()
+        workplace=row[31].value.strip()
+        educationfaculty=row[32].value.strip()
+        workoccupation=row[33].value.strip()
+        worktype=row[33].value.strip()
+        unit_name = row[34].value.strip()#מפקד?
+        army_role = row[35].value.strip()#מפקד?
+        eshcol = row[36].value.strip()
+        institution_name = row[37].value.strip()
+        accompany_id = row[38].value#מפקד?
+        base_name=row[39].value.strip()
         CityId = db.session.query(City.id).filter(City.name==city).first()[0]
         militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()[0]
 
-        #print(militaryCompoundId)
 
         try:
             institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
@@ -194,6 +195,7 @@ def add_apprentice_excel():
                 teacher_grade_a=teacher_grade_a,
                 hadar_plan_session=hadar_plan_session,
                 contact2_phone=contact2_phone,
+
                 contact2_first_name=contact2_first_name,
                 contact1_phone=contact1_phone,
                 contact1_first_name=contact1_first_name,
@@ -202,17 +204,23 @@ def add_apprentice_excel():
                 unit_name=unit_name,
                 eshcol=eshcol,
                 accompany_id=accompany_id,
-                contact3_relation=contact3_relation,
             contact3_email=contact3_email,
-            contact3_last_name=contact3_last_name,
             contact3_first_name=contact3_first_name,
             contact3_phone=contact3_phone,
-                email=mail,
-            release_date=release_date,
-            recruitment_date=recruitment_date,
+            #release_date=release_date,
+            #recruitment_date=recruitment_date,
             marriage_date=marriage_date,
-            spirit_status=spirit_status,
-            institution_mahzor=institution_mahzor
+            spirit_status="",
+                contact2_email=contact2_email,
+            worktype=worktype,
+            workoccupation=workoccupation,
+            educationfaculty=educationfaculty,
+            workplace=workplace,
+            workstatus=workstatus,
+            high_school_teacher_phone=high_school_teacher_phone,
+            high_school_name=high_school_name,
+            matzbar=matzbar,
+            paying=paying,
 
             )
             db.session.add(Apprentice1)

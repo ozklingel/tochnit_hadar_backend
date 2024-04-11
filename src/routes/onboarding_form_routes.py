@@ -22,6 +22,9 @@ onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/
 def getOTP_form():
     try:
         created_by_phone = request.args.get('created_by_phone')
+        userEnt = user1.query.get(created_by_phone)
+        if userEnt is None:
+            return jsonify({"result": "not in system"}), 401
         # Create a secret key (keep it secret!)̥
         secret_key = pyotp.random_base32()
         # Generate an OTP using TOTP after every 30 seconds
@@ -38,10 +41,10 @@ def verifyOTP_form():
         print("current TOTP is: ", otp.now())
         print("created_by_phone",created_by_phone)
         if (otp.verify(user_otp))==False:
-            return jsonify({"result": "wrong otp","firsOnboarding": True}), HTTPStatus.OK
+            return jsonify({"result": "wrong otp","firsOnboarding": True}), 401
         userEnt = user1.query.get(created_by_phone)
         if userEnt is None:
-            return jsonify({"result": "not in system","firsOnboarding": True}), HTTPStatus.OK
+            return jsonify({"result": "not in system","firsOnboarding": True}), 401
         print(userEnt.name)
         print(userEnt.last_name)
         print(userEnt.email)
@@ -90,8 +93,14 @@ def upload_CitiesDB():
 @onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['get'])
 def getOTP_whatsapp():
     try:
-        created_by_phone = ["0"+request.args.get('created_by_phone')]
-        returned: List[int] = send_green_whatsapp(otp.now(), created_by_phone)
+        created_by_phone = request.args.get('created_by_phone')
+        created_by_phone_asList=["0"+str(created_by_phone)]
+        userEnt = user1.query.get(created_by_phone)
+        if userEnt is None:
+            return jsonify({"result": "not in system"}), 401
+        print(created_by_phone)
+        print("your verify service verification code from tochnit hadar is:"+otp.now())
+        returned: List[int] = send_green_whatsapp("your verify service verification code from tochnit hadar is:"+otp.now(), created_by_phone_asList)
         count_200 = returned.count(200)
         if count_200 == len(returned):
             return jsonify({'result': 'success'}), HTTPStatus.OK

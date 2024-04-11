@@ -96,7 +96,7 @@ def add_notificaion_to_melave(user):
 def add_notificaion_to_mosad(user):
     # doForBogrim
     visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,
-                                                Visit.title == config.doForBogrim_report).order_by(
+                                                Visit.title.in_(config.report_as_DoForBogrim)).order_by(
         Visit.visit_date.desc()).first()
     if visitEvent is None or (date.today() - visitEvent.visit_date).days > 23:
         res = db.session.query(notifications).filter(notifications.userid == user.id,

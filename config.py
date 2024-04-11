@@ -21,16 +21,20 @@ personalMeet_report="פגישה פיזית"
 groupMeet_report="מפגש קבוצתי"
 basis_report="ביקור בבסיס"
 HorimCall_report="שיחת הורים"
-professional_report="כנס מלווים מקצועי"#2 חודשים
+professional_report="כנס מלווים מקצועי חודשי"#2 חודשים
 cenes_report="כנס מלווים שנתי"
 matzbar_report ="ישיבת מצב”ר"#3 חודשים
-hazanatMachzor_report="הזנת מחזור חדש"
-doForBogrim_report="עשיה לטובת בוגרים"
+hazanatMachzor_report="הזנת מחזור"
+doForBogrim_report="עשיה  בוגרים"
 MelavimMeeting_report="ישיבה מוסדית"#1 חודשים
 MOsadEshcolMeeting_report="ישיבת מוסד אשכול"
 tochnitMeeting_report="ישיבת רכזי תוכנית"
+mahzorMeeting_report="מפגש מחזור"
+mahzorShabat_report="שבת מחזור"
+
 reports_as_call=[call_report,zoom_report,fiveMess_report]
 report_as_meet=[personalMeet_report,groupMeet_report,basis_report]
+report_as_DoForBogrim=[mahzorShabat_report,mahzorMeeting_report,doForBogrim_report]
 
 #דוחות
 mosad_racaz_meeting="mosad_racaz_meeting"

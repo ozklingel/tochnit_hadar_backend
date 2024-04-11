@@ -442,7 +442,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
             isVisitenterMahzor=True
 
         too_old = datetime.today() - timedelta(days=365)
-        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title == config.doForBogrim_report,Visit.visit_date>too_old).all()
+        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.titlein_(config.report_as_DoForBogrim),Visit.visit_date>too_old).all()
 
         old_Melave_ids_MelavimMeeting = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=120)
@@ -693,7 +693,7 @@ def mosad_Coordinators_score(mosadCoord_id):
         current_month=datetime.today().month
         too_old = datetime.today() - timedelta(days=30*current_month)
         visit_did_for_apprentice = db.session.query(Visit.user_id,
-                                                         ).filter(Visit.title == config.doForBogrim_report, Visit.user_id == mosadCoord_id,
+                                                         ).filter(Visit.title.in_(config.report_as_DoForBogrim), Visit.user_id == mosadCoord_id,
                                   Visit.visit_date > too_old).all()
         if len(visit_did_for_apprentice)>=current_month/3 or gap_since_created<120 :
             Mosad_coord_score += bogrim_wight
@@ -772,6 +772,15 @@ def eshcol_Coordinators_score(eshcolCoord_id):
             Apprentice_ids_forgoten.remove(i[0])
     eshcolCoord_score=tohnit_yeshiva_score+total_eshcol_mosad_score
     return eshcolCoord_score,total_eshcol_mosad_gap
+@madadim_form_blueprint.route("/mosadot_scores", methods=['GET'])
+def mosadot_scores():
+    institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).all()
+    mosadlist_score = []
+    for institution_ in institotionList:
+        mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
+        mosadlist_score.append({"institution":institution_[0],"mosad__score":mosad__score1})
+    return jsonify(mosadlist_score), HTTPStatus.OK
+
 
 def mosad_score(institution_id):
     melaveScore_wight = 72
@@ -807,7 +816,7 @@ def mosad_score(institution_id):
         #עשייה_לבוגרים=5
         too_old = datetime.today() - timedelta(days=365)
         visit_did_for_apprentice = db.session.query(Visit.user_id,
-                                                         ).filter(Visit.title == config.doForBogrim_report, Visit.user_id == mosadCoord_id[0],
+                                                         ).filter(Visit.title.in_(config.report_as_DoForBogrim), Visit.user_id == mosadCoord_id[0],
                                   Visit.visit_date > too_old).all()
         mosad_score+=bogrim_wight*len(visit_did_for_apprentice)
         Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,total_avg_call,total_avg_meet,groupNeeting_gap_avg=mosad_Coordinators_score(mosadCoord_id[0])

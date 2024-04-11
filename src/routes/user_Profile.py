@@ -97,7 +97,6 @@ def getmyApprenticesNames(created_by_id):
 def add_user_excel():
 
     file = request.files['file']
-    print(file)
     path = 'data/user_enter.xlsx'
     wb = load_workbook(file)
     sheet = wb.active
@@ -118,11 +117,8 @@ def add_user_excel():
         email = row[3].value.strip()
         eshcol = row[5].value.strip()
         try:
-            print("institution_name",institution_name)
-
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
-            print("institution_id",institution_id)
             user = user1(
                 id=int(str(phone).replace("-","")),
                 name=first_name,
@@ -132,10 +128,12 @@ def add_user_excel():
                 eshcol=eshcol,
                 institution_id=institution_id.id,
             )
+            print(user)
             db.session.add(user)
+            db.session.commit()
+
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-    db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
 

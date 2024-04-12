@@ -70,3 +70,4 @@ class Apprentice(db.Model):
     photo_path=db.Column("photo_path", db.String(50), nullable=False,default="https://www.gravatar.com/avatar")
     militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")
     association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
+    birthday_ivry=db.Column("birthday_ivry", db.String(50), nullable=False,default="ה' בטבת")

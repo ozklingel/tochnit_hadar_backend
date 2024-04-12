@@ -3,7 +3,9 @@ from datetime import datetime as dt,date,timedelta
 
 from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
-
+from hebrew import Hebrew
+from hebrew import GematriaTypes
+from pyluach import hebrewcal, dates
 from sqlalchemy import func, or_
 
 import config
@@ -19,6 +21,17 @@ from ..models.notification_model import notifications
 
 notification_form_blueprint = Blueprint('notification_form', __name__, url_prefix='/notification_form')
 init_weekDay=date.today().weekday()
+
+
+def convert_hebrewDate_to_Lozai(hebrew_date):
+    today = dates.HebrewDate.today()
+    birthday_ivry1 = hebrew_date.split(" ")
+    print(birthday_ivry1[0])
+    print(Hebrew(birthday_ivry1[0]).gematria())
+    thisYearBirthday = dates.HebrewDate(today.year, int(config.Ivry_month[birthday_ivry1[1]]),
+                                        Hebrew(birthday_ivry1[0]).gematria()).to_greg()
+    thisYearBirthday = date(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day)
+    return thisYearBirthday
 
 def add_notificaion_to_melave(user):
     # update notification created by system=basis meetings
@@ -48,7 +61,7 @@ def add_notificaion_to_melave(user):
                                           allreadyread=False,numoflinesdisplay=2,id=int(str(uuid.uuid4().int)[:5]))
             db.session.add(notification1)
 
-    ApprenticeList = db.session.query(Apprentice.birthday, Apprentice.id, Apprentice.accompany_id).filter(
+    ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id).filter(
         Apprentice.accompany_id == user.id).all()
     for Apprentice1 in ApprenticeList:
         #call
@@ -80,7 +93,7 @@ def add_notificaion_to_melave(user):
                                               id=int(str(uuid.uuid4().int)[:5]))
                 db.session.add(notification3)
         #birthday
-        thisYearBirthday = date(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)
+        thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
         gap = (date.today() - thisYearBirthday).days
         if gap <= 7 and gap >= 7 and date.today().weekday() == init_weekDay:
             res = db.session.query(notifications).filter(notifications.userid == user.id,notifications.subject==str(Apprentice1.id) ,

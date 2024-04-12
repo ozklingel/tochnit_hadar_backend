@@ -1,5 +1,6 @@
 import uuid
 import time
+from datetime import timedelta
 from typing import List
 
 from flask import Blueprint, request, jsonify
@@ -7,6 +8,7 @@ from http import HTTPStatus
 import pyotp
 
 from openpyxl.reader.excel import load_workbook
+from timer_dict import TimerDict
 from twilio.rest import Client
 
 from app import red, db
@@ -17,6 +19,7 @@ from src.routes.messegaes_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
 otp = pyotp.TOTP(secret_key, interval=60)
+user_otp_dict= TimerDict(default_duration=timedelta(minutes=1))
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
 @onboarding_form_blueprint.route('/getOTP', methods=['GET'])
 def getOTP_form():
@@ -25,10 +28,12 @@ def getOTP_form():
         userEnt = user1.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system"}), 401
-        # Create a secret key (keep it secret!)̥
-        secret_key = pyotp.random_base32()
+        if str(created_by_phone) in user_otp_dict:
+            return jsonify({"result": "already got otp"}), 401
         # Generate an OTP using TOTP after every 30 seconds
         send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from tochnit hadar is:"+otp.now())
+        user_otp_dict[str(created_by_phone)]=otp.now()
+        print(user_otp_dict)
         return jsonify({"result":"success"}),HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

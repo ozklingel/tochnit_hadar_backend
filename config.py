@@ -70,3 +70,16 @@ class SendMessages:
             'eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJmaXJzdF9rZXkiOiI2MjI5MiIsInNlY29uZF9rZXkiOiIzNTM2NDc4IiwiaXNzdWVkQ'
             'XQiOiIxNS0wMi0yMDI0IDEyOjQwOjE3IiwidHRsIjo2MzA3MjAwMH0.1DoH8hc3aS3xI-FdT7hc_E0fBW05rtlcuPdsYfGGoUw')
         token_expiration_date: '14/02/2026 12:40:17'
+Ivry_month={"ניסן":"1",
+   "אייר": "2",
+   "סיון": "3",
+  "תמוז":  "4",
+  "אב": "5",
+   "אלול": "6",
+   "תשרי": "7",
+   "חשון": "8",
+   "כסליו": "9",
+    "טבת": "10",
+    "שבט": "11",
+   "אדר א ": "12",
+    "אדר ב":"13"}

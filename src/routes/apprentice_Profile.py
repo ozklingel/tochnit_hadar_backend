@@ -3,9 +3,10 @@ import uuid
 import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
-
+from datetime import datetime
 from openpyxl.reader.excel import load_workbook
 from datetime import datetime,date
+from pyluach import dates, hebrewcal
 
 import config
 from app import db, red
@@ -18,6 +19,7 @@ from src.models.institution_model import Institution
 from src.models.notification_model import notifications
 from src.models.user_model import user1
 from src.models.visit_model import Visit
+from src.routes.setEntityDetails_form_routes import validate_email, validate_date
 
 apprentice_Profile_form_blueprint = Blueprint('apprentice_Profile_form', __name__, url_prefix='/apprentice_Profile_form')
 @apprentice_Profile_form_blueprint.route('/delete', methods=['POST'])
@@ -50,6 +52,16 @@ def update():
             if key == "avatar":
                 print(data[key])
                 setattr(updatedEnt, "photo_path", data[key])
+            if key == "email":
+                if validate_email(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "email -wrong format"}), HTTPStatus.OK
+            if key == "birthday":
+                if validate_date(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "birthday -wrong format"}), HTTPStatus.OK
             else:
                 setattr(updatedEnt, key, data[key])
         db.session.commit()
@@ -127,11 +139,11 @@ def add_apprentice():
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
+
 @apprentice_Profile_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
     #/home/ubuntu/flaskapp/
     file = request.files['file']
-    print(file)
     wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
@@ -141,7 +153,9 @@ def add_apprentice_excel():
         city = row[3].value.strip()
         address = row[4].value.strip()
         teudatZehut = row[5].value#מפקד?
+        birthday_Ivry = row[6].value.strip()#מפקד?
         birthday_loazi = row[7].value.strip()#מפקד?
+
         marriage_status = row[8].value.strip()
         serve_type = row[9].value.strip()
         hadar_plan_session = row[10].value
@@ -200,6 +214,7 @@ def add_apprentice_excel():
                 contact1_phone=contact1_phone,
                 contact1_first_name=contact1_first_name,
                 teudatZehut=teudatZehut,
+                birthday_ivry=birthday_Ivry,
                 birthday=birthday_loazi,
                 unit_name=unit_name,
                 eshcol=eshcol,
@@ -210,7 +225,7 @@ def add_apprentice_excel():
             #release_date=release_date,
             #recruitment_date=recruitment_date,
             marriage_date=marriage_date,
-            spirit_status="",
+            spirit_status=matzbar,
                 contact2_email=contact2_email,
             worktype=worktype,
             workoccupation=workoccupation,
@@ -219,7 +234,6 @@ def add_apprentice_excel():
             workstatus=workstatus,
             high_school_teacher_phone=high_school_teacher_phone,
             high_school_name=high_school_name,
-            matzbar=matzbar,
             paying=paying,
 
             )

@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import re
 
 from flask import Blueprint, request, jsonify
 import boto3
@@ -36,6 +37,16 @@ def setEntityDetailsByType():
                            Cluster.name == str(atrrToBeSet[key])).first()
                        setattr(updatedEnt, key, clusterId)
                        continue
+                   if key == "email":
+                       if validate_email(atrrToBeSet[key]):
+                            setattr(updatedEnt, key, atrrToBeSet[key])
+                       else:
+                           return jsonify({'result': "email -wrong format"}), HTTPStatus.OK
+                   if key == "birthday":
+                       if validate_date(atrrToBeSet[key]):
+                            setattr(updatedEnt, key, atrrToBeSet[key])
+                       else:
+                           return jsonify({'result': "birthday -wrong format"}), HTTPStatus.OK
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
 
@@ -109,3 +120,13 @@ s3 = boto3.client(
    aws_access_key_id=app.config['S3_KEY'],
    aws_secret_access_key=app.config['S3_SECRET']
 )
+
+def validate_email(email):
+    # Regular expression for email validation
+    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(email_pattern, email) is not None
+
+def validate_date(date):
+    # Regular expression for date validation in the format YYYY-MM-DD
+    date_pattern = r'^\d{4}-\d{2}-\d{2}$'
+    return re.match(date_pattern, date) is not None

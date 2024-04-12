@@ -3,12 +3,14 @@ from datetime import datetime as dt,date,timedelta
 
 from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
+
 from hebrew import Hebrew
-from hebrew import GematriaTypes
 from pyluach import hebrewcal, dates
 from sqlalchemy import func, or_
 
 import config
+from .Utils.notifiacationDetails import groupMeet_details, personalMeet_details, basisVisit_details, event_details, \
+    personalCall_details
 from .madadim import  mosad_Coordinators_score, melave_score, mosad_score
 from .user_Profile import toISO
 from ..models.apprentice_model import Apprentice
@@ -34,6 +36,8 @@ def convert_hebrewDate_to_Lozai(hebrew_date):
     return thisYearBirthday
 
 def add_notificaion_to_melave(user):
+    ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,Apprentice.name).filter(
+        Apprentice.accompany_id == user.id).all()
     # update notification created by system=basis meetings
     visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,
                                                 Visit.title == config.basis_report).order_by(
@@ -44,7 +48,7 @@ def add_notificaion_to_melave(user):
                                                      notifications.event == config.basis_report).first()
         if res is None and date.today().weekday() == init_weekDay:
             date1='2023-01-01' if visitEvent is None else visitEvent.visit_date
-            notification1 = notifications(userid=user.id,subject = "",event=config.basis_report,date=date1,
+            notification1 = notifications(userid=user.id,subject = "",event=config.basis_report,date=date1,details=basisVisit_details.format(user.name),
                                           allreadyread=False,numoflinesdisplay=2,id=int(str(uuid.uuid4().int)[:5]))
             db.session.add(notification1)
     # update notification created by system=group meetings
@@ -57,12 +61,11 @@ def add_notificaion_to_melave(user):
                                                      notifications.event == config.groupMeet_report).first()
         if res is None and date.today().weekday() == init_weekDay:
             date1='2023-01-01' if visitEvent is None else visitEvent.visit_date
-            notification1 = notifications(userid=user.id,subject = "",event=config.groupMeet_report,date=date1,
+            notification1 = notifications(userid=user.id,subject = "",event=config.groupMeet_report,date=date1,details=groupMeet_details.format(user.name),
                                           allreadyread=False,numoflinesdisplay=2,id=int(str(uuid.uuid4().int)[:5]))
             db.session.add(notification1)
 
-    ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id).filter(
-        Apprentice.accompany_id == user.id).all()
+
     for Apprentice1 in ApprenticeList:
         #call
         visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,Visit.ent_reported==Apprentice1.id,
@@ -75,7 +78,7 @@ def add_notificaion_to_melave(user):
             if res is None and date.today().weekday() == init_weekDay:
                 date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
                 notification2 = notifications(userid=user.id, subject=str(Apprentice1.id), event=config.call_report,
-                                              date=date1,
+                                              date=date1,details=personalCall_details.format(user.name,Apprentice1.name),
                                               allreadyread=False, numoflinesdisplay=2,
                                               id=int(str(uuid.uuid4().int)[:5]))
                 db.session.add(notification2)
@@ -88,7 +91,7 @@ def add_notificaion_to_melave(user):
             if res is None and date.today().weekday() == init_weekDay:
                 date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
                 notification3 = notifications(userid=user.id, subject=str(Apprentice1.id), event=config.personalMeet_report,
-                                              date=date1,
+                                              date=date1,details=personalMeet_details.format(user.name,Apprentice1.name),
                                               allreadyread=False, numoflinesdisplay=2,
                                               id=int(str(uuid.uuid4().int)[:5]))
                 db.session.add(notification3)
@@ -324,7 +327,7 @@ def getAll_notification_form():
         print("weekday ",date.today().weekday())
         user = request.args.get('userId')
         print("user:",user)
-        user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id).filter(user1.id == user).first()
+        user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
         print("user role:",user_ent[0])
         if user_ent[0]=="0":#melave
             add_notificaion_to_melave(user_ent)
@@ -336,7 +339,6 @@ def getAll_notification_form():
             add_notificaion_to_ahraiTohnit(user_ent)
         #send  notifications.
         userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(user1.id==user).first()
-
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
         for noti in notiList:
@@ -346,8 +348,6 @@ def getAll_notification_form():
             else:
                 apprenticeids=str(noti.subject)
             if noti.numoflinesdisplay==2:
-
-                noti.details = noti.event if noti.details is None else noti.details
                 my_dict.append(
                     {"id": str(noti.id),"subject":apprenticeids,
                      "date": toISO(noti.date),
@@ -358,7 +358,6 @@ def getAll_notification_form():
             if userEnt.notifyStartWeek==True and date(date.today().year, noti.date.month, noti.date.day).weekday()==6:
                 gap = (date.today() - date(date.today().year, noti.date.month, noti.date.day)).days
                 if gap<=7:
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                     my_dict.append(
                         {"id": str(noti.id), "subject":str(noti.subject),
                          "date": toISO(noti.date),
@@ -368,7 +367,6 @@ def getAll_notification_form():
             if userEnt.notifyDayBefore ==True :
                 is_shabat=date(date.today().year, noti.date.month, noti.date.day).weekday()==5
                 if (is_shabat  and daysFromNow==-2) or  daysFromNow==-1 :
-                    noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                     my_dict.append(
                         {"id": str(noti.id),"subject":str(noti.subject),
                          "date": toISO(noti.date),
@@ -466,14 +464,21 @@ def add_notification_form():
     try:
         json_object = request.json
         user = json_object["userId"]
-        apprenticeid = json_object["apprenticeid"] if json_object["apprenticeid"] else ""
+        subject = json_object["subject"] if json_object["subject"] else ""
         event = json_object["event"]
         date = json_object["date"]
-        details = json_object["details"]
+        user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
+        subject_ent=db.session.query(Apprentice.name).filter(Apprentice.id == subject).first()
+        if subject_ent is None:
+            subject_ent="מי שקבעת"
+        else:
+            subject_ent=subject_ent.name
+        details = event_details.format(user_ent.name,date,event,subject_ent)+json_object["details"]
+        print(details)
         frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
         notification1 = notifications(
                         userid=user,
-                        subject = str(apprenticeid),
+                        subject = str(subject),
                         event=event,
                         date=date,
                         allreadyread=False,

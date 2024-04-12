@@ -188,7 +188,7 @@ def getAll_messegases_form():
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": mess.created_at,
+                     "date": toISO(mess.created_at),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
 

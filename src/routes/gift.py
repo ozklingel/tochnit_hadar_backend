@@ -96,3 +96,16 @@ def deleteAll():
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+@gift_blueprint.route("/getGifts_cnt", methods=['get'])
+def getGifts_cnt():
+    try:
+
+        giftCodes_all = db.session.query(gift).all()
+        giftCodes_used = db.session.query(gift).filter(gift.was_used==True).all()
+        giftCodes_all_cnt=len(giftCodes_all) or 0
+        giftCodes_used_cnt=len(giftCodes_used) or 0
+
+        return jsonify(f"מומשו {giftCodes_used_cnt} מתוך {giftCodes_all_cnt} קודי מתנה"), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

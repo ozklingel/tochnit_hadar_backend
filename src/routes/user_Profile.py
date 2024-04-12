@@ -101,7 +101,8 @@ def add_user_excel():
     wb = load_workbook(file)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        name=str(row[0].value).split(" ")
+        if row[5].value is None:
+            continue
         if row[2].value.strip() == "מלווה" :
             role=0
         elif row[2].value.strip() == "רכז" :
@@ -110,12 +111,12 @@ def add_user_excel():
             role = 2
         elif row[2].value.strip() == "אחראי תוכנית":
             role = 3
-        first_name =name[0].strip()
-        last_name = name[1].strip()
-        institution_name = row[1].value.strip()
-        phone = str(row[4].value).replace("-","").strip()
-        email = row[3].value.strip()
-        eshcol = row[5].value.strip()
+        first_name =row[0].value.strip()
+        last_name = row[1].value.strip()
+        institution_name = row[3].value.strip()
+        phone = str(row[5].value).replace("-","").strip()
+        #email = row[3].value.strip()
+        eshcol = row[4].value.strip()
         try:
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
@@ -124,7 +125,7 @@ def add_user_excel():
                 name=first_name,
                 last_name=last_name,
                 role_id=str(role),
-                email=str(email),
+                #email=str(email),
                 eshcol=eshcol,
                 institution_id=institution_id.id,
             )

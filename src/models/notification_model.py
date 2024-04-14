@@ -15,4 +15,5 @@ class notifications(db.Model):
     numoflinesdisplay=db.Column(db.Integer, nullable=False,default=2)
     details=db.Column(db.String(100), nullable=False,default="")
     frequency=db.Column(db.String(100), nullable=False,default="")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 

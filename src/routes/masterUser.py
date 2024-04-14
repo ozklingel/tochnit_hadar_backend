@@ -193,7 +193,7 @@ def addUsers(wb):
 
 
 @master_user_form_blueprint.route("/initDB", methods=['put'])
-def deleteAll():
+def initDB():
     try:
 
         giftCode = db.session.query(gift).delete()

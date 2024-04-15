@@ -796,6 +796,7 @@ def mosad_score(institution_id):
                                                              user1.institution_id == institution_id).all()
         all_Mosad_apprentices = db.session.query(Apprentice.id).filter(
                                                              Apprentice.institution_id == institution_id).all()
+
         if len(all_Mosad_Melave) == 0:
             return 100,[]
         all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]

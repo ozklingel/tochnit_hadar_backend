@@ -28,7 +28,7 @@ def getAll():
         baseList = db.session.query(Base).all()
         print(baseList)
         if baseList:
-            return  [{"id": str(row.id), 'LAT': str(row.cordinatot).split(" ")[0],'LNG':str(row.cordinatot).split(" ")[1], "name": row.name,"address":"מישור אדומים"} for row in baseList]
+            return  [{"id": str(row.id), 'LAT': str(row.cordinatot).split(" ")[0],'LNG':str(row.cordinatot).split(" ")[1], "name": row.name,"address":row.cordinatot} for row in baseList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

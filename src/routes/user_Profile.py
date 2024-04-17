@@ -183,7 +183,7 @@ def toISO(d):
         return None
 
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
-def getmyApprentices_form():
+def myPersonas():
     try:
         created_by_id = request.args.get('userId')
         print(created_by_id)
@@ -276,7 +276,7 @@ def getmyApprentices_form():
                  "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
                  "serve_type": noti.serve_type,
                  "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
-                 "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
+                 "phone": str(noti.id), "email": noti.email, "teudatZehut": noti.teudatZehut,
                  "birthday": toISO(noti.birthday),  "marriage_date": toISO(noti.marriage_date),
                  "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
                  "unit_name": noti.unit_name,
@@ -292,9 +292,7 @@ def getmyApprentices_form():
 
         for noti in userList:
 
-            print(noti.city_id)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
-            print(city)
             my_dict.append(
                 {"Horim_status": "",
                  "personalMeet_status": "",
@@ -356,14 +354,14 @@ def getmyApprentices_form():
                  "institution_id": str(noti.institution_id), "thPeriod": "",
                  "serve_type": "",
                  "marriage_status":"", "militaryCompoundId": "",
-                 "phone": noti.phone,
+                 "phone": str(noti.id),
                  "email": noti.email,
                  "teudatZehut": noti.teudatZehut,
                  "birthday": "",
                  "marriage_date": "",
                  "highSchoolInstitution": "",
-                 "army_role": noti.army_role,
-                 "unit_name": noti.unit_name,
+                 "army_role": "",
+                 "unit_name": "",
                  "matsber": "",
                  "militaryDateOfDischarge": "",
                  "militaryDateOfEnlistment": ""

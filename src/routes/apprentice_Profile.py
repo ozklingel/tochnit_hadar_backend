@@ -147,14 +147,16 @@ def add_apprentice_excel():
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         first_name = row[0].value.strip()
-        last_name = str(row[1].value)
+        last_name = row[1].value.strip()
         phone = row[2].value
         city = row[3].value.strip()
         address = row[4].value.strip()
         teudatZehut = row[5].value#מפקד?
-        birthday_Ivry = row[6].value.strip()#מפקד?
-        birthday_loazi = row[7].value.strip()#מפקד?
 
+        birthday_Ivry_month = row[6].value.strip()#מפקד?
+        birthday_Ivry_day = row[7].value.strip()#מפקד?
+        birthday_Ivry=birthday_Ivry_day+birthday_Ivry_month
+        birthday_loazi = row[8].value.strip()#מפקד?
         marriage_status = row[8].value.strip()
         serve_type = row[9].value.strip()
         hadar_plan_session = row[10].value

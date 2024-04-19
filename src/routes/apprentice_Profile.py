@@ -152,52 +152,80 @@ def add_apprentice_excel():
         city = row[3].value.strip()
         address = row[4].value.strip()
         teudatZehut = row[5].value#מפקד?
-
         birthday_Ivry_month = row[6].value.strip()#מפקד?
         birthday_Ivry_day = row[7].value.strip()#מפקד?
-        birthday_Ivry=birthday_Ivry_day+birthday_Ivry_month
+        birthday_Ivry=birthday_Ivry_day+" "+birthday_Ivry_month
         birthday_loazi = row[8].value.strip()#מפקד?
-        marriage_status = row[8].value.strip()
-        serve_type = row[9].value.strip()
-        hadar_plan_session = row[10].value
-        contact1_first_name = row[11].value.strip()
-        contact1_phone = row[12].value.strip()
-        contact1_email = row[13].value.strip()
-        contact2_first_name = row[14].value.strip()
-        contact2_phone = row[15].value.strip()
-        contact2_email = row[16].value.strip()
-        contact3_first_name = row[17].value.strip()
-        contact3_phone = row[18].value
-        contact3_email = row[19].value.strip()
-        marriage_date =row[21].value
-        teacher_grade_a = row[22].value.strip()
-        teacher_grade_b = row[24].value.strip()
-        paying=row[26].value.strip()
-        matzbar=row[27].value.strip()
-        high_school_name=row[28].value.strip()
-        high_school_teacher_phone=row[29].value
-        workstatus=row[30].value.strip()
-        workplace=row[31].value.strip()
-        educationfaculty=row[32].value.strip()
-        workoccupation=row[33].value.strip()
-        worktype=row[33].value.strip()
-        unit_name = row[34].value.strip()#מפקד?
-        army_role = row[35].value.strip()#מפקד?
-        eshcol = row[36].value.strip()
-        institution_name = row[37].value.strip()
-        accompany_id = row[38].value#מפקד?
-        base_name=row[39].value.strip()
-        CityId = db.session.query(City.id).filter(City.name==city).first()[0]
-        militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()[0]
+        mail = row[9].value.strip() if row[9].value else ""#מפקד?
 
+        marriage_status = row[10].value.strip()
+        serve_type = row[11].value.strip()
+        hadar_plan_session = row[12].value
+        contact1_first_relation = row[13].value.strip()
+        contact1_first_name = row[14].value.strip()
+        contact1_phone = row[15].value
+        contact1_email = row[16].value.strip()
+        contact2_first_relation = row[17].value.strip()
+        contact2_first_name = row[18].value.strip()
+        contact2_phone = row[19].value
+        contact2_email = row[20].value.strip()
+        contact3_first_relation = row[21].value.strip()
+        contact3_first_name = row[22].value.strip()
+        contact3_phone = row[23].value
+        contact3_email = row[24].value.strip()
+        marriage_date_month =row[25].value
+        marriage_date_day =row[26].value
+        marriage_date=marriage_date_day+" "+marriage_date_month
+        marriage_date_loazi =row[27].value
+        institution_mahzor=row[28].value
+        teacher_grade_a = row[29].value.strip()
+        teacher_grade_a_phone = row[30].value
+        teacher_grade_b = row[31].value.strip()
+        teacher_grade_b_phone = row[32].value
+
+        paying=row[33].value.strip()
+        matzbar=row[34].value.strip()
+        high_school_name=row[35].value.strip()
+        high_school_teacher=row[36].value
+        high_school_teacher_phone=row[37].value
+        workstatus=row[38].value.strip()#isuk
+        workplace=row[39].value.strip()#city
+        educationfaculty=row[40].value.strip()#ariel
+        workoccupation=row[41].value.strip()#Anaf
+        worktype=row[42].value.strip()#
+        unit_name = row[43].value.strip() #חיל שריון
+        army_role=row[44].value.strip()#צנחנים
+        militaryPositionNew = row[46].value.strip()#מפקצ
+        militaryPositionOld=row[47].value.strip()#צנחנים
+        recruitment_date=row[48].value.strip()#צנחנים
+        release_date=row[49].value.strip()#צנחנים
+        base_name=row[50].value.strip()
+        institution_name = row[51].value.strip()
+        accompany_id = row[52].value#מפקד?
+
+        CityId = db.session.query(City.id).filter(City.name==city).first()
+        militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()
+        print(institution_name)
+        institution_id = db.session.query(Institution.id).filter(Institution.name == institution_name).first()
+        eshcol=db.session.query(Institution.eshcol_id).filter(Institution.id == institution_id.id).first()
 
         try:
             institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
             Apprentice1 = Apprentice(
-                city_id=CityId,
+                email=mail,
+                high_school_teacher=high_school_teacher,
+                #release_date=release_date,
+                #recruitment_date=recruitment_date,
+                militaryPositionOld=militaryPositionOld,
+                militaryPositionNew=militaryPositionNew,
+                institution_mahzor=institution_mahzor,
+                teacher_grade_a_phone=teacher_grade_a_phone,
+                teacher_grade_b_phone=teacher_grade_b_phone,
+                city_id=CityId.id,
                 id=phone,
-                base_address=militaryCompoundId,
-                institution_id=institution_id[0] if institution_id is not None else 0,
+                eshcol=eshcol.eshcol_id,
+                base_address=militaryCompoundId.id,
+                institution_id=institution_id.id if institution_id is not None else 0,
                 address=address,
                 serve_type=serve_type,
                 name=first_name,
@@ -210,24 +238,23 @@ def add_apprentice_excel():
                 teacher_grade_a=teacher_grade_a,
                 hadar_plan_session=hadar_plan_session,
                 contact2_phone=contact2_phone,
-
                 contact2_first_name=contact2_first_name,
                 contact1_phone=contact1_phone,
                 contact1_first_name=contact1_first_name,
                 teudatZehut=teudatZehut,
                 birthday_ivry=birthday_Ivry,
-                birthday=birthday_loazi,
+                #birthday=birthday_loazi,
                 unit_name=unit_name,
-                eshcol=eshcol,
                 accompany_id=accompany_id,
             contact3_email=contact3_email,
             contact3_first_name=contact3_first_name,
             contact3_phone=contact3_phone,
             #release_date=release_date,
             #recruitment_date=recruitment_date,
-            marriage_date=marriage_date,
+            marriage_date_ivry=marriage_date,
+            #marriage_date=marriage_date_loazi,
             spirit_status=matzbar,
-                contact2_email=contact2_email,
+            contact2_email=contact2_email,
             worktype=worktype,
             workoccupation=workoccupation,
             educationfaculty=educationfaculty,
@@ -236,6 +263,9 @@ def add_apprentice_excel():
             high_school_teacher_phone=high_school_teacher_phone,
             high_school_name=high_school_name,
             paying=paying,
+            contact1_relation=contact1_first_relation,
+            contact2_relation=contact2_first_relation,
+            contact3_relation=contact3_first_relation
 
             )
             db.session.add(Apprentice1)

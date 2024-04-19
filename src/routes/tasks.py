@@ -30,6 +30,8 @@ def getTasks():
     try:
         for i in range(0,len(res[0].json)):
             ent=res[0].json[i]
+            if "דוח" in    ent["event"] or "עידכון" in    ent["event"]:
+                continue
             todo_ids.append(ent["id"])
             if ent["numOfLinesDisplay"]==2:#noti not created by user
                 del ent["numOfLinesDisplay"]

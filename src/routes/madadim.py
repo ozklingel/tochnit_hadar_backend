@@ -143,6 +143,7 @@ def forgotenApprentice():
         for i in ids_no_visit:
             forgotenApprentice_total += 1
             counts[i[1]] = counts.get(i[1], 0) + 1
+            print(counts)
         return jsonify({
         'forgotenApprentice_total': forgotenApprentice_total,
 

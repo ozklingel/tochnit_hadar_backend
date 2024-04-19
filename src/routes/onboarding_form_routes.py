@@ -31,7 +31,7 @@ def getOTP_form():
         if str(created_by_phone) in user_otp_dict:
             return jsonify({"result": "already got otp"}), 401
         # Generate an OTP using TOTP after every 30 seconds
-        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from tochnit hadar is:"+otp.now())
+        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from *tochnit hadar* is : "+otp.now())
         user_otp_dict[str(created_by_phone)]=otp.now()
         print(user_otp_dict)
         return jsonify({"result":"success"}),HTTPStatus.OK
@@ -105,7 +105,7 @@ def getOTP_whatsapp():
             return jsonify({"result": "not in system"}), 401
         print(created_by_phone)
         print("your verify service verification code from tochnit hadar is:"+otp.now())
-        returned: List[int] = send_green_whatsapp("your verify service verification code from tochnit hadar is:"+otp.now(), created_by_phone_asList)
+        returned: List[int] = send_green_whatsapp("your verify service verification code from *tochnit hadar* is : "+otp.now(), created_by_phone_asList)
         count_200 = returned.count(200)
         if count_200 == len(returned):
             return jsonify({'result': 'success'}), HTTPStatus.OK

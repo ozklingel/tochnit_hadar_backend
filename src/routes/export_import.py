@@ -66,13 +66,14 @@ def upload_baseDB():
 def export_dict():
     try:
         data = request.json
-        to_csv = data['list']
+        print("exporting:",list(data.keys())[0])
+        to_csv = data[list(data.keys())[0]]
         keys = to_csv[0].keys()
-        with open('/home/ubuntu/flaskapp/data/to_csv.csv', 'w', newline='') as output_file:
+        with open('to_csv.csv', 'w', newline='',encoding="utf-8") as output_file:
             dict_writer = csv.DictWriter(output_file, keys)
             dict_writer.writeheader()
             dict_writer.writerows(to_csv)
-        return send_file("/home/ubuntu/flaskapp/data/to_csv.csv", as_attachment=True, download_name="/home/ubuntu/flaskapp/dict2.csv")
+        return send_file("to_csv.csv", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 

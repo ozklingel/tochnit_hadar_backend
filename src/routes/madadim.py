@@ -23,7 +23,7 @@ madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 def lowScoreApprentice():
     try:
         Oldvisitcalls = db.session.query(Visit.ent_reported,Institution.name).filter(Visit.ent_reported==Apprentice.id,Institution.id==
-                                                                                      Apprentice.institution_id,Visit.title =="נסיון_שנכשל" ).all()
+                                                                                      Apprentice.institution_id,Visit.title ==config.failCall_report ).all()
         forgotenApprenticCount=0
         forgotenApprenticeList={}
 
@@ -152,7 +152,39 @@ def forgotenApprentice():
         }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
 @madadim_form_blueprint.route("/forgotenApprentice_Mosad", methods=['GET'])
+def forgotenApprentices_mosad_outbound():
+    try:
+        institution_id = request.args.get("institutionId")
+        all_Apprentices = db.session.query(Apprentice.id,).filter(
+            Apprentice.institution_id == institution_id).all()
+        # update apprentices meet
+        visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title.in_(config.reports_as_call)).group_by(
+            Visit.ent_reported,
+            Institution.name).all()
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0],100])
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            ids_no_visit.append(i,gap)
+
+        return jsonify(
+             [{"id": r[0], "gap": r[1]} for r in ids_no_visit],
+
+        ), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@madadim_form_blueprint.route("/forgotenApprentice_inbound", methods=['GET'])
 def forgotenApprentice_Mosad(institution_id='empty'):
     try:
         if institution_id=='empty':
@@ -725,7 +757,6 @@ def mosad_Coordinators_score(mosadCoord_id):
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def eshcol_Coordinators_score(eshcolCoord_id):
-    print("eshcolCoord_id",eshcolCoord_id)
     eshcol = db.session.query( user1.eshcol).filter(user1.id==eshcolCoord_id).first()[0]
     all_eshcol_mosadCoord = db.session.query(user1.id).filter(user1.role_id == "1",
                                                          user1.eshcol == eshcol).all()
@@ -772,6 +803,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
         if i[0] in Apprentice_ids_forgoten:
             Apprentice_ids_forgoten.remove(i[0])
     eshcolCoord_score=tohnit_yeshiva_score+total_eshcol_mosad_score
+
     return eshcolCoord_score,total_eshcol_mosad_gap
 @madadim_form_blueprint.route("/mosadot_scores", methods=['GET'])
 def mosadot_scores():

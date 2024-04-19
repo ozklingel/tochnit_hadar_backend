@@ -10,6 +10,7 @@ from datetime import datetime,date,timedelta
 
 from sqlalchemy import func, or_
 
+import config
 from app import db, red
 from config import AWS_access_key_id, AWS_secret_access_key, melave_Score, visitcalls_melave_avg, visitmeets_melave_avg, \
     proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence, horim_meeting, call_report, groupMeet_report, \
@@ -18,12 +19,192 @@ from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.gift import gift
+from src.models.institution_model import Institution
 from src.models.system_report import system_report
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 import src.routes.madadim as md
+from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordinators_score, get_melave_score
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
+
+@export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
+def lowScoreApprentice_tohnit():
+    try:
+        lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
+        print(lowScoreApprentice_dict)
+        missingCalleApprentice_dict= md.missingCalleApprentice()[0].json
+        print(missingCalleApprentice_dict)
+        missingMeetingApprentice_dict= md.missingMeetingApprentice()[0].json
+        print(missingMeetingApprentice_dict)
+        res=[]
+        lowScoreApprentice_List=lowScoreApprentice_dict["lowScoreApprentice_List"]
+        callApprentice_List=missingCalleApprentice_dict["missingCalleApprentice_count"]
+        meetingApprentice_List=missingMeetingApprentice_dict["missingmeetApprentice_count"]
+
+        for i in range(0,len( lowScoreApprentice_List)):
+            print(lowScoreApprentice_List)
+            score_ent=lowScoreApprentice_List[i]
+            call_ent=callApprentice_List[i]
+            meet_ent=meetingApprentice_List[i]
+            res.append([score_ent["name"],score_ent["value"],call_ent["value"],meet_ent["value"]])
+        print(res)
+        fields = ['id', 'gap','Name']
+        with open('GFG', 'w',encoding="utf-8") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(res)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("/melave_corrdintors_score", methods=['post'])
+def melave_corrdintors_score():
+    try:
+        score_dict=get_melave_score()
+        rows = score_dict[1]
+        for dict in rows:
+            user_mosad = db.session.query(user1.name,Institution.name).filter(
+                user1.id==dict["melaveId"],Institution.id==user1.institution_id).first()
+            dict["name"]=user_mosad[0]
+            dict["mosad"]=user_mosad[1]
+        print(rows)
+        with open('GFG', 'w', encoding="utf-8") as f:
+            title = "melave_score1,melaveId,name,mosad".split(",")  # quick hack
+            cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            cw.writeheader()
+            cw.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
+def mosad_melavim_cnt():
+    try:
+        mosad_melavim_cnt = db.session.query(Institution.name,func.count(user1.name)).filter(user1.institution_id==Institution.id,user1.role_id=="0").group_by(
+                                                                                               Institution.id).all()
+        mosad_melavim_cnt=dict(mosad_melavim_cnt)
+        rows = mosad_melavim_cnt.items()
+        fields = ['count','name']
+
+        with open('GFG', 'w',encoding="utf-8") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("/mosad_corrdintors_score", methods=['post'])
+def mosad_corrdintors_score():
+    try:
+        score_dict=get_mosad_Coordinators_score()
+        print(score_dict)
+        rows = score_dict[1]
+        for dict in rows:
+            user_name = db.session.query(user1.name).filter(
+                user1.id==dict["id"]).first()
+            print(user_name)
+            dict["name"]=user_name[0]
+        print(rows)
+        with open('GFG', 'w', encoding="utf-8") as f:
+            title = "score,id,name".split(",")  # quick hack
+            cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            cw.writeheader()
+            cw.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("/Eshcol_corrdintors_score", methods=['post'])
+def Eshcol_corrdintors_score():
+    try:
+        score_dict=get_Eshcol_corrdintors_score()
+        print(score_dict)
+        rows = score_dict[1]
+        for dict in rows:
+            user_name = db.session.query(user1.name).filter(
+                user1.id==dict["id"]).first()
+            print(user_name)
+            dict["name"]=user_name[0]
+        print(rows)
+        with open('GFG', 'w', encoding="utf-8") as f:
+            title = "score,id,name".split(",")  # quick hack
+            cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            cw.writeheader()
+            cw.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+@export_import_blueprint.route("/forgoten_Tohnit", methods=['post'])
+def export_forgoten_Tohnit():
+    try:
+        all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+            Apprentice.institution_id == Institution.id).all()
+        # update apprentices meet
+        visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title.in_(config.reports_as_call)).group_by(
+            Visit.ent_reported,
+            Institution.name).all()
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0], ent[1]])
+        counts = dict()
+        forgotenApprentice_total = 0
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            if gap > 100:
+                forgotenApprentice_total += 1
+                counts[i[2]] = counts.get(i[2], 0) + 1
+        for i in ids_no_visit:
+            forgotenApprentice_total += 1
+            counts[i[1]] = counts.get(i[1], 0) + 1
+        print(counts)
+        fields = ['count','name']
+        rows = counts.items()
+        with open('GFG', 'w',encoding="utf-8") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("/forgoten_mosad", methods=['post'])
+def export_forgoten_mosad():
+    try:
+        all_Apprentices = db.session.query(Apprentice.id, Apprentice.name,Institution.name).filter(
+            Apprentice.institution_id == Institution.id).all()
+        # update apprentices meet
+        visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title.in_(config.reports_as_call)).group_by(
+            Visit.ent_reported,
+            Institution.name).all()
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0],ent[1], 100])
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            ids_no_visit.append(i,ent[1], gap)
+        fields = ['id', 'gap','Name']
+        rows = ids_no_visit
+        with open('GFG', 'w',encoding="utf-8") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(rows)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/upload_CitiesDB', methods=['PUT'])
 def upload_CitiesDB():
     try:
@@ -76,6 +257,7 @@ def export_dict():
         return send_file("to_csv.csv", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
 
 @export_import_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():

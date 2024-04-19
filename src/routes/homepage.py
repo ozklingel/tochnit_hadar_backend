@@ -72,8 +72,9 @@ def get_Eshcol_corrdintors_score():
     for Eshcol_coord in all_Eshcol_coord:
         Eshcol_coord_id = Eshcol_coord[0]
         eshcolCoordinator_score1, avg__mosad_racaz_meeting_monthly = eshcol_Coordinators_score(Eshcol_coord_id)
+        print("eshcolCoordinator_score1",eshcolCoordinator_score1)
         eshcol_Cooordinator_score[eshcolCoordinator_score1] = eshcol_Cooordinator_score.get(eshcolCoordinator_score1, 0) + 1
-        score_EshcolCoordProfile.append({"score":Eshcol_coord_id,"id":Eshcol_coord_id})
+        score_EshcolCoordProfile.append({"score":eshcolCoordinator_score1,"id":Eshcol_coord_id})
     k, v = [], []
     for key, value in eshcol_Cooordinator_score.items():
         k.append(key)

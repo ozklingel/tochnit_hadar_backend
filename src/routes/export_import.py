@@ -27,7 +27,6 @@ import src.routes.madadim as md
 from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordinators_score, get_melave_score
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
-
 @export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
 def lowScoreApprentice_tohnit():
     try:
@@ -47,9 +46,42 @@ def lowScoreApprentice_tohnit():
             score_ent=lowScoreApprentice_List[i]
             call_ent=callApprentice_List[i]
             meet_ent=meetingApprentice_List[i]
-            res.append([score_ent["name"],score_ent["value"],call_ent["value"],meet_ent["value"]])
+            all_Apprentices_cnt = db.session.query(func.count(Apprentice.id)).filter(
+                Apprentice.institution_id == Institution.id,Institution.name==score_ent["name"]).first()
+            res.append([score_ent["name"],all_Apprentices_cnt[0],score_ent["value"],call_ent["value"],meet_ent["value"]])
         print(res)
-        fields = ['id', 'gap','Name']
+        fields = ['callgap_count','meetgap_count','lowScore_count', 'apprentice_count','Mosad_name']
+        with open('GFG', 'w',encoding="utf-8") as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(res)
+        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+@export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
+def lowScoreApprentice_tohnit():
+    try:
+        lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
+        print(lowScoreApprentice_dict)
+        missingCalleApprentice_dict= md.missingCalleApprentice()[0].json
+        print(missingCalleApprentice_dict)
+        missingMeetingApprentice_dict= md.missingMeetingApprentice()[0].json
+        print(missingMeetingApprentice_dict)
+        res=[]
+        lowScoreApprentice_List=lowScoreApprentice_dict["lowScoreApprentice_List"]
+        callApprentice_List=missingCalleApprentice_dict["missingCalleApprentice_count"]
+        meetingApprentice_List=missingMeetingApprentice_dict["missingmeetApprentice_count"]
+
+        for i in range(0,len( lowScoreApprentice_List)):
+            print(lowScoreApprentice_List)
+            score_ent=lowScoreApprentice_List[i]
+            call_ent=callApprentice_List[i]
+            meet_ent=meetingApprentice_List[i]
+            all_Apprentices_cnt = db.session.query(func.count(Apprentice.id)).filter(
+                Apprentice.institution_id == Institution.id,Institution.name==score_ent["name"]).first()
+            res.append([score_ent["name"],all_Apprentices_cnt[0],score_ent["value"],call_ent["value"],meet_ent["value"]])
+        print(res)
+        fields = ['callgap_count','meetgap_count','lowScore_count', 'apprentice_count','Mosad_name']
         with open('GFG', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)

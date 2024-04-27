@@ -27,7 +27,7 @@ def delete():
         data = request.json
         apprenticetId = data['apprenticetId']
         print(apprenticetId)
-        res = db.session.query(notifications).filter(notifications.apprenticeid == apprenticetId, ).delete()
+        res = db.session.query(notifications).filter(notifications.subject == apprenticetId, ).delete()
         res = db.session.query(Visit).filter(Visit.ent_reported == apprenticetId, ).delete()
         res = db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
         db.session.commit()
@@ -55,12 +55,12 @@ def update():
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "email -wrong format"}), HTTPStatus.OK
+                    return jsonify({'result': "email -wrong format"}), 401
             if key == "birthday":
                 if validate_date(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "birthday -wrong format"}), HTTPStatus.OK
+                    return jsonify({'result': "birthday -wrong format"}), 401
             else:
                 setattr(updatedEnt, key, data[key])
         db.session.commit()
@@ -69,9 +69,9 @@ def update():
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
-        return jsonify({'result': 'error'}), HTTPStatus.OK
+        return jsonify({'result': 'error'}), 401
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), 401
 
 @apprentice_Profile_form_blueprint.route("/add_apprentice_manual", methods=['post'])
 def add_apprentice():

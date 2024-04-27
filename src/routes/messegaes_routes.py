@@ -142,6 +142,7 @@ def add_contact_form():
         if type == "draft":
             created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
+        print("date ",arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
             ContactForm1 = ContactForm(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
@@ -157,6 +158,7 @@ def add_contact_form():
                 icon=icon
             )
             db.session.add(ContactForm1)
+            print(ContactForm1.created_at)
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
@@ -168,6 +170,8 @@ def getAll_messegases_form():
     try:
         user = request.args.get('userId')
         print(user)
+        user_role = db.session.query(user1.role_id).filter(
+            user == user1.id).first()[0]
         messegasesList = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
                                           ContactForm.attachments, ContactForm.type, ContactForm.icon,
                                           ContactForm.allreadyread, ContactForm.subject, ContactForm.content
@@ -178,6 +182,8 @@ def getAll_messegases_form():
         group_report_dict = dict()
         print(messegasesList)
         for mess in messegasesList:
+            if mess.type=="יוצאות" and user_role=="0":
+                continue
             if mess.ent_group != "":
                 if mess.ent_group + str(mess.id) in group_report_dict:
                     group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
@@ -185,19 +191,27 @@ def getAll_messegases_form():
                     group_report_dict[mess.ent_group + str(mess.id)] = [str(mess.created_for_id)]
                 groped_mess.append(mess)
             else:
+                created_for_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_for_id).first()
+                created_by_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_by_id).first()
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": toISO(mess.created_at),
+                     "to": [created_for_id.name+" " +created_for_id.last_name], "ent_group": "", "from": created_by_id.name+" " +created_by_id.last_name,
+                     "date": str(mess.created_at),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
-
         for mess in groped_mess:
             if group_report_dict[mess.ent_group + str(mess.id)] != None:
+                created_for_id_str=""
+                for id in group_report_dict[mess.ent_group + str(mess.id)]:
+                    created_for_id = db.session.query( user1.name, user1.last_name).filter(user1.id==id).first()
+                    created_for_id_str+=created_for_id.name+" " +created_for_id.last_name+","
+                created_for_id_str=created_for_id_str[:-1]
+                created_by_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_by_id).first()
+
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": str(mess.created_at).replace(" ", "T"),
-                     "to": group_report_dict[mess.ent_group + str(mess.id)],
+                     "from": created_by_id.name+" " +created_by_id.last_name, "date": str(mess.created_at).replace(" ", "T"),
+                     "to": [created_for_id_str],
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "ent_group": mess.ent_group,
                      "icon": mess.icon})

@@ -27,8 +27,8 @@ import src.routes.madadim as md
 from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordinators_score, get_melave_score
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
-@export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
-def lowScoreApprentice_tohnit():
+@export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
+def lowScoreApprentice_mosad():
     try:
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
         print(lowScoreApprentice_dict)

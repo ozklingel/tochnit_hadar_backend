@@ -3,7 +3,7 @@ import time
 from datetime import timedelta
 from typing import List
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from http import HTTPStatus
 import pyotp
 
@@ -11,6 +11,7 @@ from openpyxl.reader.excel import load_workbook
 from timer_dict import TimerDict
 from twilio.rest import Client
 
+import config
 from app import red, db
 from src.models.city_model import City
 from src.models.user_model import user1
@@ -19,6 +20,7 @@ from src.routes.messegaes_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
 otp = pyotp.TOTP(secret_key, interval=60)
+config.prev_otp=0
 user_otp_dict= TimerDict(default_duration=timedelta(minutes=1))
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
 @onboarding_form_blueprint.route('/getOTP', methods=['GET'])
@@ -33,6 +35,8 @@ def getOTP_form():
         # Generate an OTP using TOTP after every 30 seconds
         send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from *tochnit hadar* is : "+otp.now())
         user_otp_dict[str(created_by_phone)]=otp.now()
+        config.prev_otp=str(otp.now())
+        session['otp_code'] = str(otp.now())
         print(user_otp_dict)
         return jsonify({"result":"success"}),HTTPStatus.OK
     except Exception as e:
@@ -44,9 +48,13 @@ def verifyOTP_form():
         created_by_phone = request.args.get('created_by_phone')
         print("user_otp",user_otp)
         print("current TOTP is: ", otp.now())
+        print("prev TOTP is: ", config.prev_otp)
+
         print("created_by_phone",created_by_phone)
         if (otp.verify(user_otp))==False:
-            return jsonify({"result": "wrong otp","firsOnboarding": True}), 401
+            if session['otp_code']!=user_otp:
+                print(user_otp,otp.now(),config.prev_otp)
+                return jsonify({"result": "wrong otp","firsOnboarding": True}), 401
         userEnt = user1.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system","firsOnboarding": True}), 401

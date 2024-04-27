@@ -57,9 +57,9 @@ def update():
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
-        return jsonify({'result': 'no updatedEnt'}), HTTPStatus.OK
+        return jsonify({'result': 'no updatedEnt'}), 401
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), 401
 
 
 
@@ -80,7 +80,7 @@ def getProfileAtributes_form():
         else:
             return jsonify(results="no such id"), HTTPStatus.OK
     except Exception:
-        return jsonify({'result': str(Exception)}), HTTPStatus.OK
+        return jsonify({'result': str(Exception)}), 401
 
 
 def getmyApprenticesNames(created_by_id):
@@ -88,7 +88,7 @@ def getmyApprenticesNames(created_by_id):
         apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
         return [{"id": str(row[0]), "name": row[1], "last_name": row[2]} for row in apprenticeList]
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({'result': str(e)}), 401
 
 
 
@@ -205,12 +205,11 @@ def myPersonas():
         my_dict = []
 
         for noti in apprenticeList:
+            accompany = db.session.query(user1.name,user1.last_name).filter(user1.id == Apprentice.accompany_id).first()
             call_status=visit_gap_color(config.call_report, noti, 30, 15)
             personalMeet_status=visit_gap_color(config.personalMeet_report, noti, 100, 80)
             Horim_status=visit_gap_color(config.HorimCall_report, noti, 365, 350)
-            print(noti.city_id)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
-            print(city)
             reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
             eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
                                                                                notifications.subject == str(noti.id),
@@ -270,7 +269,7 @@ def myPersonas():
 
                       [{"id" :str(row[0]),"title":row[1],"description":row[2],"date" : toISO(row[3])} for row in eventlist]
 
-                    , "id": str(noti.id), "thMentor": str(noti.accompany_id),
+                    , "id": str(noti.id), "thMentor": accompany.name+" "+accompany.last_name,
                  "militaryPositionNew": str(noti.militaryPositionNew)
                     , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar' , "name": str(noti.name), "last_name": str(noti.last_name),
                  "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
@@ -291,6 +290,7 @@ def myPersonas():
                  })
 
         for noti in userList:
+            reportList = db.session.query(Visit.id).filter(Visit.user_id == noti.id).all()
 
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             my_dict.append(
@@ -337,7 +337,7 @@ def myPersonas():
                  "contact3_phone": "",
                  "contact3_email": "",
                  "contact3_relation": "",
-                 "activity_score": "",
+                 "activity_score": len(reportList),
 
                  "reports":
                      ""

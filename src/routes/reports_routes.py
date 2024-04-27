@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
 from openpyxl.reader.excel import load_workbook
+import arrow as arrow
 
 import config
 from .search_ent import filter_by_request
@@ -29,31 +30,31 @@ def add_reports_form():
     try:
         ent_group_name = str(data['ent_group'])
     except:
-        print("no ent_group ")
+        print("")
     try:
         attachments = data['attachments']
     except:
-        print("no  attachments")
+        print("")
     try:
         description = data['description']
     except:
-        print("no  description")
+        print("")
     if user:
         List_of_repored = data['List_of_repored']
         vis_id = int(str(uuid.uuid4().int)[:5])
-        print(List_of_repored)
         event_type=data['event_type']
         if event_type==config.zoom_report or event_type==config.fiveMess_report:
             event_type=config.call_report
-        print(event_type)
         for key in List_of_repored:
             Visit1 = Visit(
+                created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
+
                 user_id=user,
                 ent_reported=str(key),
                 visit_in_army=True if data['event_type']==config.basis_report else False,
                 visit_date=datetime.fromisoformat(data['date']),
                 allreadyread=False,
-                id=vis_id if ent_group_name!="" else int(str(uuid.uuid4().int)[:5]),
+                id=vis_id ,
                 title=event_type,
                 attachments=attachments,
                 ent_group=ent_group_name,
@@ -95,38 +96,33 @@ def getById():
 def getAll_reports_form():
     try:
         user = request.args.get('userId')
-        print(user)
-        reportList = db.session.query(Visit.ent_reported,Visit.ent_group,Visit.note,Visit.visit_date,Visit.id,Visit.title,Visit.description,Visit.attachments,Visit.allreadyread).filter(Visit.user_id == user).all()
-        group_report_dict=dict()
+        reportList = db.session.query(Visit.ent_reported,Visit.ent_group,Visit.note,Visit.visit_date,Visit.id,Visit.title,Visit.description,Visit.attachments,Visit.allreadyread,Visit.created_at).filter(Visit.user_id == user).all()
+        user_name = db.session.query(user1.name, user1.last_name).filter(
+            user == user1.id).first()
+        user_name=user_name.name+" "+user_name.last_name
         my_dict = []
-        groped_rep=[]
+        used_report=dict()
         for noti in reportList:
-            daysFromNow = (date.today() - noti.visit_date).days if noti.visit_date is not None else None
-            if noti.ent_group !="":
-                if noti.ent_group+str(noti.id) in  group_report_dict:
-                    group_report_dict[noti.ent_group+str(noti.id)].append(str(noti.ent_reported))
-                else:
-                    print("created_for_id",noti.ent_reported)
-                    group_report_dict[noti.ent_group+str(noti.id)] = [str(noti.ent_reported)]
-                groped_rep.append(noti)
-            else:
-                my_dict.append(
-                {"id": str(noti.id), "reported_on":[str(noti.ent_reported)], "date":toISO(noti.visit_date),        "ent_group": "",
-                  "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),"attachments": noti.attachments})
-        for noti in groped_rep:
-            daysFromNow = (date.today() - noti.visit_date).days if noti.visit_date is not None else None
-            if group_report_dict[noti.ent_group+str(noti.id)]!=None:
-                my_dict.append(
-                    {"id": str(noti.id), "reported_on": group_report_dict[noti.ent_group+str(noti.id)], "date": toISO(noti.visit_date),
-                     "ent_group": noti.ent_group,
-                      "title": str(noti.title), "allreadyread": str(noti.allreadyread),
-                     "description": str(noti.note), "attachments": noti.attachments})
-                group_report_dict[noti.ent_group+str(noti.id)]=None
+            used_report[str(noti.id)]=used_report.get(str(noti.id),[])+[noti]
+        print(used_report.keys())
+        for k,notiList in used_report.items():
+            reportedList=[]
+            reported_name_str = ""
+            for noti in notiList:
+                reportedList.append(str(noti.ent_reported))
+                reported_name = db.session.query(Apprentice.name, Apprentice.last_name).filter(
+                    Apprentice.id == noti.ent_reported).first()
+                if reported_name is None:
+                    reported_name = db.session.query(user1.name, user1.last_name).filter(
+                        user1.id == user).first()
+                reported_name_str += reported_name.name + " " + reported_name.last_name + ","
+            my_dict.append(
+                    {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
+                     "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
+                     "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),
+                     "attachments": noti.attachments})
 
-        else:
-            # print(f' notifications: {my_dict}]')
-            # TODO: get Noti form to DB
-            return jsonify(my_dict), HTTPStatus.OK
+        return jsonify(my_dict), HTTPStatus.OK
             # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

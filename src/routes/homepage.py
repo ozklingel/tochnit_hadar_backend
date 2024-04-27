@@ -9,7 +9,7 @@ from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
 from src.models.visit_model import Visit
 from src.routes.madadim import melave_score, mosad_Coordinators_score, eshcol_Coordinators_score
-from src.routes.notification_form_routes import getAll_notification_form
+from src.routes.notification_form_routes import getAll_notification_form, convert_hebrewDate_to_Lozai
 
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
@@ -270,32 +270,36 @@ def init_mosadCoord():
                        }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
+class Apprentice1:
+    pass
+
+
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
     try:
-        userId = request.args.get("userId")
-        tasksAndEvents=getlist_from_notification(userId)
-        return jsonify( tasksAndEvents[0] if tasksAndEvents is not None else []), HTTPStatus.OK
+        user = request.args.get("userId")
+
+        ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
+                                          Apprentice.name, Apprentice.last_name).filter(
+            Apprentice.accompany_id == user).all()
+        my_dict = []
+        for Apprentice1 in ApprenticeList:
+            # birthday
+            thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
+            print(thisYearBirthday)
+            gap = (date.today() - thisYearBirthday).days
+            print(gap)
+            if gap <= 0 and gap >= -30 :
+                my_dict.append(
+                    {"id": str(Apprentice1.id),"subject":Apprentice1.id,
+                     "date": datetime(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day).isoformat(),"created_at": str(thisYearBirthday),
+                     "daysfromnow": gap, "event": "יומהולדת", "allreadyread": False,"description": "יומהולדת","frequency": "never" ,
+                     "numOfLinesDisplay": 2})
+        return jsonify(my_dict), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-def getlist_from_notification(userId):
-    # get tasksAndEvents
-    res=getAll_notification_form()
-    if res is None:
-        return None,None
-    if str(type(res))!="<class 'tuple'>":
-        return [],[]
-    event_dict = []
-    task_dict = []
-    for i in range(len(res[0].json)):
-       # print("res1=" ,res[0].json[i])
-        ent=res[0].json[i]
-        if ent["numOfLinesDisplay"]==3:
-            event_dict.append(ent)
-        else :
-            task_dict.append(ent)
-
-    return event_dict,task_dict
 
 def toISO(d):
     if d:

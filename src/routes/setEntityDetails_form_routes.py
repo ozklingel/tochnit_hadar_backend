@@ -41,12 +41,12 @@ def setEntityDetailsByType():
                        if validate_email(atrrToBeSet[key]):
                             setattr(updatedEnt, key, atrrToBeSet[key])
                        else:
-                           return jsonify({'result': "email -wrong format"}), HTTPStatus.OK
+                           return jsonify({'result': "email -wrong format"}), 401
                    if key == "birthday":
                        if validate_date(atrrToBeSet[key]):
                             setattr(updatedEnt, key, atrrToBeSet[key])
                        else:
-                           return jsonify({'result': "birthday -wrong format"}), HTTPStatus.OK
+                           return jsonify({'result': "birthday -wrong format"}), 401
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
 
@@ -80,7 +80,7 @@ def setEntityDetailsByType():
                    setattr(updatedEnt, key, atrrToBeSet[key])
                db.session.commit()
        except Exception as e:  # work on python 3.x
-           return jsonify({'result': str(e)}), HTTPStatus.OK
+           return jsonify({'result': str(e)}),401
 
        if updatedEnt:
                # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

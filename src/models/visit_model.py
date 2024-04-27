@@ -2,6 +2,7 @@
 from . import *
 from .user_model import user1
 
+from datetime import datetime
 
 class Visit(db.Model):
     __tablename__ = VISITS_TBL
@@ -17,6 +18,7 @@ class Visit(db.Model):
     attachments = db.Column("attachments", nullable=True,default=[])
     description = db.Column("description", db.String(100), nullable=True,default="")
     ent_group=db.Column(db.String(100), nullable=True,default="")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
 

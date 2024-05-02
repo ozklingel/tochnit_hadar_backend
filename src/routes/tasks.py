@@ -24,9 +24,9 @@ tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form
 def getTasks():
     # get tasksAndEvents
     userId = request.args.get("userId")
-    role=db.session.query(user1.role_id).filter(
+    role=db.session.query(user1.role_ids).filter(
         user1.id == userId).first()
-    if role.role_id=="3":
+    if 3 in role.role_ids:
         tasks=db.session.query(task_user_made).filter(
             task_user_made.userid == userId).all()
         res=[]

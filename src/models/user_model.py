@@ -8,6 +8,7 @@ import datetime
 
 class user1(db.Model):
     __tablename__ = USERS_TBL
+    role_ids = db.Column("role_ids", nullable=False)
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     name = db.Column("first_name", db.String(50), nullable=False,default="")

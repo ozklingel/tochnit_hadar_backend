@@ -1,5 +1,7 @@
 from http import HTTPStatus
 from flask import Blueprint, request, jsonify
+from sqlalchemy import or_
+
 from app import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
@@ -59,7 +61,9 @@ def filter_by_request(request):
             entityType.append("3")
         if len(entityType) > 0:
             query = db.session.query(user1.id).distinct(user1.id)
-            query = query.filter(user1.role_id.in_(entityType))
+            filter_list = [user1.role_id.contains(x) for x in entityType]
+
+            query = query.filter(or_(*filter_list))
             if institutions:
                 ent_group_dict["institutions"] = str(institutions).replace("[", "").replace("]", "")
                 query = query.filter(user1.institution_id == Institution.id, Institution.name.in_(institutions))

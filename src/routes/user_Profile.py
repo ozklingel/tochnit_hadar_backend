@@ -27,7 +27,6 @@ from src.routes.apprentice_Profile import visit_gap_color
 from src.routes.setEntityDetails_form_routes import validate_email
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
-role_name = Enum('Color', ['melave', 'racaz_mosad', 'racaz_eshcol'])
 @userProfile_form_blueprint.route('/delete', methods=['post'])
 def delete():
     try:
@@ -103,7 +102,7 @@ def getProfileAtributes_form():
             myApprenticesNamesList=getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(regionName[0]), "role":str(userEnt.role_id), "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
+                           "city":city.name, "region":str(regionName[0]), "role":userEnt.role_ids, "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
                            "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:
@@ -132,14 +131,16 @@ def add_user_excel():
     for row in sheet.iter_rows(min_row=2):
         if row[5].value is None:
             continue
-        if row[2].value.strip() == "מלווה" :
-            role=0
-        elif row[2].value.strip() == "רכז" :
-            role = 1
-        elif row[2].value.strip() == "רכז אשכול":
-            role = 2
-        elif row[2].value.strip() == "אחראי תוכנית":
-            role = 3
+        role_ids=[]
+        if "מלווה" in row[2].value.strip()  :
+            role_ids.append(0)
+        if "רכז מוסד" in row[2].value.strip():
+            role_ids.append(1)
+        if "רכז אשכול" in row[2].value.strip():
+            role_ids.append(2)
+        if  "אחראי תוכנית" in row[2].value.strip() :
+            role_ids.append(3)
+        print(role_ids)
         first_name =row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip()
@@ -153,12 +154,12 @@ def add_user_excel():
                 id=int(str(phone).replace("-","")),
                 name=first_name,
                 last_name=last_name,
-                role_id=str(role),
+                role_ids=role_ids,
                 #email=str(email),
                 eshcol=eshcol,
                 institution_id=institution_id.id,
             )
-            print(user)
+
             db.session.add(user)
             db.session.commit()
 
@@ -181,7 +182,7 @@ def add_user_manual():
             city_name = data['city_name'] or "עלי"
         except:
             print("no city")
-        role_id = data['role_id']
+        role_ids = data['role_ids']
         CityId = db.session.query(City).filter(City.name==city_name).first()
         #institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
         institution_id=institution_id[0] if institution_id else 0
@@ -190,7 +191,7 @@ def add_user_manual():
             id=int(phone[1:]),
             name=first_name,
             last_name=last_name,
-            role_id=role_id,
+            role_ids=role_ids,
             institution_id=institution_id,
             city_id=CityId.id,
             cluster_id=CityId.cluster_id,
@@ -217,10 +218,11 @@ def myPersonas():
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList=[]
-        user1ent = db.session.query(user1.role_id,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
-        if user1ent.role_id=="0":
+        user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
+        if 0 in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
             userList=[]
+
         if user1ent.role_id=="1":
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
             userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()

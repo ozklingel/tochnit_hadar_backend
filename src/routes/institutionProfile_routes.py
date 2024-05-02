@@ -13,8 +13,9 @@ from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
-from src.models.institution_model import Institution
+from src.models.institution_model import Institution, front_end_dict
 from src.models.user_model import user1
+from src.routes.setEntityDetails_form_routes import validate_email
 
 institutionProfile_form_blueprint = Blueprint('institutionProfile_form', __name__, url_prefix='/institutionProfile_form')
 
@@ -249,7 +250,23 @@ def update():
         data = request.json
         updatedEnt = Institution.query.get(mosad_Id)
         for key in data:
-            setattr(updatedEnt, key, data[key])
+            if key == "city":
+                CityId = db.session.query(City).filter(
+                    City.name == str(data[key])).first()
+                print("CityId", CityId)
+                setattr(updatedEnt, "city_id", CityId.id)
+            if key == "region":
+                ClusterId = db.session.query(Cluster.id).filter(
+                    Cluster.name == str(data[key])).first()
+                print("ClusterId", ClusterId.id)
+                setattr(updatedEnt, "cluster_id", ClusterId.id)
+            elif key == "email" or key == "birthday":
+                if validate_email(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "email or date -wrong format"}), 401
+            else:
+                setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

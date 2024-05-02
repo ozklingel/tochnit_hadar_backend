@@ -20,7 +20,80 @@ from ..models.user_model import user1
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
+@messegaes_form_blueprint.route('/send_per_persona', methods=['POST'])
+def send_per_persona():
+    try:
+        data = request.json
+        roles = data['roles']
+        subject = data['subject']
+        content = data['content']
+        type = "יוצאות"
+        icon = ""
+        attachments = []
+        try:
+            icon = data['icon']
+            attachments = data['attachments']
+        except Exception as e:
+            print(str(e))
+        created_by_id = str(data['created_by_id'])
 
+        personas = user1.query.filter(user1.role_id.in_(roles)).all()
+        created_for_ids = [str(a.id) for a in personas]
+        if type == "draft":
+            created_for_ids = [str(created_by_id)]#do not send any one
+        mess_id = str(uuid.uuid1().int)[:5]
+        print("date ",arrow.now().format('YYYY-MM-DDThh:mm:ss'))
+        if icon=="INTERNAL":
+            for key in created_for_ids:
+                ContactForm1 = ContactForm(
+                    id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
+                    created_for_id=key,
+                    created_by_id=created_by_id,
+                    content=content,
+                    subject=subject,
+                    created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
+                    allreadyread=False,
+                    attachments=attachments,
+                    type=type,
+                    ent_group="",
+                    icon=icon
+                )
+                db.session.add(ContactForm1)
+            db.session.commit()
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        if icon=="WHATSAPP":
+            created_for_ids_whatapp = ["0"+a for a in created_for_ids]
+            returned: List[int] = send_green_whatsapp(content, created_for_ids_whatapp)
+            count_200 = returned.count(200)
+            if count_200 == len(returned):
+                return jsonify({'result': 'success'}), HTTPStatus.OK
+        if icon=="SMS":
+            created_for_ids_SMS = ["0"+a for a in created_for_ids]
+            responses = send_sms_019("559482844", created_for_ids_SMS, content)
+            if responses is not None:
+                numbers_to_add_to_019 = []
+                for number in responses:
+                    if isinstance(responses[number], dict):
+                        if (config.SendMessages.Sms.error_message_019
+                                in responses[number].values()):
+                            numbers_to_add_to_019.append(number)
+                    else:
+                        if (config.SendMessages.Sms.error_message_019
+                                in responses[number]):
+                            numbers_to_add_to_019.append(number)
+                if len(numbers_to_add_to_019) > 0:
+                    return jsonify({'result': {
+                        "response": str(responses),
+                        config.SendMessages.Sms.at_least_one_error: config.SendMessages.Sms.message_add_to_019 + str(
+                            numbers_to_add_to_019)
+                    }
+                    }), HTTPStatus.INTERNAL_SERVER_ERROR
+                return jsonify({'result': str(responses)}), HTTPStatus.INTERNAL_SERVER_ERROR
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': "general error"}), HTTPStatus.BAD_REQUEST
+
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @messegaes_form_blueprint.route('/send_sms', methods=['POST'])
 def send_sms():
     try:
@@ -196,7 +269,7 @@ def getAll_messegases_form():
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [created_for_id.name+" " +created_for_id.last_name], "ent_group": "", "from": created_by_id.name+" " +created_by_id.last_name,
-                     "date": str(mess.created_at),
+                     "date": str(mess.created_at).replace(" ", "T"),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
         for mess in groped_mess:

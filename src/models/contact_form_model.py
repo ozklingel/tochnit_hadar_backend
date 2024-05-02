@@ -3,7 +3,7 @@ from sqlalchemy import ARRAY
 from . import *
 from datetime import datetime
 from .user_model import user1
-#wil be created by support call and by messages page
+#message class internal (not SMS or WHATAPP
 class ContactForm(db.Model):
     __tablename__ = CONTACT_FORMS_TBL
 

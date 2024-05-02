@@ -35,7 +35,9 @@ mahzorShabat_report="שבת מחזור"
 reports_as_call=[call_report,zoom_report,fiveMess_report]
 report_as_meet=[personalMeet_report,groupMeet_report,basis_report]
 report_as_DoForBogrim=[mahzorShabat_report,mahzorMeeting_report,doForBogrim_report]
-
+all_reports=[mahzorShabat_report,mahzorMeeting_report,tochnitMeeting_report,MOsadEshcolMeeting_report,MelavimMeeting_report,
+             doForBogrim_report,hazanatMachzor_report,matzbar_report,cenes_report,professional_report,HorimCall_report
+             ,basis_report,groupMeet_report,personalMeet_report,failCall_report,fiveMess_report]
 #דוחות
 mosad_racaz_meeting="mosad_racaz_meeting"
 horim_meeting="horim_meeting"

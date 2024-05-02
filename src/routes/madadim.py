@@ -117,14 +117,14 @@ def missingMeetingApprentice():
 @madadim_form_blueprint.route("/forgotenApprentices", methods=['GET'])
 def forgotenApprentice():
     try:
-        all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+        all_Apprentices = db.session.query(Apprentice.id, Institution.id).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
         visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
-                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                      Institution.id).filter(Apprentice.id == Visit.ent_reported,
                                                                Institution.id == Apprentice.institution_id,
                                                                Visit.title.in_(config.reports_as_call)).group_by(Visit.ent_reported,
-                                                                                               Institution.name).all()
+                                                                                               Institution.id).all()
         ids_have_visit = [r[0] for r in visitcalls]
         ids_no_visit = []
         # handle no record
@@ -147,7 +147,7 @@ def forgotenApprentice():
         return jsonify({
         'forgotenApprentice_total': forgotenApprentice_total,
 
-            'forgotenApprentice_count': [{"name":key,"value":value} for key, value in counts.items()],
+            'forgotenApprentice_count': [{"id":str(key),"value":value} for key, value in counts.items()],
 
         }), HTTPStatus.OK
     except Exception as e:
@@ -361,7 +361,7 @@ def getMelaveMadadim():
             if i[0] in  Apprentice_ids_meetInArmy:
                 Apprentice_ids_meetInArmy.remove(i[0])
 
-        Apprentice_ids_forgoten=[r[0] for r in ApprenticeCount]
+        Apprentice_ids_forgoten=[str(r[0]) for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=100)
         Oldvisitcalls = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Apprentice.id==Visit.ent_reported,Institution.id==Apprentice.institution_id,Visit.title == "שיחה",
                                                                      Visit.visit_date > too_old).all()

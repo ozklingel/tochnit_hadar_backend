@@ -8,6 +8,7 @@ from http import HTTPStatus
 from hebrew import Hebrew
 from pyluach import hebrewcal, dates
 from sqlalchemy import func, or_
+from sqlalchemy import func, or_
 
 import config
 from .Utils.notifiacationDetails import groupMeet_details, personalMeet_details, basisVisit_details, event_details, \
@@ -462,6 +463,7 @@ def getAll_notification_form():
         userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(user1.id==user).first()
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
+        print()
         for noti in notiList:
             daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
             if noti.event==config.groupMeet_report:

@@ -34,3 +34,24 @@ class user1(db.Model):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+
+
+front_end_dict={
+"cluster": "eshcol"
+,"avatar":"photo_path",
+"region":"cluster_id",
+"institution":"institution_id",
+"address":"address",
+"city_id":"city_id",
+"date_of_birth":"birthday",
+"email":"email",
+"teudatZehut":"teudatZehut",
+"role": "role_id",
+"last_name":"last_name",
+"firstName":"name",
+"city":"city",
+
+
+}

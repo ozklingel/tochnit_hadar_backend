@@ -33,7 +33,7 @@ def getOTP_form():
         if str(created_by_phone) in user_otp_dict:
             return jsonify({"result": "already got otp"}), 401
         # Generate an OTP using TOTP after every 30 seconds
-        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from *tochnit hadar* is : "+otp.now())
+        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from **tochnit hadar** is : "+otp.now())
         user_otp_dict[str(created_by_phone)]=otp.now()
         config.prev_otp=str(otp.now())
         session['otp_code'] = str(otp.now())

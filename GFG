@@ -1,2 +1,3 @@
-callgap_count,meetgap_count,lowScore_count,apprentice_count,Mosad_name
-בני דוד דרך אבות,1,1,1,1
+score,id,name
+100,549247620,עוז 5
+100,549247621,עוז 6

@@ -10,7 +10,7 @@ from datetime import datetime,date
 import config
 from app import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
-from src.models.apprentice_model import Apprentice
+from src.models.apprentice_model import Apprentice, front_end_dict
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
@@ -41,30 +41,20 @@ def update():
     try:
         # get tasksAndEvents
         apprenticetId = request.args.get("apprenticetId")
-        print(apprenticetId)
         data = request.json
         updatedEnt = Apprentice.query.get(apprenticetId)
+
         for key in data:
-            if key =="militarycompoundid":
-                print(data[key])
-                setattr(updatedEnt, "base_address", data[key])
-            if key == "avatar":
-                print(data[key])
-                setattr(updatedEnt, "photo_path", data[key])
-            if key == "email":
+
+            if key == "email" or key == "birthday":
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "email -wrong format"}), 401
-            if key == "birthday":
-                if validate_date(data[key]):
-                    setattr(updatedEnt, key, data[key])
-                else:
-                    return jsonify({'result': "birthday -wrong format"}), 401
+                    return jsonify({'result': "email or date -wrong format"}), 401
             else:
-                setattr(updatedEnt, key, data[key])
+                print(front_end_dict[key])
+                setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
-        print(updatedEnt.militaryPositionOld)
         if updatedEnt:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
@@ -515,7 +505,6 @@ def visit_gap_color(type, apprentice, redLine, greenLine):
     # Apprentice_call_status
     visitEvent = db.session.query(Visit).filter(Visit.ent_reported == apprentice.id,
                                                 Visit.title == type).order_by(Visit.visit_date.desc()).first()
-    print("visitEvent", visitEvent)
     # handle no row so insert need a call
     if visitEvent is None:
         return "red"

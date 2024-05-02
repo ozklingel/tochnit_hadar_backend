@@ -282,16 +282,20 @@ def get_closest_Events():
         user = request.args.get("userId")
 
         ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
-                                          Apprentice.name, Apprentice.last_name).filter(
+                                          Apprentice.name, Apprentice.last_name,Apprentice.birthday).filter(
             Apprentice.accompany_id == user).all()
         my_dict = []
         for Apprentice1 in ApprenticeList:
             # birthday
-            thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
-            print(thisYearBirthday)
-            gap = (date.today() - thisYearBirthday).days
-            print(gap)
-            if gap <= 0 and gap >= -30 :
+            gap_loazi=1000
+            gap=1000
+            if Apprentice1.birthday_ivry:
+                thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
+                gap = (date.today() - thisYearBirthday).days
+            if Apprentice1.birthday:
+                gap_loazi=(date.today() - Apprentice1.birthday).days
+
+            if (gap <= 0 and gap >= -30) or (gap_loazi <= 0 and gap_loazi >= -30) :
                 my_dict.append(
                     {"id": str(Apprentice1.id),"subject":Apprentice1.id,
                      "date": datetime(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day).isoformat(),"created_at": str(thisYearBirthday),

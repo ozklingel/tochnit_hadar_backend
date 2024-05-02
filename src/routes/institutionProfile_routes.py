@@ -57,7 +57,7 @@ def uploadPhoto_form():
 def getmyApprentices_form():
     institution_id = int(request.args.get('institution_id'))
     print(institution_id)
-    melave_List = db.session.query(user1).filter(user1.institution_id== institution_id,user1.role_id=="0").all()
+    melave_List = db.session.query(user1).filter(user1.institution_id== institution_id,user1.role_ids.contains("0")).all()
     apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == institution_id).all()
     print(melave_List)
     my_dict = []
@@ -206,7 +206,7 @@ def getAll():
         if r.city_id !="":
             city = db.session.query(City).filter(City.id == r.city_id).first()
             region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
-        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_id == "0").all()
+        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_ids.contains("0")).all()
         apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
         my_list.append(
             {"id":str(r.id),"roshYeshiva_phone":r.roshYeshiva_phone,"roshYeshiva_name":r.roshYeshiva_name,

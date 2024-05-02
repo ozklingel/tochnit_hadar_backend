@@ -46,8 +46,13 @@ def update():
 
         for key in data:
 
-            if key == "email" or key == "birthday":
+            if key == "email" :
                 if validate_email(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "email or date -wrong format"}), 401
+            elif  key == "birthday":
+                if validate_date(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
@@ -271,12 +276,12 @@ def getmyApprentices_form():
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList=[]
-        user1ent = db.session.query(user1.role_id,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
-        if user1ent.role_id=="0":
+        user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
+        if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
-        if user1ent.role_id=="1":
+        if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
-        if user1ent.role_id == "2":
+        if "2" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
 
         my_dict = []
@@ -393,12 +398,12 @@ def maps_apprentices():
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList=[]
-        user1ent = db.session.query(user1.role_id,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
-        if user1ent.role_id=="0":
+        user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
+        if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
-        if user1ent.role_id == "1":
+        if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
-        if user1ent.role_id == "2" or user1ent.role_id == "3" :
+        if "2" in user1ent.role_ids or "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
 
         my_dict = []

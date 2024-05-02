@@ -19,7 +19,7 @@ from src.routes.Utils.Sms import send_sms_019
 from src.routes.messegaes_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
-otp = pyotp.TOTP(secret_key, interval=60)
+otp = pyotp.TOTP(secret_key, interval=120)
 config.prev_otp=0
 user_otp_dict= TimerDict(default_duration=timedelta(minutes=1))
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')

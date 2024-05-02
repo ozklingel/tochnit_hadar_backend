@@ -198,15 +198,17 @@ def addUsers(wb):
     for row in sheet.iter_rows(min_row=2):
         if row[5].value is None:
             continue
-        role_ids = []
+        role_ids = ""
         if "מלווה" in row[2].value.strip():
-            role_ids.append(0)
+            role_ids += "0,"
         if "רכז מוסד" in row[2].value.strip():
-            role_ids.append(1)
+            role_ids += "1,"
         if "רכז אשכול" in row[2].value.strip():
-            role_ids.append(2)
+            role_ids += "2,"
         if "אחראי תוכנית" in row[2].value.strip():
-            role_ids.append(3)
+            role_ids += "3,"
+        print(role_ids)
+        role_ids = role_ids[:-1]
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip()

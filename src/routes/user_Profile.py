@@ -102,7 +102,7 @@ def getProfileAtributes_form():
             myApprenticesNamesList=getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(regionName[0]), "role":userEnt.role_ids, "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
+                           "city":city.name, "region":str(regionName[0]), "role":[int(r) for r in userEnt.role_ids.split(",")], "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
                            "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:
@@ -131,16 +131,17 @@ def add_user_excel():
     for row in sheet.iter_rows(min_row=2):
         if row[5].value is None:
             continue
-        role_ids=[]
+        role_ids=""
         if "מלווה" in row[2].value.strip()  :
-            role_ids.append(0)
+            role_ids+="0,"
         if "רכז מוסד" in row[2].value.strip():
-            role_ids.append(1)
+            role_ids+="1,"
         if "רכז אשכול" in row[2].value.strip():
-            role_ids.append(2)
+            role_ids+="2,"
         if  "אחראי תוכנית" in row[2].value.strip() :
-            role_ids.append(3)
+            role_ids+="3,"
         print(role_ids)
+        role_ids=role_ids[:-1]
         first_name =row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip()
@@ -219,17 +220,17 @@ def myPersonas():
         print(created_by_id)
         apprenticeList=[]
         user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
-        if 0 in user1ent.role_ids:
+        if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
             userList=[]
 
-        if user1ent.role_id=="1":
+        if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
             userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()
-        if user1ent.role_id == "2":
+        if "2" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
             userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()
-        if user1ent.role_id == "3":
+        if "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
             userList = db.session.query(user1).all()
 

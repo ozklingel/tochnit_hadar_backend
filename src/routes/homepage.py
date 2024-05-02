@@ -22,13 +22,13 @@ def get_melave_score(eshcol="0",mosad="0"):
     counts = dict()
     score_melaveProfile = []
     if eshcol!="0" and mosad!="0":
-        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.eshcol==eshcol,user1.institution_id==mosad).all()
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0"),user1.eshcol==eshcol,user1.institution_id==mosad).all()
     elif eshcol!="0":
-        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.eshcol==eshcol).all()
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0"),user1.eshcol==eshcol).all()
     elif mosad!="0":
-        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0",user1.institution_id==mosad).all()
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0"),user1.institution_id==mosad).all()
     else:
-        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
         melave_score1, call_gap_avg, meet_gap_avg = melave_score(melaveId)
@@ -46,9 +46,9 @@ def get_melave_score(eshcol="0",mosad="0"):
 def get_mosad_Coordinators_score(eshcol="0"):
     if eshcol!="0":
         all_Mosad_coord = db.session.query(user1.id, user1.institution_id, user1.name).filter(
-            user1.role_id == "1",user1.eshcol==eshcol).all()
+            user1.role_ids.contains("1"),user1.eshcol==eshcol).all()
     else:
-        all_Mosad_coord = db.session.query(user1.id, user1.institution_id,user1.name).filter(user1.role_id == "1").all()
+        all_Mosad_coord = db.session.query(user1.id, user1.institution_id,user1.name).filter(user1.role_ids.contains("1")).all()
     mosad_Cooordinator_score_dict = dict()
     score_MosadCoordProfile=[]
     for mosad_coord in all_Mosad_coord:
@@ -66,7 +66,7 @@ def get_mosad_Coordinators_score(eshcol="0"):
 
 
 def get_Eshcol_corrdintors_score():
-    all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id,user1.name,user1.institution_id).filter(user1.role_id == "2").all()
+    all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id,user1.name,user1.institution_id).filter(user1.role_ids.contains("2")).all()
     eshcol_Cooordinator_score = dict()
     score_EshcolCoordProfile=[]
     for Eshcol_coord in all_Eshcol_coord:

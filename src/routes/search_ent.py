@@ -61,7 +61,7 @@ def filter_by_request(request):
             entityType.append("3")
         if len(entityType) > 0:
             query = db.session.query(user1.id).distinct(user1.id)
-            filter_list = [user1.role_id.contains(x) for x in entityType]
+            filter_list = [user1.role_ids.contains(x) for x in entityType]
 
             query = query.filter(or_(*filter_list))
             if institutions:

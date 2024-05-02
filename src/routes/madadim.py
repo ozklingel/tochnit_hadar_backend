@@ -5,6 +5,7 @@ from datetime import datetime,date,timedelta
 
 from pyluach import dates
 from sqlalchemy import func, or_
+from sqlalchemy.event import contains
 
 import config
 from app import db, red
@@ -288,7 +289,7 @@ def fetch_Diagram_rivonly(related_id,type="melave_Score"):
         value= row[1]
         i=x_list.index(rivon)
         y_list[i]= value
-    return  x_list,y_list,
+    return  x_list,y_list
 
 def fetch_Diagram_yearly(related_id,type="melave_Score"):
     too_old = datetime.today() - timedelta(days=30*12)
@@ -317,7 +318,6 @@ def getMelaveMadadim():
         for i in Oldvisitcalls:
             if i[0] in  Apprentice_ids_call:
                 Apprentice_ids_call.remove(i[0])
-
         Apprentice_ids_meet=[r[0] for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=90)
         Oldvisitmeet = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,or_(Visit.title == "מפגש",Visit.title == "מפגש"),
@@ -346,7 +346,6 @@ def getMelaveMadadim():
             cenes_score= 100*len(newvisit_cenes)/len(_yearly_cenes)
         else:
             cenes_score=100
-
         Apprentice_ids_Horim=[r[0] for r in ApprenticeCount]
         OldvisitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Visit.title == "מפגש_הורים",
                                             Visit.visit_date>start_Of_year  ).all()
@@ -376,6 +375,14 @@ def getMelaveMadadim():
                                          "serve_type": row[7],"hadar_plan_session": row[8]} for row in
                             [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
         melave_score1,call_gap_avg,meet_gap_avg=melave_score(melaveId)
+        print("aa")
+
+        print(fetch_Diagram_rivonly(melaveId, config.proffesionalMeet_presence))
+        print("aa")
+
+        print(fetch_Diagram_rivonly(melaveId, config.forgotenApprentice_cnt))
+        print("aa")
+
         return jsonify({
             'melave_score': melave_score1,
             "numOfApprentice": len(ApprenticeCount),
@@ -418,7 +425,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         numOfQuarter_passed=int(current_month/3)
 
         institutionId = db.session.query(user1.institution_id).filter(user1.id == mosadCoordinator).first()[0]
-        all_Melave = db.session.query(user1.id).filter(user1.role_id=="0",user1.institution_id == institutionId).all()
+        all_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),user1.institution_id == institutionId).all()
 
         old_Melave_ids_professional=[r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=90)
@@ -552,13 +559,13 @@ def getEshcolCoordinatorMadadim():
         print("eshcol_id",eshcol)
 
         # total MosadCoordinator Count for this eshcol
-        all_MosadCoordinator = db.session.query(user1.id).filter(user1.eshcol == eshcol[0],user1.role_id=="1").all()
+        all_MosadCoordinator = db.session.query(user1.id).filter(user1.eshcol == eshcol[0],user1.role_ids.contains("1")).all()
         #EshcolMelvin = db.session.query(user1.id).filter(user1.cluster_id == eshcol[0],user1.role_id=="0").all()
         all_EshcolApprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id==Institution.id,Institution.eshcol_id==str(eshcol[0])).all()
 
         all_MosadCoordinator_ids_call = [r[0] for r in all_MosadCoordinator]
         too_old = datetime.today() - timedelta(days=30)
-        new_visit_yeshiva = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,user1.role_id=="1",
+        new_visit_yeshiva = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,user1.role_ids.contains("1"),
                                                                 user1.eshcol == eshcol[0],
                                                                 Visit.title == "מפגש",
                                                                 Visit.visit_date > too_old).all()
@@ -681,7 +688,7 @@ def mosad_Coordinators_score(mosadCoord_id):
 
     try:
         user_prof = db.session.query( user1.institution_id,user1.association_date).filter(user1.id==mosadCoord_id).first()
-        all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_id == "0",
+        all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),
                                                              user1.institution_id == user_prof[0]).all()
 
         if len(all_Mosad_Melave) == 0:
@@ -758,7 +765,7 @@ def mosad_Coordinators_score(mosadCoord_id):
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def eshcol_Coordinators_score(eshcolCoord_id):
     eshcol = db.session.query( user1.eshcol).filter(user1.id==eshcolCoord_id).first()[0]
-    all_eshcol_mosadCoord = db.session.query(user1.id).filter(user1.role_id == "1",
+    all_eshcol_mosadCoord = db.session.query(user1.id).filter(user1.role_ids.contains("1"),
                                                          user1.eshcol == eshcol).all()
     all_eshcol_apprentices = db.session.query(Apprentice.id).filter(
                                                          Apprentice.eshcol == eshcol).all()
@@ -823,9 +830,10 @@ def mosad_score(institution_id):
 
     mosad_score=0
     try:
-        mosadCoord_id=db.session.query(user1.id).filter(user1.role_id == "1",
+        mosadCoord_id=db.session.query(user1.id).filter(user1.role_ids.contains("1"),
                                                              user1.institution_id == institution_id).first()
-        all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_id == "0",
+        print("mosadCoord_id",mosadCoord_id)
+        all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),
                                                              user1.institution_id == institution_id).all()
         all_Mosad_apprentices = db.session.query(Apprentice.id).filter(
                                                              Apprentice.institution_id == institution_id).all()

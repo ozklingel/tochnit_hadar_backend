@@ -26,7 +26,7 @@ def getTasks():
     userId = request.args.get("userId")
     role=db.session.query(user1.role_ids).filter(
         user1.id == userId).first()
-    if 3 in role.role_ids:
+    if "3" in role.role_ids:
         tasks=db.session.query(task_user_made).filter(
             task_user_made.userid == userId).all()
         res=[]

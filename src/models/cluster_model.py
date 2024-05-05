@@ -1,6 +1,6 @@
 from . import *
 
-from app import db
+from src.services import db
 #region where the entity is in Israel
 class Cluster(db.Model):
     __tablename__ = CLUSTERS_TBL

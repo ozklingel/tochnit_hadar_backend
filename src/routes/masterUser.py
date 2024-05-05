@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
-from app import db
+from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City

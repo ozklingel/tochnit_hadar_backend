@@ -7,7 +7,7 @@ from http import HTTPStatus
 from datetime import datetime as dt,date,timedelta
 
 import config
-from app import db, red
+from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
 from src.models.task_userMade import  task_user_made

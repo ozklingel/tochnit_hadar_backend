@@ -1,6 +1,6 @@
 from . import *
 
-from app import db
+from src.services import db
 class City(db.Model):
     __tablename__ = CITIES_TBL
 

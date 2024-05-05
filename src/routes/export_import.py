@@ -11,7 +11,7 @@ from datetime import datetime,date,timedelta
 from sqlalchemy import func, or_
 
 import config
-from app import db, red
+from src.services import db, red
 from config import AWS_access_key_id, AWS_secret_access_key, melave_Score, visitcalls_melave_avg, visitmeets_melave_avg, \
     proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence, horim_meeting, call_report, groupMeet_report, \
     personalMeet_report, professional_report, HorimCall_report

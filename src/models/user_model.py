@@ -3,7 +3,7 @@ from .city_model import City
 from .cluster_model import Cluster
 from .institution_model import Institution
 
-from app import db
+from src.services import db
 import datetime
 
 class user1(db.Model):

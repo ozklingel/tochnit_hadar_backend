@@ -4,7 +4,7 @@ from http import HTTPStatus
 from datetime import datetime,date
 from sqlalchemy import func, or_
 import config
-from app import db, red
+from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
 from src.models.visit_model import Visit

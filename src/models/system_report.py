@@ -1,6 +1,6 @@
 from . import *
 
-from app import db
+from src.services import db
 class system_report(db.Model):
     __tablename__ = "system_report"
 

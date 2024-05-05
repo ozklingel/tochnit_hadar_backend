@@ -20,7 +20,7 @@ from ..models.apprentice_model import Apprentice
 from ..models.institution_model import Institution
 from ..models.user_model import user1
 from ..models.visit_model import Visit
-from app import  db
+from src.services import  db
 import uuid
 from ..models.notification_model import notifications
 

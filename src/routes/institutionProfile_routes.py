@@ -8,7 +8,7 @@ from http import HTTPStatus
 
 from openpyxl.reader.excel import load_workbook
 
-from app import db, red
+from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City

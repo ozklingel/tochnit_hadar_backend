@@ -11,7 +11,7 @@ from openpyxl.reader.excel import load_workbook
 from sqlalchemy import or_
 
 import config
-from app import db
+from src.services import db
 from .Utils.Sms import send_sms_019
 from .search_ent import filter_by_request
 from .user_Profile import toISO

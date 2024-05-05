@@ -8,7 +8,7 @@ from openpyxl.reader.excel import load_workbook
 from datetime import datetime,date
 
 import config
-from app import db, red
+from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice, front_end_dict
 from src.models.base_model import Base

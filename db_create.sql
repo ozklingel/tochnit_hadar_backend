@@ -70,6 +70,7 @@ notifyMorning_weekly_report boolean DEFAULT False,
 notifyMorning_sevev boolean DEFAULT False,
 notifyDayBefore_sevev boolean DEFAULT False,
 notifyStartWeek_sevev boolean DEFAULT False,
+association_date timestamp DEFAULT now(),
 
 PRIMARY KEY(id)
 ,
@@ -150,7 +151,7 @@ workPlace text DEFAULT '',
 workStatus text DEFAULT '',  
 militaryPositionNew text DEFAULT '',                                  
 first_name text DEFAULT '',
-institution_mahzor DEFAULT '',
+institution_mahzor text DEFAULT '',
 PRIMARY KEY(id)
 ,
 CONSTRAINT fk_1

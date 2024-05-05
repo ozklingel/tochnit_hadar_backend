@@ -63,7 +63,10 @@ def getNotificationSetting_form():
 def addApperntice(wb):
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        first_name = row[0].value.strip()
+        if row[0].value is None:
+            continue
+        first_name = row[0].value.strip() if not row[0].value is None else ""
+        print(first_name)
         last_name = row[1].value.strip()
         phone = row[2].value
         city = row[3].value.strip()
@@ -72,9 +75,8 @@ def addApperntice(wb):
         birthday_Ivry_month = row[6].value.strip()  # מפקד?
         birthday_Ivry_day = row[7].value.strip()  # מפקד?
         birthday_Ivry = birthday_Ivry_day + " " + birthday_Ivry_month
-        birthday_loazi = row[8].value.strip()  # מפקד?
+        birthday_loazi = row[8].value  # מפקד?
         mail = row[9].value.strip() if row[9].value else ""  # מפקד?
-
         marriage_status = row[10].value.strip()
         serve_type = row[11].value.strip()
         hadar_plan_session = row[12].value
@@ -109,22 +111,26 @@ def addApperntice(wb):
         workplace = row[39].value.strip()  # city
         educationfaculty = row[40].value.strip()  # ariel
         workoccupation = row[41].value.strip()  # Anaf
-        worktype = row[42].value.strip()  #
-        unit_name = row[43].value.strip()  # חיל שריון
-        army_role = row[44].value.strip()  # צנחנים
-        militaryPositionNew = row[46].value.strip()  # מפקצ
-        militaryPositionOld = row[47].value.strip()  # צנחנים
-        recruitment_date = row[48].value.strip()  # צנחנים
-        release_date = row[49].value.strip()  # צנחנים
-        base_name = row[50].value.strip()
-        institution_name = row[51].value.strip()
-        accompany_id = row[52].value  # מפקד?
+        #worktype = row[42].value.strip()  #
+        unit_name = row[42].value.strip()  # חיל שריון
+        army_role = row[43].value.strip()  # צנחנים
+        militaryPositionNew = row[45].value.strip()  # מפקצ
+        militaryPositionOld = row[46].value.strip()  # צנחנים
+        recruitment_date = row[47].value  # צנחנים
+        release_date = row[48].value # צנחנים
+        base_name = row[49].value.strip()
+        institution_name = row[50].value.strip()
+        print(row[51].value)
+        accompany_id = row[51].value  # מפקד?
 
         CityId = db.session.query(City.id).filter(City.name == city).first()
         militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()
-        print(institution_name)
         institution_id = db.session.query(Institution.id).filter(Institution.name == institution_name).first()
+        if institution_id is None or CityId is None or militaryCompoundId is None:
+            continue
         eshcol = db.session.query(Institution.eshcol_id).filter(Institution.id == institution_id.id).first()
+        if institution_id is None or eshcol is None or CityId is None or militaryCompoundId is None:
+            continue
 
         try:
             institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
@@ -172,7 +178,7 @@ def addApperntice(wb):
                 # marriage_date=marriage_date_loazi,
                 spirit_status=matzbar,
                 contact2_email=contact2_email,
-                worktype=worktype,
+                #worktype=worktype,
                 workoccupation=workoccupation,
                 educationfaculty=educationfaculty,
                 workplace=workplace,
@@ -186,17 +192,19 @@ def addApperntice(wb):
 
             )
             db.session.add(Apprentice1)
-            db.session.commit()
+            print("first ",Apprentice1.last_name)
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-
+    print("done")
+    db.session.commit()
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 def addUsers(wb):
+
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
-        if row[5].value is None:
+        if row[0].value is None:
             continue
         role_ids = ""
         if "מלווה" in row[2].value.strip():
@@ -207,17 +215,17 @@ def addUsers(wb):
             role_ids += "2,"
         if "אחראי תוכנית" in row[2].value.strip():
             role_ids += "3,"
-        print(role_ids)
         role_ids = role_ids[:-1]
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
-        institution_name = row[3].value.strip()
+        institution_name = row[3].value.strip() if not row[3].value is None else ""
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
-        eshcol = row[4].value.strip()
+        eshcol = row[4].value.strip() if not row[4].value is None else ""
         try:
             institution_id = db.session.query(Institution.id).filter(
-                Institution.name == str(institution_name)).first()
+                Institution.name == str(institution_name)).first() if institution_name!="" else [24304]
+
             user = user1(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
@@ -225,22 +233,23 @@ def addUsers(wb):
                 role_ids=role_ids,
                 # email=str(email),
                 eshcol=eshcol,
-                institution_id=institution_id.id,
+                institution_id=institution_id[0],
             )
 
             db.session.add(user)
-            db.session.commit()
 
+            print("phone",phone)
+            db.session.commit()
 
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 @master_user_form_blueprint.route("/initDB", methods=['put'])
 def initDB():
     try:
+        type = request.args.get('type')
 
         giftCode = db.session.query(gift).delete()
         giftCode = db.session.query(Visit).delete()
@@ -248,13 +257,24 @@ def initDB():
         giftCode = db.session.query(notifications).delete()
         giftCode = db.session.query(user1).delete()
         giftCode = db.session.query(Apprentice).delete()
-        path = 'data/apprentice_enter_lab.xlsx'
-        wb = load_workbook(filename=path)
-        addApperntice(wb)
-        path = 'data/user_enter_lab.xlsx'
-        wb = load_workbook(filename=path)
-        addUsers(wb)
+        db.session.commit()
+        if type=="lab":
+            path = 'data/apprentice_enter_lab.xlsx'
+            wb = load_workbook(filename=path)
+            addApperntice(wb)
+            print("appretice loaded")
+            path = 'data/user_enter_lab.xlsx'
+            wb = load_workbook(filename=path)
+            addUsers(wb)
+            print("user loaded")
 
+        else :
+            path = 'data/טבלת הכנסת חניכים - סופית ינון.xlsx'
+            wb = load_workbook(filename=path)
+            addApperntice(wb)
+            path = 'data/טבלת הכנסת משתמשים  - סופית ינון.xlsx'
+            wb = load_workbook(filename=path)
+            addUsers(wb)
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

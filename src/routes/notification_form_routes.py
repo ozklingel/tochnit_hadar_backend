@@ -31,11 +31,14 @@ init_weekDay=date.today().weekday()
 def convert_hebrewDate_to_Lozai(hebrew_date):
     today = dates.HebrewDate.today()
     birthday_ivry1 = hebrew_date.split(" ")
-    print(birthday_ivry1[0])
-    print(Hebrew(birthday_ivry1[0]).gematria())
-    thisYearBirthday = dates.HebrewDate(today.year, int(config.Ivry_month[birthday_ivry1[1]]),
-                                        Hebrew(birthday_ivry1[0]).gematria()).to_greg()
-    thisYearBirthday = date(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day)
+    try:
+        thisYearBirthday = dates.HebrewDate(today.year, int(config.Ivry_month[birthday_ivry1[1]]),
+                                            Hebrew(birthday_ivry1[0]).gematria()).to_greg()
+        thisYearBirthday = date(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day)
+    except:
+        thisYearBirthday = dates.HebrewDate(today.year, int(config.Ivry_month[birthday_ivry1[1]]),
+                                            Hebrew(birthday_ivry1[0]).gematria()-2).to_greg()
+        thisYearBirthday = date(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day)
     return thisYearBirthday
 
 def add_notificaion_to_melave(user):
@@ -80,7 +83,6 @@ def add_notificaion_to_melave(user):
         visitEvent = db.session.query(Visit).filter(Visit.user_id == user.id,Visit.ent_reported==Apprentice1.id,
                                                     Visit.title.in_(config.reports_as_call)).order_by(
                                                     Visit.visit_date.desc()).first()
-        print(visitEvent)
         if visitEvent is None or (date.today() - visitEvent.visit_date).days > 14:
             too_old = datetime.datetime.today() - timedelta(days=14)
             res = db.session.query(notifications).filter(notifications.userid == user.id,notifications.subject==str(Apprentice1.id),
@@ -110,6 +112,7 @@ def add_notificaion_to_melave(user):
                 db.session.add(notification3)
         #birthday
         thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
+
         gap = (date.today() - thisYearBirthday).days
         if gap <= 7 and gap >= 7 and date.today().weekday() == init_weekDay:
             too_old = datetime.datetime.today() - timedelta(days=8)
@@ -177,7 +180,6 @@ def add_notificaion_to_mosad(user):
     too_old = datetime.datetime.today() - timedelta(days=83)
     res = db.session.query(notifications).filter(notifications.userid == user.id,
                                                  notifications.event == config.matzbar_report).first()
-    print("Matzbar",res)
 
     if res :
         d=res.created_at
@@ -198,7 +200,6 @@ def add_notificaion_to_mosad(user):
                                                  notifications.created_at > too_old,
                                                  notifications.event == config.melave_Score_list).first()
     too_old = datetime.datetime.today() - timedelta(days=23)
-    print("melave_Score_",res)
 
     if res :
         d=res.created_at
@@ -227,7 +228,6 @@ def add_notificaion_to_mosad(user):
 
         apprenFOrgoten=""
         for r in apprenticeList:
-            print(r.name)
             apprenFOrgoten+=r.name+" "+r.last_name+"\n"
         notification1 = notifications(userid=user.id, subject="", event=config.forgotenApprentice_list,
                                       date=date1,created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
@@ -373,7 +373,7 @@ def add_notificaion_to_ahraiTohnit(user):
         for r in no_MOsadEshcolMeeting:
             no_MOsadEshcolMeeting_str += r + "\n"
         date1 = '2023-01-01' if visitEvent is None else visitEvent.visit_date
-        notification1 = notifications(userid=user.id, subject=str(mosadCoord_), event=config.tochnitMeeting_report,
+        notification1 = notifications(userid=user.id, subject="", event=config.tochnitMeeting_report,
                                       date=date1, created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
                                       allreadyread=False, numoflinesdisplay=2,
                                       details=MOsadEshcolMeeting_details.format(user.name) + no_MOsadEshcolMeeting_str,
@@ -465,7 +465,7 @@ def getAll_notification_form():
         my_dict = []
         print()
         for noti in notiList:
-            daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+            daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
             if noti.event==config.groupMeet_report:
                 apprenticeids=""
             else:
@@ -534,7 +534,7 @@ def getAll_notification_form():
              notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
              my_dict = []
              for noti in notiList:
-                daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+                daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
                 if userEnt.notifyStartWeek == True and date(date.today().year, noti.date.month,
                                                             noti.date.day).weekday() == 6:
                     gap = (date.today() - date(date.today().year, noti.date.month, noti.date.day)).days
@@ -767,7 +767,7 @@ def add_frequenced_notification():
     notiList = db.session.query(notifications).filter(notifications.frequency!="never").all()
     my_dict = []
     for noti in notiList:
-        daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
+        daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
         if noti.frequency == "daily" and daysFromNow == 1:
             notification1 = notifications(
                 userid=noti.userid,

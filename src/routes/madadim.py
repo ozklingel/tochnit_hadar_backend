@@ -832,7 +832,6 @@ def mosad_score(institution_id):
     try:
         mosadCoord_id=db.session.query(user1.id).filter(user1.role_ids.contains("1"),
                                                              user1.institution_id == institution_id).first()
-        print("mosadCoord_id",mosadCoord_id)
         all_Mosad_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),
                                                              user1.institution_id == institution_id).all()
         all_Mosad_apprentices = db.session.query(Apprentice.id).filter(

@@ -75,6 +75,8 @@ class Apprentice(db.Model):
 
 
 front_end_dict={
+"address": "address",
+
 "highSchoolRavMelamed_phone": "high_school_teacher_phone"
 ,"highSchoolRavMelamed_name":"high_school_teacher",
 "highSchoolRavMelamed_email":"high_school_teacher_email",
@@ -120,7 +122,7 @@ front_end_dict={
 "marriage_date":"marriage_date",
 "highSchoolInstitution":"highSchoolInstitution",
 "army_role":"army_role",
-"unit_name":"unit_name",
+"militaryUnit":"unit_name",
 "matsber":"spirit_status",
 "militaryDateOfDischarge":"release_date",
 "militaryDateOfEnlistment":"recruitment_date"

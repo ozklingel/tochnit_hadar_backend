@@ -52,7 +52,7 @@ def update():
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
             elif  key == "birthday":
-                if validate_date(data[key]):
+                if validate_date(data[key][:-9]):
                     setattr(updatedEnt, key, data[key])
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401

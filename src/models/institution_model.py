@@ -21,3 +21,18 @@ class Institution(db.Model):
 
     #eshcol_id = db.Column("eshcol_id",db.Integer,ForeignKey(get_forgein_key_source("eshcol", ID_COL)), nullable=False)
 
+front_end_dict={
+   "id":"id",
+   "name":"name",
+   "racaz_id":"owner_id",
+   "contact_phone":"owner_id",
+   "address":"city",
+   "contact_name":"contact_name",
+   "phone":"phone",
+   "avatar":"logo_path",
+   "eshcol":"eshcol_id",
+   "roshYeshiva_phone":"roshYeshiva_phone",
+   "roshYeshiva_name":"roshYeshiva_name",
+   "admin_phone":"admin_phone",
+   "admin_name":"admin_name"
+}

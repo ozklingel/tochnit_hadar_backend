@@ -198,14 +198,17 @@ def addUsers(wb):
     for row in sheet.iter_rows(min_row=2):
         if row[5].value is None:
             continue
-        if row[2].value.strip() == "מלווה":
-            role = 0
-        elif row[2].value.strip() == "רכז":
-            role = 1
-        elif row[2].value.strip() == "רכז אשכול":
-            role = 2
-        elif row[2].value.strip() == "אחראי תוכנית":
-            role = 3
+        role_ids = ""
+        if "מלווה" in row[2].value.strip():
+            role_ids += "0,"
+        if "רכז מוסד" in row[2].value.strip():
+            role_ids += "1,"
+        if "רכז אשכול" in row[2].value.strip():
+            role_ids += "2,"
+        if "אחראי תוכנית" in row[2].value.strip():
+            role_ids += "3,"
+        print(role_ids)
+        role_ids = role_ids[:-1]
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip()
@@ -219,12 +222,12 @@ def addUsers(wb):
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
-                role_id=str(role),
+                role_ids=role_ids,
                 # email=str(email),
                 eshcol=eshcol,
                 institution_id=institution_id.id,
             )
-            print(user)
+
             db.session.add(user)
             db.session.commit()
 

@@ -111,7 +111,7 @@ def melave_corrdintors_score():
 @export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
 def mosad_melavim_cnt():
     try:
-        mosad_melavim_cnt = db.session.query(Institution.name,func.count(user1.name)).filter(user1.institution_id==Institution.id,user1.role_id=="0").group_by(
+        mosad_melavim_cnt = db.session.query(Institution.name,func.count(user1.name)).filter(user1.institution_id==Institution.id,user1.role_ids.contains("0")).group_by(
                                                                                                Institution.id).all()
         mosad_melavim_cnt=dict(mosad_melavim_cnt)
         rows = mosad_melavim_cnt.items()
@@ -335,7 +335,7 @@ def getGift():
 @export_import_blueprint.route('/monthly', methods=['GET'])
 def monthly():
     try:
-        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_id == "0").all()
+        all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0")).all()
         for melave in all_melave:
             melaveId = melave[0]
             all_melave_Apprentices = db.session.query(Apprentice.id).filter(
@@ -367,7 +367,7 @@ def monthly():
             db.session.add(system_report1)
 
             # mosad Madadim:
-            all_MosadCoordinator = db.session.query(user1.id, user1.institution_id).filter(user1.role_id == "1").all()
+            all_MosadCoordinator = db.session.query(user1.id, user1.institution_id).filter(user1.role_ids.contains("1")).all()
             for mosadCoord in all_MosadCoordinator:
                 mosadCoord_id = mosadCoord[0]
                 res = md.mosadCoordinator(mosadCoord_id)[0].json
@@ -403,7 +403,7 @@ def rivony():
     month4index=current_month%3
     start_Of_Rivon = datetime.today() - timedelta(days=30*month4index)
     #melave Madadim:
-    all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_id == "0").all()
+    all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
@@ -442,7 +442,7 @@ def rivony():
         db.session.add(system_report1)
 
     #mosad Madadim:
-    all_MosadCoordinator = db.session.query(user1.id,user1.institution_id).filter(user1.role_id=="1").all()
+    all_MosadCoordinator = db.session.query(user1.id,user1.institution_id).filter(user1.role_ids.contains("1")).all()
     for mosadCoord in all_MosadCoordinator:
         mosadCoord_id=mosadCoord[0]
         inst=db.session.query(user1.institution_id).filter(user1.id==mosadCoord_id)
@@ -470,7 +470,7 @@ def rivony():
 
 
     #eshcol Madadim:
-    all_eshcolCoordinator = db.session.query(user1.id,user1.eshcol).filter(user1.role_id=="2").all()
+    all_eshcolCoordinator = db.session.query(user1.id,user1.eshcol).filter(user1.role_ids.contains("2")).all()
     for eshcolCoord in all_eshcolCoordinator:
         eshcolCoord_id=eshcolCoord[0]
         eshco=eshcolCoord[1]
@@ -506,7 +506,7 @@ def rivony():
 def yearly():
     current_month=date.today().month
     start_Of_year = datetime.today() - timedelta(days=30*current_month)
-    all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_id == "0").all()
+    all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(

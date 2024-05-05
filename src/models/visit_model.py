@@ -4,6 +4,7 @@ from .user_model import user1
 
 from datetime import datetime
 
+#דיוחחים על משתמש או חניך
 class Visit(db.Model):
     __tablename__ = VISITS_TBL
 

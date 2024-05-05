@@ -19,7 +19,7 @@ from src.routes.Utils.Sms import send_sms_019
 from src.routes.messegaes_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
-otp = pyotp.TOTP(secret_key, interval=60)
+otp = pyotp.TOTP(secret_key, interval=120)
 config.prev_otp=0
 user_otp_dict= TimerDict(default_duration=timedelta(minutes=1))
 onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/onboarding_form')
@@ -33,7 +33,7 @@ def getOTP_form():
         if str(created_by_phone) in user_otp_dict:
             return jsonify({"result": "already got otp"}), 401
         # Generate an OTP using TOTP after every 30 seconds
-        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from *tochnit hadar* is : "+otp.now())
+        send_sms_019(["559482844"],[created_by_phone],"your verify service verification code from **tochnit hadar** is : "+otp.now())
         user_otp_dict[str(created_by_phone)]=otp.now()
         config.prev_otp=str(otp.now())
         session['otp_code'] = str(otp.now())

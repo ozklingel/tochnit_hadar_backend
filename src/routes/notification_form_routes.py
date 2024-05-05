@@ -8,6 +8,7 @@ from http import HTTPStatus
 from hebrew import Hebrew
 from pyluach import hebrewcal, dates
 from sqlalchemy import func, or_
+from sqlalchemy import func, or_
 
 import config
 from .Utils.notifiacationDetails import groupMeet_details, personalMeet_details, basisVisit_details, event_details, \
@@ -158,7 +159,7 @@ def add_notificaion_to_mosad(user):
                                           id=int(str(uuid.uuid4().int)[:5]))
             db.session.add(notification1)
 
-    melave_list = db.session.query(user1.id,user1.name,user1.last_name).filter(user1.institution_id==user.institution_id,user1.role_id=="0").all()
+    melave_list = db.session.query(user1.id,user1.name,user1.last_name).filter(user1.institution_id==user.institution_id,user1.role_ids.contains("0")).all()
     under65_dict = dict()
     no_matzbar_list=[]
     for melave_ in melave_list:
@@ -246,7 +247,7 @@ def add_notificaion_to_eshcol(user):
         mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
         if mosad__score1 < 65:
             lowScore_mosdot.append(institution_[1])
-        mosadCoord_ = db.session.query(user1.id, user1.name, user1.last_name).filter(user1.role_id == "1",
+        mosadCoord_ = db.session.query(user1.id, user1.name, user1.last_name).filter(user1.role_ids.contains("1"),
                                                                                      user1.institution_id == institution_.id).first()
         if mosadCoord_ is not None:
             # MOsadEshcolMeeting_report
@@ -257,7 +258,7 @@ def add_notificaion_to_eshcol(user):
                 no_MOsadEshcolMeeting.append(mosadCoord_.name)
             #ציון מלווים
             melave_list = db.session.query(user1.id, user1.name, user1.last_name).filter(
-                user1.institution_id == institution_[0], user1.role_id == "0").all()
+                user1.institution_id == institution_[0], user1.role_ids.contains("0")).all()
             under65_dict=dict()
             for melave_ in melave_list:
                 melave_score1, call_gap_avg, personal_meet_gap_avg = melave_score(melave_.id)
@@ -341,7 +342,7 @@ def add_notificaion_to_ahraiTohnit(user):
             mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
             if mosad__score1 < 65:
                 lowScore_mosdot[institution_.eshcol_id]=lowScore_mosdot.get(institution_.eshcol_id, [])+[institution_.name]
-            mosadCoord_ = db.session.query(user1.id, user1.name, user1.last_name).filter(user1.role_id == "1",
+            mosadCoord_ = db.session.query(user1.id, user1.name, user1.last_name).filter(user1.role_ids.contains("1"),
                                                                                          user1.institution_id == institution_.id).first()
             if mosadCoord_ is not None:
                 # ישיבת רכזי תוכנית
@@ -352,7 +353,7 @@ def add_notificaion_to_ahraiTohnit(user):
                     no_MOsadEshcolMeeting.append(mosadCoord_.name)
                 # ציון מלווים
                 melave_list = db.session.query(user1.id, user1.name, user1.last_name).filter(
-                    user1.institution_id == institution_[0], user1.role_id == "0").all()
+                    user1.institution_id == institution_[0], user1.role_ids.contains("0")).all()
                 under65_dict = dict()
                 for melave_ in melave_list:
                     melave_score1, call_gap_avg, personal_meet_gap_avg = melave_score(melave_.id)
@@ -448,20 +449,21 @@ def getAll_notification_form():
         print("weekday ",date.today().weekday())
         user = request.args.get('userId')
         print("user:",user)
-        user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
+        user_ent=db.session.query(user1.role_ids,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
         print("user role:",user_ent[0])
-        if user_ent[0]=="0":#melave
+        if "0" in user_ent[0]:#melave
             add_notificaion_to_melave(user_ent)
-        if user_ent[0] == "1":  # mosad
+        if "1" in user_ent[0] :  # mosad
                 add_notificaion_to_mosad(user_ent)
-        if user_ent[0] == "2":  # eshcol
+        if "2" in user_ent[0] :  # eshcol
                 add_notificaion_to_eshcol(user_ent)
-        if user_ent[0] == "3":  # ahrah
+        if "3" in user_ent[0] :  # ahrah
             add_notificaion_to_ahraiTohnit(user_ent)
         #send  notifications.
         userEnt = db.session.query(user1.notifyStartWeek,user1.notifyDayBefore,user1.notifyMorning).filter(user1.id==user).first()
         notiList = db.session.query(notifications).filter(notifications.userid == user).order_by(notifications.date.desc()).all()
         my_dict = []
+        print()
         for noti in notiList:
             daysFromNow = (date.today() - noti.date).days if noti.date is not None else "None"
             if noti.event==config.groupMeet_report:
@@ -511,7 +513,7 @@ def getAll_notification_form():
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
 
-        if user_Role[0]=="3":#ahrai tohhnit
+        if "3" in user_Role[0]:#ahrai tohhnit
              userEnt = db.session.query(user1.id,user1.notifyStartWeek,user1.notifyMorning,user1.notifyDayBefore,user1.notifyMorning_sevev,user1.notifyDayBefore_sevev,user1.notifyStartWeek_sevev,user1.notifyMorning_weekly_report).filter(user1.id == user).first()
              institotionList= db.session.query(Institution.id,Institution.name,Institution.eshcol_id).all()
              eshcol_dict=dict()
@@ -519,7 +521,7 @@ def getAll_notification_form():
                  mosad__score1,forgotenApprentice_Mosad1=mosad__score(institution_[0])
                  if mosad__score1<65:
                      add_visit_notification(user, institution_[1], "ציון מוסדות", date.today())
-                 mosadCoord_ = db.session.query(user1.id,user1.name,user1.last_name).filter(user1.role_id == "1",
+                 mosadCoord_ = db.session.query(user1.id,user1.name,user1.last_name).filter(user1.role_ids.contains("1"),
                                                                    user1.institution_id == institution_.id).first()
                  if mosadCoord_ is not None:
                      mosad_Coordinators_score1=mosad_Coordinators_score(mosadCoord_[0])
@@ -587,7 +589,7 @@ def add_notification_form():
         subject = json_object["subject"] if json_object["subject"] else ""
         event = json_object["event"]
         date = json_object["date"]
-        user_ent=db.session.query(user1.role_id,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
+        user_ent=db.session.query(user1.role_ids,user1.institution_id,user1.eshcol,user1.id,user1.name).filter(user1.id == user).first()
         subject_ent=db.session.query(Apprentice.name).filter(Apprentice.id == subject).first()
         if subject_ent is None:
             subject_ent="מי שקבעת"

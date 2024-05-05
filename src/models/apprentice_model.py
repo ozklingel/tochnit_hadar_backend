@@ -72,3 +72,65 @@ class Apprentice(db.Model):
     association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
     birthday_ivry=db.Column("birthday_ivry", db.String(50), nullable=False,default="ה' בטבת")
     marriage_date_ivry=db.Column("marriage_date_ivry", db.DateTime, nullable=False,default="ה' בטבת")
+
+
+front_end_dict={
+"highSchoolRavMelamed_phone": "high_school_teacher_phone"
+,"highSchoolRavMelamed_name":"high_school_teacher",
+"highSchoolRavMelamed_email":"high_school_teacher_email",
+
+"thRavMelamedYearA_name":"teacher_grade_a",
+"thRavMelamedYearA_phone":"teacher_grade_a_phone",
+"thRavMelamedYearA_email":"teacher_grade_a_email",
+
+"thRavMelamedYearB_name":"teacher_grade_b",
+"thRavMelamedYearB_phone":"teacher_grade_b_phone",
+"thRavMelamedYearB_email":"teacher_grade_b_email",
+"thMentor_id": "thMentor_id",
+"contact1_first_name":"contact1_first_name",
+"contact1_last_name":"contact1_last_name",
+"contact1_phone":"contact1_phone",
+"contact1_email":"contact1_email",
+"contact1_relation":"contact1_relation",
+"contact2_first_name":"contact2_first_name",
+"contact2_last_name":"contact2_last_name",
+"contact2_phone":"contact2_phone",
+"contact2_email":"contact2_email",
+"contact2_relation":"contact2_relation",
+"contact3_first_name":"contact3_first_name",
+"contact3_last_name":"contact3_last_name",
+"contact3_phone":"contact3_phone",
+"contact3_email":'contact3_email',
+"contact3_relation":"contact3_relation",
+"activity_score":"reportList",
+"id":"id",
+"thMentor_id":"thMentor_id",
+"militaryPositionNew":"militaryPositionNew"
+,"avatar":"photo_path",
+"name":"name",
+"last_name":"last_name",
+"institution_id":"institution_id",
+"thPeriod":"hadar_plan_session",
+"serve_type":"serve_type",
+"marriage_status":"marriage_status",
+"militaryCompoundId":"base_id",
+"phone":'id',"email":"email",
+"teudatZehut":"teudatZehut",
+"birthday":"birthday",
+"marriage_date":"marriage_date",
+"highSchoolInstitution":"highSchoolInstitution",
+"army_role":"army_role",
+"unit_name":"unit_name",
+"matsber":"spirit_status",
+"militaryDateOfDischarge":"release_date",
+"militaryDateOfEnlistment":"recruitment_date"
+,"militaryUpdatedDateTime":"militaryupdateddatetime",
+"militaryPositionOld":"militaryPositionOld",
+"educationalInstitution":"educationalinstitution"
+,"educationFaculty":"educationfaculty",
+"workOccupation":"workoccupation",
+"workType":"worktype",
+"workPlace":"workplace",
+"workStatus":"workstatus",
+"paying":"paying"
+}

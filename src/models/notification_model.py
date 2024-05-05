@@ -4,7 +4,7 @@ from datetime import datetime
 from .user_model import user1
 
 
-
+#התראןת
 class notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     userid = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)#converted from string

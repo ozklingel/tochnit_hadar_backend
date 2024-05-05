@@ -13,8 +13,9 @@ from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
-from src.models.institution_model import Institution
+from src.models.institution_model import Institution, front_end_dict
 from src.models.user_model import user1
+from src.routes.setEntityDetails_form_routes import validate_email
 
 institutionProfile_form_blueprint = Blueprint('institutionProfile_form', __name__, url_prefix='/institutionProfile_form')
 
@@ -56,7 +57,7 @@ def uploadPhoto_form():
 def getmyApprentices_form():
     institution_id = int(request.args.get('institution_id'))
     print(institution_id)
-    melave_List = db.session.query(user1).filter(user1.institution_id== institution_id,user1.role_id=="0").all()
+    melave_List = db.session.query(user1).filter(user1.institution_id== institution_id,user1.role_ids.contains("0")).all()
     apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == institution_id).all()
     print(melave_List)
     my_dict = []
@@ -205,7 +206,7 @@ def getAll():
         if r.city_id !="":
             city = db.session.query(City).filter(City.id == r.city_id).first()
             region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
-        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_id == "0").all()
+        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_ids.contains("0")).all()
         apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
         my_list.append(
             {"id":str(r.id),"roshYeshiva_phone":r.roshYeshiva_phone,"roshYeshiva_name":r.roshYeshiva_name,
@@ -249,7 +250,23 @@ def update():
         data = request.json
         updatedEnt = Institution.query.get(mosad_Id)
         for key in data:
-            setattr(updatedEnt, key, data[key])
+            if key == "city":
+                CityId = db.session.query(City).filter(
+                    City.name == str(data[key])).first()
+                print("CityId", CityId)
+                setattr(updatedEnt, "city_id", CityId.id)
+            if key == "region":
+                ClusterId = db.session.query(Cluster.id).filter(
+                    Cluster.name == str(data[key])).first()
+                print("ClusterId", ClusterId.id)
+                setattr(updatedEnt, "cluster_id", ClusterId.id)
+            elif key == "email" or key == "birthday":
+                if validate_email(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "email or date -wrong format"}), 401
+            else:
+                setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
             # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')

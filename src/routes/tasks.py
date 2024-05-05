@@ -4,12 +4,17 @@ import uuid
 
 from flask import Blueprint, request, jsonify, Response
 from http import HTTPStatus
+from datetime import datetime as dt,date,timedelta
 
 import config
 from app import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
+from src.models.task_userMade import  task_user_made
+from src.models.user_model import user1
+
 from src.models.visit_model import Visit
+from src.routes.apprentice_Profile import toISO
 from src.routes.notification_form_routes import getAll_notification_form
 
 tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form')
@@ -19,66 +24,97 @@ tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form
 def getTasks():
     # get tasksAndEvents
     userId = request.args.get("userId")
-    res=getAll_notification_form()
-    todo_dict = []
-    todo_ids=[]
-    try:
-        print(res[0])
-    except Exception as e:
-        return jsonify([]), HTTPStatus.OK
+    role=db.session.query(user1.role_ids).filter(
+        user1.id == userId).first()
+    if "3" in role.role_ids:
+        tasks=db.session.query(task_user_made).filter(
+            task_user_made.userid == userId).all()
+        res=[]
+        for task in tasks:
+            daysFromNow = (dt.today() - task.date).days if task.date is not None else "None"
+            print("daysFromNow",daysFromNow)
+            print("task.frequency_end",task.frequency_end)
+            date_format = '%Y-%m-%d'
 
-    try:
-        for i in range(0,len(res[0].json)):
-            ent=res[0].json[i]
-            if "דוח" in    ent["event"] or "עידכון" in    ent["event"]:
-                continue
-            todo_ids.append(ent["id"])
-            if ent["numOfLinesDisplay"]==2:#noti not created by user
-                del ent["numOfLinesDisplay"]
+            if daysFromNow==0 and dt.strptime(task.frequency_end[:-9], date_format)>dt.today():#insert new row for next run todo
+                if task.frequency_meta == "daily":
+                    next_date = datetime.datetime.today() - datetime.timedelta(days=(-1))
+                if task.frequency_meta == "weekly":
+                    next_date = datetime.datetime.today() - datetime.timedelta(days=7 * (-1))
+                if task.frequency_meta == "monthly":
+                    next_date = datetime.datetime.today() - datetime.timedelta(days=30 * (-1))
+                if task.frequency_meta == "yearly":
+                    next_date = datetime.datetime.today() - datetime.timedelta(days=365 * (-1))
+                daysFromNow = (dt.today() - next_date).days if task.date is not None else "None"
+                res.append(
+                    {"frequency": task.frequency_meta, "description": task.details, 'status': "todo",
+                     'subject': task.event,
+                     'date': str(next_date)+str(task.date)[11:], 'daysfromnow': daysFromNow, 'event': task.event, 'id': str(uuid.uuid4().int)[:5],
+                     'title': task.event})
+            res.append(
+                {"frequency": task.frequency_meta, "description": task.details, 'status': task.status,  'subject': task.event,
+                 'date': str(task.date), 'daysfromnow': 373, 'event': task.event, 'id': str(task.id),
+                 'title': task.event})
+        return jsonify(res)
+    else:
+        res=getAll_notification_form()
+        todo_dict = []
+        todo_ids=[]
+        try:
+            print(res[0])
+        except Exception as e:
+            return jsonify([]), HTTPStatus.OK
 
-                #print(ent)
-                ent["status"] = "todo"
-                ent["id"] = str(ent["id"])
-                ent["subject"] = [ent["subject"]]
+        try:
+            for i in range(0,len(res[0].json)):
+                ent=res[0].json[i]
+                if "דוח" in    ent["event"] or "עידכון" in    ent["event"]:
+                    continue
+                todo_ids.append(ent["id"])
+                if ent["numOfLinesDisplay"]==2:#noti not created by user
+                    del ent["numOfLinesDisplay"]
 
-                if ent["event"]== config.groupMeet_report :
-                    ent["subject"]=[]
+                    #print(ent)
+                    ent["status"] = "todo"
+                    ent["id"] = str(ent["id"])
+                    ent["subject"] = [ent["subject"]]
 
-                todo_dict.append(ent)
+                    if ent["event"]== config.groupMeet_report or ent["event"]== config.basis_report :
+                        ent["subject"]=[]
 
-        ApprenticeList = db.session.query( Apprentice.id).filter(
-            Apprentice.accompany_id == userId).all()
-        all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
+                    todo_dict.append(ent)
 
-        visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
-                                                    Visit.title == config.HorimCall_report).all()
-        for i in visitHorim:
-            if i[0] in all_ApprenticeList_Horim:
-                all_ApprenticeList_Horim.remove(i[0])
-        for ent in all_ApprenticeList_Horim:
-            #Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
-            todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'subject': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
-        too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-        done_visits = db.session.query(Visit.ent_reported,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
-                                                    Visit.id.not_in(todo_ids),Visit.visit_date>too_old).distinct(Visit.id).all()
-        done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
-        "description": str(row[4]),'status':'done',"subject": [str(row[0])], "title": str(row[1])
-             ,"daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
+            ApprenticeList = db.session.query( Apprentice.id).filter(
+                Apprentice.accompany_id == userId).all()
+            all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
 
-        tasks_list = todo_dict+done_visits_dict
+            visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
+                                                        Visit.title == config.HorimCall_report).all()
+            for i in visitHorim:
+                if i[0] in all_ApprenticeList_Horim:
+                    all_ApprenticeList_Horim.remove(i[0])
+            for ent in all_ApprenticeList_Horim:
+                #Apprentice1 = db.session.query(Apprentice.name,Apprentice.last_name).filter(Apprentice.id == ent).first()
+                todo_dict.append({"frequency": "never","description": "",'status':'todo',"allreadyread": False, 'subject': [str(ent)], 'date': '2023-01-01T00:00:00', 'daysfromnow': 373, 'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5],  'title': 'מפגש הורים'})
+            too_old = datetime.datetime.today() - datetime.timedelta(days=60)
+            done_visits = db.session.query(Visit.ent_reported,Visit.title,Visit.visit_date,Visit.id,Visit.description).filter(Visit.user_id == userId,
+                                                        Visit.id.not_in(todo_ids),Visit.visit_date>too_old).distinct(Visit.id).all()
+            done_visits_dict=[{   "frequency": "never",        "allreadyread": False, "event": str(row[1]),
+            "description": str(row[4]),'status':'done',"subject": [str(row[0])], "title": str(row[1])
+                 ,"daysfromnow": 373, "date": str(row[2]), "id": str(row[3])} for row in [tuple(row) for row in done_visits]] if done_visits is not None else []
 
-        return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
+            tasks_list = todo_dict+done_visits_dict
+
+            return Response(json.dumps(tasks_list), mimetype='application/json'), HTTPStatus.OK
+        except Exception as e:
+            return jsonify({'result': 'error while get' + str(e)}), HTTPStatus.BAD_REQUEST
 @tasks_form_blueprint.route("/update", methods=['put'])
 def updateTask():
     # get tasksAndEvents
     try:
         taskId = request.args.get("taskId")
         data = request.json
-
-
-        updatedEnt = notifications.query.get(taskId)
+        updatedEnt = task_user_made.query.get(taskId)
         for key in data:
             setattr(updatedEnt, key, data[key])
         db.session.commit()
@@ -95,26 +131,41 @@ def add_task():
     try:
         json_object = request.json
         user = json_object["userId"]
-        apprenticeid = json_object["apprenticeid"] if json_object["apprenticeid"] else ""
         event = json_object["event"]
         date = json_object["date"]
         details = json_object["details"]
-        frequency = json_object["frequency"] if  json_object["frequency"] is not None else "never"
-        notification1 = notifications(
-                        userid=user,
-                        subject = apprenticeid,
-                        event=event,
-                        date=date,
-                        allreadyread=False,
-                        numoflinesdisplay=2,
-                        details=details,
-                        frequency=frequency,
+        frequency_end = json_object["frequency_end"]#1,2,3,4 or once or never
+        frequency_meta = json_object["frequency_meta"]
 
+        #frequency_weekday = json_object["frequency_weekday"]
+
+        if frequency_end.isnumeric():
+            if frequency_meta=="daily":
+                future_date_finish = datetime.datetime.today() - datetime.timedelta(days=(-frequency_end))
+            if frequency_meta=="weekly":
+                future_date_finish = datetime.datetime.today() - datetime.timedelta(days=7*(-frequency_end))
+            if frequency_meta=="monthly":
+                future_date_finish = datetime.datetime.today() - datetime.timedelta(days=30*(-frequency_end))
+            if frequency_meta=="yearly":
+                future_date_finish = datetime.datetime.today() - datetime.timedelta(days=365*(-frequency_end))
+        elif frequency_meta=="once":
+            future_date_finish=date
+        else:
+            future_date_finish = datetime.datetime.today() - datetime.timedelta(days=1000 * (-1))
+        print("future_date_finish",future_date_finish)
+        task_userMade1 = task_user_made(
+                        userid=user,
+                        event=event,
+                        details=details,
+            date=date,
+            #frequency_weekday=frequency_weekday,#weekday
+            frequency_meta=frequency_meta,  # daily
+            frequency_end=str(future_date_finish)[:-7],#finish date
             id=int(str(uuid.uuid4().int)[:5]),
 
         )
 
-        db.session.add(notification1)
+        db.session.add(task_userMade1)
         db.session.commit()
     except Exception as e:
         return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST

@@ -41,7 +41,6 @@ def add():
         data = request.json
         name = data['name']
         cluster_id = data['cluster']
-        print("no cluster_id")
         city = City(
             id=str(uuid.uuid1().int)[:5],  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
             name=name,

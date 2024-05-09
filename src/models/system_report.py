@@ -8,5 +8,5 @@ class system_report(db.Model):
     creation_date = db.Column("creation_date", db.DateTime, nullable=False)
     type = db.Column("type", db.String(20), nullable=False)
     related_id=db.Column("related_id",db.Integer, nullable=False)
-    value=db.Column("value",db.Integer, nullable=False)
+    value=db.Column("value",db.String(20), nullable=False)
 

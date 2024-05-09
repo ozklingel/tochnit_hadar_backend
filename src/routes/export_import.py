@@ -28,14 +28,18 @@ from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordina
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
 @export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
-def lowScoreApprentice_mosad():
+def export_lowScoreApprentice_mosad(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "lowScoreApprentice_mosad",system_report.creation_date ==export_date).first()
+            return data.value
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
-        print(lowScoreApprentice_dict)
+        #print(lowScoreApprentice_dict)
         missingCalleApprentice_dict= md.missingCalleApprentice()[0].json
-        print(missingCalleApprentice_dict)
+        #print(missingCalleApprentice_dict)
         missingMeetingApprentice_dict= md.missingMeetingApprentice()[0].json
-        print(missingMeetingApprentice_dict)
+        #print(missingMeetingApprentice_dict)
         res=[]
         lowScoreApprentice_List=lowScoreApprentice_dict["lowScoreApprentice_List"]
         callApprentice_List=missingCalleApprentice_dict["missingCalleApprentice_count"]
@@ -55,18 +59,25 @@ def lowScoreApprentice_mosad():
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(res)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
-def lowScoreApprentice_tohnit():
+def export_lowScoreApprentice_tohnit(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "lowScoreApprentice_tohnit",system_report.creation_date ==export_date).first()
+            return data.value
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
-        print(lowScoreApprentice_dict)
+        #print(lowScoreApprentice_dict)
         missingCalleApprentice_dict= md.missingCalleApprentice()[0].json
-        print(missingCalleApprentice_dict)
+        #print(missingCalleApprentice_dict)
         missingMeetingApprentice_dict= md.missingMeetingApprentice()[0].json
-        print(missingMeetingApprentice_dict)
+        #print(missingMeetingApprentice_dict)
         res=[]
         lowScoreApprentice_List=lowScoreApprentice_dict["lowScoreApprentice_List"]
         callApprentice_List=missingCalleApprentice_dict["missingCalleApprentice_count"]
@@ -80,18 +91,25 @@ def lowScoreApprentice_tohnit():
             all_Apprentices_cnt = db.session.query(func.count(Apprentice.id)).filter(
                 Apprentice.institution_id == Institution.id,Institution.name==score_ent["name"]).first()
             res.append([score_ent["name"],all_Apprentices_cnt[0],score_ent["value"],call_ent["value"],meet_ent["value"]])
-        print(res)
         fields = ['callgap_count','meetgap_count','lowScore_count', 'apprentice_count','Mosad_name']
         with open('GFG', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(res)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
+        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/melave_corrdintors_score", methods=['post'])
-def melave_corrdintors_score():
+def export_melave_corrdintors_score(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "melave_corrdintors_score",system_report.creation_date ==export_date).first()
+            return data.value
         score_dict=get_melave_score()
         rows = score_dict[1]
         for dict in rows:
@@ -105,12 +123,19 @@ def melave_corrdintors_score():
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
-def mosad_melavim_cnt():
+def export_mosad_melavim_cnt(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "mosad_melavim_cnt",system_report.creation_date ==export_date).first()
+            return data.value
         mosad_melavim_cnt = db.session.query(Institution.name,func.count(user1.name)).filter(user1.institution_id==Institution.id,user1.role_ids.contains("0")).group_by(
                                                                                                Institution.id).all()
         mosad_melavim_cnt=dict(mosad_melavim_cnt)
@@ -121,53 +146,69 @@ def mosad_melavim_cnt():
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_corrdintors_score", methods=['post'])
-def mosad_corrdintors_score():
+def export_mosad_corrdintors_score(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "mosad_corrdintors_score",system_report.creation_date ==export_date).first()
+            return data.value
         score_dict=get_mosad_Coordinators_score()
-        print(score_dict)
         rows = score_dict[1]
         for dict in rows:
             user_name = db.session.query(user1.name).filter(
                 user1.id==dict["id"]).first()
             print(user_name)
             dict["name"]=user_name[0]
-        print(rows)
         with open('GFG', 'w', encoding="utf-8") as f:
             title = "score,id,name".split(",")  # quick hack
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/Eshcol_corrdintors_score", methods=['post'])
-def Eshcol_corrdintors_score():
+def export_Eshcol_corrdintors_score(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "Eshcol_corrdintors_score",system_report.creation_date ==export_date).first()
+            return data.value
         score_dict=get_Eshcol_corrdintors_score()
-        print(score_dict)
         rows = score_dict[1]
         for dict in rows:
             user_name = db.session.query(user1.name).filter(
                 user1.id==dict["id"]).first()
-            print(user_name)
             dict["name"]=user_name[0]
-        print(rows)
         with open('GFG', 'w', encoding="utf-8") as f:
             title = "score,id,name".split(",")  # quick hack
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @export_import_blueprint.route("/forgoten_Tohnit", methods=['post'])
-def export_forgoten_Tohnit():
+def export_forgoten_Tohnit(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "forgoten_Tohnit",system_report.creation_date ==export_date).first()
+            return data.value
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
@@ -195,19 +236,25 @@ def export_forgoten_Tohnit():
         for i in ids_no_visit:
             forgotenApprentice_total += 1
             counts[i[1]] = counts.get(i[1], 0) + 1
-        print(counts)
         fields = ['count','name']
         rows = counts.items()
         with open('GFG', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/forgoten_mosad", methods=['post'])
-def export_forgoten_mosad():
+def export_forgoten_mosad(type="extenal"):
     try:
+        export_date = request.args.get("export_date")
+        if export_date !=str(date.today()) and export_date is not  None:
+            data = db.session.query( system_report.value).filter(system_report.type == "forgoten_mosad",system_report.creation_date ==export_date).first()
+            return data.value
         all_Apprentices = db.session.query(Apprentice.id, Apprentice.name,Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
@@ -234,6 +281,9 @@ def export_forgoten_mosad():
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
+        if type=="local":
+            with open('GFG', 'r',encoding="utf-8") as file:
+                return file.read()
         return send_file("GFG", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -245,9 +295,7 @@ def upload_CitiesDB():
         #/home/ubuntu/flaskapp/
         with open('/home/ubuntu/flaskapp/data/cities_add.csv', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
-            print(reader)
             for row in reader:
-                print(row)
                 my_list.append(City(row[0].strip(), row[1].strip(), row[2].strip()))
         for ent in my_list:
             db.session.add(ent)
@@ -268,7 +316,6 @@ def upload_baseDB():
         with open('/home/ubuntu/flaskapp/data/base_add.csv', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
-                print(row[1].strip())
                 ent=Base(int(str(uuid.uuid4().int)[:5]), row[0].strip(), row[1].strip())
                 db.session.add(ent)
         db.session.commit()
@@ -276,7 +323,7 @@ def upload_baseDB():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
 @export_import_blueprint.route("/export_dict", methods=['post'])
-def export_dict():
+def ZNOTINUSE_export_dict():
     try:
         data = request.json
         print("exporting:",list(data.keys())[0])
@@ -301,8 +348,7 @@ def add_giftCode_excel():
         for row in sheet.iter_rows(min_row=2):
             code = row[0].value
             was_used = row[1].value
-            print(code)
-            print(was_used)
+
             gift1 = gift( code=code,was_used=was_used)
             db.session.add(gift1)
 
@@ -313,28 +359,99 @@ def add_giftCode_excel():
         return jsonify({'result': 'success'}), HTTPStatus.BAD_REQUEST
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-@export_import_blueprint.route('/getGift', methods=['GET'])
-def getGift():
-    try:
-        teudat_zehut = request.args.get('teudat_zehut')
-        base = request.args.get('base')
-        giftCode = db.session.query(gift).filter(gift.was_used == False).first()
-        print(giftCode)
-        if giftCode is not None:
-            giftCode.was_used=True
-            #res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
-            db.session.commit()
 
-        if not giftCode:
-            # acount not found
-            return jsonify({'result': 'no code available'}), HTTPStatus.OK
-        else:
-            return jsonify({'result': str(giftCode.code)}), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/monthly', methods=['GET'])
 def monthly():
     try:
+        #export_lowScoreApprentice_tohnit_csv
+        export_lowScoreApprentice_tohnit_csv=export_lowScoreApprentice_tohnit("local")
+        print("export_lowScoreApprentice_tohnit_csv",export_lowScoreApprentice_tohnit_csv)
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="lowScoreApprentice_tohnit",
+            value=export_lowScoreApprentice_tohnit_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_lowScoreApprentice_mosad
+        export_lowScoreApprentice_mosad_csv=export_lowScoreApprentice_mosad("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="lowScoreApprentice_mosad",
+            value=export_lowScoreApprentice_mosad_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_Eshcol_corrdintors_score
+        export_Eshcol_corrdintors_score_csv=export_Eshcol_corrdintors_score("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="Eshcol_corrdintors_score",
+            value=export_Eshcol_corrdintors_score_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_forgoten_mosad
+        export_forgoten_mosad_csv=export_forgoten_mosad("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="forgoten_mosad",
+            value=export_forgoten_mosad_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_forgoten_Tohnit
+        export_forgoten_Tohnit_csv=export_forgoten_Tohnit("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="forgoten_Tohnit",
+            value=export_forgoten_Tohnit_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_melave_corrdintors_score
+        export_melave_corrdintors_score_csv=export_melave_corrdintors_score("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="melave_corrdintors_score",
+            value=export_melave_corrdintors_score_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_lowScoreApprentice_tohnit_csv
+        export_mosad_melavim_cnt_csv=export_mosad_melavim_cnt("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="mosad_melavim_cnt",
+            value=export_mosad_melavim_cnt_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
+        #export_mosad_corrdintors_score
+        export_mosad_corrdintors_score_csv=export_mosad_corrdintors_score("local")
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
+            type="mosad_corrdintors_score",
+            value=export_mosad_corrdintors_score_csv,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
+
         all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0")).all()
         for melave in all_melave:
             melaveId = melave[0]
@@ -371,7 +488,7 @@ def monthly():
             for mosadCoord in all_MosadCoordinator:
                 mosadCoord_id = mosadCoord[0]
                 res = md.mosadCoordinator(mosadCoord_id)[0].json
-                print("res", res['avg_apprenticeCall_gap'])
+
                 system_report1 = system_report(
                     id=int(str(uuid.uuid4().int)[:5]),
                     related_id=mosadCoord_id,

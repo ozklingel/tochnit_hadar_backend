@@ -293,7 +293,7 @@ def get_closest_Events():
                 thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
                 gap = (date.today() - thisYearBirthday).days
             if Apprentice1.birthday:
-                gap_loazi=(date.today() - Apprentice1.birthday).days
+                gap_loazi=(datetime.today() - datetime(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)).days
 
             if (gap <= 0 and gap >= -30) or (gap_loazi <= 0 and gap_loazi >= -30) :
                 my_dict.append(

@@ -23,8 +23,9 @@ madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 @madadim_form_blueprint.route("/lowScoreApprentice", methods=['GET'])
 def lowScoreApprentice():
     try:
+
         Oldvisitcalls = db.session.query(Visit.ent_reported,Institution.name).filter(Visit.ent_reported==Apprentice.id,Institution.id==
-                                                                                      Apprentice.institution_id,Visit.title ==config.failCall_report ).all()
+                                                                                          Apprentice.institution_id,Visit.title ==config.failCall_report ).all()
         forgotenApprenticCount=0
         forgotenApprenticeList={}
 
@@ -48,6 +49,7 @@ def missingCalleApprentice():
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
+
         visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
                                       Institution.name).filter(Apprentice.id == Visit.ent_reported,
                                                                Institution.id == Apprentice.institution_id,
@@ -85,6 +87,7 @@ def missingMeetingApprentice():
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
+
         visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
                                       Institution.name).filter(Apprentice.id == Visit.ent_reported,
                                                                Institution.id == Apprentice.institution_id,
@@ -144,7 +147,6 @@ def forgotenApprentice():
         for i in ids_no_visit:
             forgotenApprentice_total += 1
             counts[i[1]] = counts.get(i[1], 0) + 1
-            print(counts)
         return jsonify({
         'forgotenApprentice_total': forgotenApprentice_total,
 
@@ -309,7 +311,6 @@ def fetch_Diagram_yearly(related_id,type="melave_Score"):
 def getMelaveMadadim():
     try:
         melaveId = request.args.get("melaveId")
-        print(melaveId)
         ApprenticeCount = db.session.query(Apprentice.id).filter(Apprentice.accompany_id == melaveId).all()
         Apprentice_ids_call=[r[0] for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=21)
@@ -375,13 +376,10 @@ def getMelaveMadadim():
                                          "serve_type": row[7],"hadar_plan_session": row[8]} for row in
                             [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
         melave_score1,call_gap_avg,meet_gap_avg=melave_score(melaveId)
-        print("aa")
 
         print(fetch_Diagram_rivonly(melaveId, config.proffesionalMeet_presence))
-        print("aa")
 
         print(fetch_Diagram_rivonly(melaveId, config.forgotenApprentice_cnt))
-        print("aa")
 
         return jsonify({
             'melave_score': melave_score1,
@@ -418,7 +416,6 @@ def mosadCoordinator(mosadCoordinator="empty"):
     try:
         if mosadCoordinator=="empty":
             mosadCoordinator = request.args.get("mosadCoordinator")
-        print(mosadCoordinator)
 
         current_month=datetime.today().month
         start_Of_year = datetime.today() - timedelta(days=30*current_month)
@@ -482,7 +479,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
             isVisitenterMahzor=True
 
         too_old = datetime.today() - timedelta(days=365)
-        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.titlein_(config.report_as_DoForBogrim),Visit.visit_date>too_old).all()
+        visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title.in_(config.report_as_DoForBogrim),Visit.visit_date>too_old).all()
 
         old_Melave_ids_MelavimMeeting = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=120)
@@ -549,14 +546,12 @@ def mosadCoordinator(mosadCoordinator="empty"):
 def getEshcolCoordinatorMadadim():
     try:
         eshcolCoordinatorId = request.args.get("eshcolCoordinator")
-        print(eshcolCoordinatorId)
         #get  Eshcol id
         eshcol = db.session.query(user1.eshcol).filter(user1.id == eshcolCoordinatorId).first()
         if eshcol =="":
             return jsonify({
                 'result': "no eshcol",
             }), HTTPStatus.OK
-        print("eshcol_id",eshcol)
 
         # total MosadCoordinator Count for this eshcol
         all_MosadCoordinator = db.session.query(user1.id).filter(user1.eshcol == eshcol[0],user1.role_ids.contains("1")).all()

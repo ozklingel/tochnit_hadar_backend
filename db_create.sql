@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS notifications CASCADE ;
 DROP TABLE IF EXISTS contact_forms CASCADE ;
 DROP TABLE IF EXISTS visits CASCADE ;
 DROP TABLE IF EXISTS ent_group CASCADE ;
+DROP TABLE IF EXISTS task_user_made CASCADE ;
 
 
 CREATE TABLE institutions(
@@ -47,9 +48,10 @@ CONSTRAINT fk_1
       REFERENCES clusters(id)
 );
 
+
 CREATE TABLE user1(
 id int,
-role_id text DEFAULT '',
+role_ids text DEFAULT '',
 first_name text DEFAULT '',
 last_name text DEFAULT '',
 teudatZehut  text DEFAULT '',
@@ -70,8 +72,8 @@ notifyMorning_weekly_report boolean DEFAULT False,
 notifyMorning_sevev boolean DEFAULT False,
 notifyDayBefore_sevev boolean DEFAULT False,
 notifyStartWeek_sevev boolean DEFAULT False,
-association_date timestamp DEFAULT now(),
 
+association_date  date ,
 PRIMARY KEY(id)
 ,
 CONSTRAINT fk_1
@@ -86,14 +88,14 @@ CONSTRAINT fk_3
 
 );
 
-
-
 CREATE TABLE apprentice(
 id int,
+teudatZehut  text DEFAULT '',
 accompany_id int ,
 last_name text DEFAULT '',
 maritalStatus text DEFAULT '',
 marriage_date date ,
+marriage_date_ivry text DEFAULT 'ה' בטבת',
 teacher_grade_b_phone text DEFAULT '',
 teacher_grade_b text DEFAULT '',
 teacher_grade_b_email  text DEFAULT '',
@@ -120,16 +122,16 @@ contact3_first_name text DEFAULT '',
 contact3_last_name text DEFAULT '',
 contact3_email text DEFAULT '',
 contact3_relation text DEFAULT '',
-militaryCompoundId text DEFAULT '14509',
+militaryCompoundId  int DEFAULT 14509,
 unit_name text DEFAULT '',
 serve_type text DEFAULT '',
 paying boolean DEFAULT False,
-release_date date,  
+release_date date,
 recruitment_date date ,
 onlineStatus int DEFAULT 0,
 matsber int DEFAULT 0,
 thPeriod text DEFAULT '',
-password text DEFAULT '',	
+password text DEFAULT '',
 phone  text DEFAULT '',
 email  text DEFAULT '',
 birthday  date ,
@@ -141,17 +143,20 @@ photo_path  text DEFAULT 'https://www.gravatar.com/avatar',
 city_id int DEFAULT 0,
 cluster_id int DEFAULT 0,
 army_role text DEFAULT '',
-militaryPositionOld text DEFAULT ''   , 
+militaryPositionOld text DEFAULT ''   ,
 militaryUpdatedDateTime date ,
-educationalInstitution text DEFAULT '', 
-educationFaculty text DEFAULT '',       
-workOccupation text DEFAULT '',         
-workType text DEFAULT '',               
-workPlace text DEFAULT '',              
-workStatus text DEFAULT '',  
-militaryPositionNew text DEFAULT '',                                  
+educationalInstitution text DEFAULT '',
+educationFaculty text DEFAULT '',
+workOccupation text DEFAULT '',
+workType text DEFAULT '',
+workPlace text DEFAULT '',
+workStatus text DEFAULT '',
+militaryPositionNew text DEFAULT '',
 first_name text DEFAULT '',
 institution_mahzor text DEFAULT '',
+association_date date ,
+birthday_ivry text DEFAULT '',
+
 PRIMARY KEY(id)
 ,
 CONSTRAINT fk_1
@@ -160,16 +165,20 @@ CONSTRAINT fk_1
 CONSTRAINT fk_2
       FOREIGN KEY(city_id)
       REFERENCES cities(id),
+CONSTRAINT fk_4
+      FOREIGN KEY(militarycompoundid )
+      REFERENCES Base(id),
 CONSTRAINT fk_3
       FOREIGN KEY(cluster_id)
       REFERENCES clusters(id)
+
 );
 
 CREATE TABLE  contact_forms(
 id int,
 created_by_id int  ,
 created_for_id int  ,
-created_at DATE ,
+created_at timestamp ,
 subject text DEFAULT '',
 content text DEFAULT '',
 allreadyread boolean DEFAULT False,
@@ -177,7 +186,7 @@ attachments text[] default '{}',
 icon text DEFAULT 'empty',
 description text DEFAULT '',
 type text DEFAULT 'draft',
-ent_group  text DEFAULT '',  
+ent_group  text DEFAULT '',
 PRIMARY KEY(id,created_for_id),
 CONSTRAINT fk_1
       FOREIGN KEY(created_by_id)
@@ -202,6 +211,7 @@ attachments text[] default '{}',
 description text DEFAULT '',
 allreadyread boolean DEFAULT False,
 ent_group  text DEFAULT ''  ,
+created_at    timestamp,
 CONSTRAINT fk_1
       FOREIGN KEY(user_id)
       REFERENCES user1(id)
@@ -211,10 +221,11 @@ CONSTRAINT fk_1
 CREATE TABLE  notifications(
 
 id int,
-apprenticeid int ,
+subject text DEFAULT '' ,
 userid int ,
 event text DEFAULT '',
 date DATE ,
+created_at timestamp,
 allreadyread boolean DEFAULT False,
 numOfLinesDisplay int  ,
 details text DEFAULT '',
@@ -225,7 +236,7 @@ CONSTRAINT fk_1
       FOREIGN KEY(userid)
       REFERENCES user1(id)
 
-	 
+
 
 );
 
@@ -263,6 +274,31 @@ PRIMARY KEY(id)
 );
 CREATE TABLE base (
 id INTEGER NOT NULL,
- name TEXT DEFAULT ''::text, 
+ name TEXT DEFAULT ''::text,
  cordinatot TEXT DEFAULT ''::text,
   PRIMARY KEY (id));
+
+
+CREATE TABLE  task_user_made(
+
+id int,
+userid int ,
+event text DEFAULT '',
+date timestamp ,
+created_at timestamp,
+Frequency_end text DEFAULT '' ,
+Frequency_weekday text DEFAULT '',
+Frequency_meta text DEFAULT ''  ,
+details text DEFAULT '',
+status text DEFAULT '',
+
+institution_id boolean DEFAULT False,
+PRIMARY KEY(id),
+CONSTRAINT fk_1
+      FOREIGN KEY(userid)
+      REFERENCES user1(id)
+
+
+
+);
+

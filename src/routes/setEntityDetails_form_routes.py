@@ -11,7 +11,8 @@ from ..models.cluster_model import Cluster
 from ..models.institution_model import Institution
 
 
-from app import db, app
+from src.services import db
+
 from ..models.user_model import user1
 setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, url_prefix='/setEntityDetails_form')
 @setEntityDetails_form_blueprint.route('/setByType', methods=['PUT'])
@@ -94,6 +95,7 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
     """
     Docs: http://boto3.readthedocs.io/en/latest/guide/s3.html
     """
+    from app import app
     try:
         s3.upload_fileobj(
             file,
@@ -109,16 +111,8 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
         return e
     return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
-app.config['S3_BUCKET'] = "S3_BUCKET_NAME"
-app.config['S3_KEY'] = "AWS_ACCESS_KEY"
-app.config['S3_SECRET'] = "AWS_ACCESS_SECRET"
-app.config['S3_LOCATION'] = 'http://{}.s3.amazonaws.com/'
-
-
 s3 = boto3.client(
-   "s3",
-   aws_access_key_id=app.config['S3_KEY'],
-   aws_secret_access_key=app.config['S3_SECRET']
+   "s3"
 )
 
 def validate_email(email):

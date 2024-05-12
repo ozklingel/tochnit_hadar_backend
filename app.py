@@ -1,5 +1,6 @@
-import redis
 from flask import Flask, app
+from flask_cors import CORS
+from src.services import db
 from flask_sqlalchemy import SQLAlchemy
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 
@@ -7,9 +8,14 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = SECRET_KEY
-db = SQLAlchemy()
 db.init_app(app)
-red = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+
+app.config['S3_BUCKET'] = "S3_BUCKET_NAME"
+app.config['S3_KEY'] = "AWS_ACCESS_KEY"
+app.config['S3_SECRET'] = "AWS_ACCESS_SECRET"
+app.config['S3_LOCATION'] = 'http://{}.s3.amazonaws.com/'
+
 
 # register blueprints
 from src.routes.messegaes_routes import messegaes_form_blueprint

@@ -8,7 +8,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.event import contains
 
 import config
-from app import db, red
+from src.services import db, red
 from src.models.apprentice_model import Apprentice
 
 from src.models.institution_model import Institution

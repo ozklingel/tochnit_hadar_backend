@@ -2,7 +2,7 @@ import uuid
 
 from flask import Blueprint, request, jsonify, send_file
 from http import HTTPStatus
-from app import db, red
+from src.services import db, red
 from src.models.base_model import Base
 
 base_blueprint = Blueprint('base', __name__, url_prefix='/base')

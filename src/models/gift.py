@@ -1,5 +1,5 @@
 
-from app import db
+from src.services import db
 class gift(db.Model):
     __tablename__ = "gift"
 

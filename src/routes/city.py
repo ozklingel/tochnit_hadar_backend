@@ -2,7 +2,7 @@ import uuid
 
 from flask import Blueprint, request, jsonify, send_file
 from http import HTTPStatus
-from app import db, red
+from src.services import db, red
 from src.models.base_model import Base
 from src.models.city_model import City
 

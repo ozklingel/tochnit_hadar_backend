@@ -2,7 +2,7 @@
 from flask import Blueprint, jsonify
 from http import HTTPStatus
 
-from app import db, red
+from src.services import db, red
 from src.models.apprentice_model import Apprentice
 
 

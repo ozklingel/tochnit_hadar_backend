@@ -12,7 +12,7 @@ from timer_dict import TimerDict
 from twilio.rest import Client
 
 import config
-from app import red, db
+from src.services import red, db
 from src.models.city_model import City
 from src.models.user_model import user1
 from src.routes.Utils.Sms import send_sms_019

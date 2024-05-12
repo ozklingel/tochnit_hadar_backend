@@ -13,7 +13,7 @@ from ..models.city_model import City
 from ..models.cluster_model import Cluster
 from ..models.institution_model import Institution
 from ..models.user_model import user1
-from app import  db
+from src.services import  db
 import uuid
 from ..models.visit_model import Visit
 

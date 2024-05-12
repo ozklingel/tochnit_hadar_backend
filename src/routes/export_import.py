@@ -27,12 +27,16 @@ import src.routes.madadim as md
 from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordinators_score, get_melave_score
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
+base_dir="/home/ubuntu/flaskapp/"
 @export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
 def export_lowScoreApprentice_mosad(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "lowScoreApprentice_mosad",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
         #print(lowScoreApprentice_dict)
@@ -53,16 +57,16 @@ def export_lowScoreApprentice_mosad(type="extenal"):
             all_Apprentices_cnt = db.session.query(func.count(Apprentice.id)).filter(
                 Apprentice.institution_id == Institution.id,Institution.name==score_ent["name"]).first()
             res.append([score_ent["name"],all_Apprentices_cnt[0],score_ent["value"],call_ent["value"],meet_ent["value"]])
-        print(res)
         fields = ['callgap_count','meetgap_count','lowScore_count', 'apprentice_count','Mosad_name']
-        with open('GFG', 'w',encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(res)
+        print("exported")
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
@@ -71,6 +75,9 @@ def export_lowScoreApprentice_tohnit(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "lowScoreApprentice_tohnit",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
         #print(lowScoreApprentice_dict)
@@ -92,14 +99,14 @@ def export_lowScoreApprentice_tohnit(type="extenal"):
                 Apprentice.institution_id == Institution.id,Institution.name==score_ent["name"]).first()
             res.append([score_ent["name"],all_Apprentices_cnt[0],score_ent["value"],call_ent["value"],meet_ent["value"]])
         fields = ['callgap_count','meetgap_count','lowScore_count', 'apprentice_count','Mosad_name']
-        with open('GFG', 'w',encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(res)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -109,25 +116,33 @@ def export_melave_corrdintors_score(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "melave_corrdintors_score",system_report.creation_date ==export_date).first()
+            if  data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
             return data.value
-        score_dict=get_melave_score()
-        rows = score_dict[1]
+        score_dict,score_melaveProfile=get_melave_score()
+        rows = score_melaveProfile
+        print("rows",rows)
         for dict in rows:
             user_mosad = db.session.query(user1.name,Institution.name).filter(
                 user1.id==dict["melaveId"],Institution.id==user1.institution_id).first()
+            if user_mosad is None:
+                userEnt = user1.query.get(dict["melaveId"])
+                print(userEnt.institution_id)
+                print("missing",dict["melaveId"])
+                continue
             dict["name"]=user_mosad[0]
             dict["mosad"]=user_mosad[1]
-        print(rows)
-        with open('GFG', 'w', encoding="utf-8") as f:
-            title = "melave_score1,melaveId,name,mosad".split(",")  # quick hack
+        with open(base_dir+'system_export', 'w', encoding="utf-8") as f:
+            title = "melave_score1,melaveId,mosad,name".split(",")  # quick hack
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
+        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
 def export_mosad_melavim_cnt(type="extenal"):
@@ -142,14 +157,14 @@ def export_mosad_melavim_cnt(type="extenal"):
         rows = mosad_melavim_cnt.items()
         fields = ['count','name']
 
-        with open('GFG', 'w',encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_corrdintors_score", methods=['post'])
@@ -158,6 +173,9 @@ def export_mosad_corrdintors_score(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "mosad_corrdintors_score",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         score_dict=get_mosad_Coordinators_score()
         rows = score_dict[1]
@@ -166,15 +184,15 @@ def export_mosad_corrdintors_score(type="extenal"):
                 user1.id==dict["id"]).first()
             print(user_name)
             dict["name"]=user_name[0]
-        with open('GFG', 'w', encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w', encoding="utf-8") as f:
             title = "score,id,name".split(",")  # quick hack
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/Eshcol_corrdintors_score", methods=['post'])
@@ -183,6 +201,9 @@ def export_Eshcol_corrdintors_score(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "Eshcol_corrdintors_score",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         score_dict=get_Eshcol_corrdintors_score()
         rows = score_dict[1]
@@ -190,15 +211,15 @@ def export_Eshcol_corrdintors_score(type="extenal"):
             user_name = db.session.query(user1.name).filter(
                 user1.id==dict["id"]).first()
             dict["name"]=user_name[0]
-        with open('GFG', 'w', encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w', encoding="utf-8") as f:
             title = "score,id,name".split(",")  # quick hack
             cw = csv.DictWriter(f, title, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             cw.writeheader()
             cw.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -208,6 +229,9 @@ def export_forgoten_Tohnit(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "forgoten_Tohnit",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
@@ -238,14 +262,14 @@ def export_forgoten_Tohnit(type="extenal"):
             counts[i[1]] = counts.get(i[1], 0) + 1
         fields = ['count','name']
         rows = counts.items()
-        with open('GFG', 'w',encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/forgoten_mosad", methods=['post'])
@@ -254,6 +278,9 @@ def export_forgoten_mosad(type="extenal"):
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
             data = db.session.query( system_report.value).filter(system_report.type == "forgoten_mosad",system_report.creation_date ==export_date).first()
+            if data is None:
+                return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
+
             return data.value
         all_Apprentices = db.session.query(Apprentice.id, Apprentice.name,Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
@@ -274,17 +301,17 @@ def export_forgoten_mosad(type="extenal"):
             vIsDate = i.visit_date
             now = date.today()
             gap = (now - vIsDate).days if vIsDate is not None else 0
-            ids_no_visit.append(i,ent[1], gap)
+            ids_no_visit.append([i,ent[1], gap])
         fields = ['id', 'gap','Name']
         rows = ids_no_visit
-        with open('GFG', 'w',encoding="utf-8") as f:
+        with open(base_dir+'system_export', 'w',encoding="utf-8") as f:
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(rows)
         if type=="local":
-            with open('GFG', 'r',encoding="utf-8") as file:
+            with open(base_dir+'system_export', 'r',encoding="utf-8") as file:
                 return file.read()
-        return send_file("GFG", as_attachment=True, download_name="dict2.csv")
+        return send_file(base_dir+"system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route('/upload_CitiesDB', methods=['PUT'])
@@ -293,7 +320,7 @@ def upload_CitiesDB():
         import csv
         my_list = []
         #/home/ubuntu/flaskapp/
-        with open('/home/ubuntu/flaskapp/data/cities_add.csv', 'r', encoding="utf8") as f:
+        with open(base_dir+'data/cities_add.csv', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
                 my_list.append(City(row[0].strip(), row[1].strip(), row[2].strip()))
@@ -313,7 +340,7 @@ def upload_baseDB():
         import csv
         my_list = []
         #/home/ubuntu/flaskapp/
-        with open('/home/ubuntu/flaskapp/data/base_add.csv', 'r', encoding="utf8") as f:
+        with open(base_dir+'data/base_add.csv', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
                 ent=Base(int(str(uuid.uuid4().int)[:5]), row[0].strip(), row[1].strip())

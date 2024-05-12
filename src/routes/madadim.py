@@ -395,8 +395,7 @@ def getMelaveMadadim():
             'cenes_percent': cenes_score,
             'visitHorim':len(ApprenticeCount)- len(Apprentice_ids_Horim),
             'forgotenApprenticeCount': len(Apprentice_ids_forgoten),
-            'new_visitmeeting_Army': len(Apprentice_ids_meetInArmy),
-
+            'new_visitmeeting_Army': len(ApprenticeCount)-len(Apprentice_ids_meetInArmy),
             'call_gap_avg': call_gap_avg,
             'meet_gap_avg': meet_gap_avg,
             'visitCall_monthlyGap_avg': fetch_Diagram_monthly(melaveId, config.visitcalls_melave_avg),
@@ -547,10 +546,10 @@ def getEshcolCoordinatorMadadim():
     try:
         eshcolCoordinatorId = request.args.get("eshcolCoordinator")
         #get  Eshcol id
-        eshcol = db.session.query(user1.eshcol).filter(user1.id == eshcolCoordinatorId).first()
-        if eshcol =="":
+        eshcol = db.session.query(user1.eshcol).filter(user1.id == eshcolCoordinatorId,user1.role_ids.contains("2")).first()
+        if eshcol =="" or eshcol is None:
             return jsonify({
-                'result': "no eshcol",
+                'result': "not  eshcolCoordinator",
             }), HTTPStatus.OK
 
         # total MosadCoordinator Count for this eshcol
@@ -599,6 +598,7 @@ def getEshcolCoordinatorMadadim():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 def melave_score(melaveId):
+    try:
         call_wight=20
         presonalMeet_wight=20
         groupMeet_wight=20
@@ -612,7 +612,8 @@ def melave_score(melaveId):
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices)==0:
-            return 100,0,0
+            print(melaveId)
+            return 100,0,0,0
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title.in_(config.reports_as_call), Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
         call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,call_wight,21)
@@ -627,7 +628,7 @@ def melave_score(melaveId):
         group_meeting_gap=0
         for index in range(1, len(group_meeting)):
             group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
-        group_meeting_gap_avg = group_meeting_gap/len(group_meeting) if group_meeting else 100
+        group_meeting_gap_avg = group_meeting_gap/len(group_meeting) if group_meeting else 1000
         group_meeting_score = 0
         if group_meeting_gap_avg <= 60:
             group_meeting_score += 12
@@ -670,8 +671,9 @@ def melave_score(melaveId):
         melave_score = base_meeting_score + Horim_meeting_score + professional_2monthly_score + yeshiva_monthly_score + \
                        cenes_yearly_score + \
                        group_meeting_score + personal_meet_score + call_score
-        return melave_score,call_gap_avg,personal_meet_gap_avg
-
+        return melave_score,call_gap_avg,personal_meet_gap_avg,group_meeting_gap_avg
+    except Exception as e:
+        print(str(e))
 def mosad_Coordinators_score(mosadCoord_id):
     melaveScore_wight = 30
     bogrim_wight = 5
@@ -692,9 +694,21 @@ def mosad_Coordinators_score(mosadCoord_id):
 
         total_melave_score=0
         Mosad_coord_score=0
+        personal_meet_gap_avg=0
+        call_gap_avg=0
+        group_meeting_gap_avg=0
         for melaveId in all_Mosad_Melaves_list:
-            total_melave_score+=melave_score(melaveId)[0]
+            melave_score1=melave_score(melaveId)
+            print(melave_score1)
+            total_melave_score+=melave_score1[0]
+            personal_meet_gap_avg+=melave_score1[2]
+            call_gap_avg+=melave_score1[1]
+            group_meeting_gap_avg+=melave_score1[3]
         total_melave_score=total_melave_score/len(all_Mosad_Melaves_list)
+        personal_meet_gap_avg=personal_meet_gap_avg/len(all_Mosad_Melaves_list)
+        call_gap_avg=call_gap_avg/len(all_Mosad_Melaves_list)
+        group_meeting_gap_avg=group_meeting_gap_avg/len(all_Mosad_Melaves_list)
+
         #melave score=30
         Mosad_coord_score +=melaveScore_wight*total_melave_score/100
         #מצבר==20
@@ -754,7 +768,7 @@ def mosad_Coordinators_score(mosadCoord_id):
         if datetime(d.year, d.month, d.day)>start_Of_year or len(visit_Hazana_new_THsession)>=1:
             Mosad_coord_score += hazana_wight
 
-        return Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,0,0,0
+        return Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,call_gap_avg,personal_meet_gap_avg,group_meeting_gap_avg
     except Exception as e:
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -770,8 +784,9 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     total_eshcol_mosad_gap=0
     for mosadCoordId in all_eshcol_mosadCoord_list:
         visitEvent = db.session.query(Visit).filter(Visit.ent_reported == mosadCoordId,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
-        if visitEvent ==[]:
-            continue
+        if visitEvent ==[] or visitEvent is None:
+            total_eshcol_mosad_gap=1000
+            break
         mosadCoordId_gap=0
         for vis in visitEvent:
             gap = (date.today() - vis.visit_date).days
@@ -781,7 +796,8 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     if total_eshcol_mosad_gap<=30:
         total_eshcol_mosad_score=60
     else:
-        total_eshcol_mosad_score=0
+        score_with_panish=60-(total_eshcol_mosad_gap-30)/2
+        total_eshcol_mosad_score=score_with_panish if score_with_panish>0 else 0
 
     too_old = datetime.today() - timedelta(days=31)
     is_tochnitMeeting_exist = db.session.query(Visit.user_id,
@@ -877,15 +893,13 @@ def compute_visit_score(all_children,visits,maxScore,expected_gap):
         if k in all_children_ids:
             all_children_ids.remove(k)
         visitcalls_melave_avg += (sum(v) / len(v))
-    #t least one apprentice with no calls
+    #at least one apprentice with no calls
     if len(all_children_ids) != 0:
-        visitcalls_melave_avg = 0
+        visitcalls_melave_avg = 1000
     else:
         visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
             visitcalls_melave_list) != 0 else 0
     call_panish = visitcalls_melave_avg - expected_gap
-
-
     if call_panish > 0:
         call_score = maxScore - call_panish / 2
     else:

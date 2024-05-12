@@ -31,7 +31,7 @@ def get_melave_score(eshcol="0",mosad="0"):
         all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
-        melave_score1, call_gap_avg, meet_gap_avg = melave_score(melaveId)
+        melave_score1, call_gap_avg, meet_gap_avg,group_meeting_gap_avg = melave_score(melaveId)
         score_melaveProfile.append({"melave_score1":melave_score1,"melaveId":melaveId})
         counts[melave_score1] = counts.get(melave_score1, 0) + 1
 

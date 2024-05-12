@@ -1,6 +1,7 @@
 from flask import Flask, app
 from flask_cors import CORS
 from src.services import db
+from flask_sqlalchemy import SQLAlchemy
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 
 app = Flask(__name__)
@@ -58,8 +59,6 @@ app.register_blueprint(hadar_plan_session_blueprint)
 app.register_blueprint(search_bar_form_blueprint)
 app.register_blueprint(city_blueprint)
 app.register_blueprint(gift_blueprint)
-
-CORS(app, support_credentials=True)
 
 if __name__ == '__main__':
 

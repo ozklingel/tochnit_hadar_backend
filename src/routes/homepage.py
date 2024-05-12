@@ -31,7 +31,7 @@ def get_melave_score(eshcol="0",mosad="0"):
         all_melave = db.session.query(user1.id,user1.name,user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
-        melave_score1, call_gap_avg, meet_gap_avg = melave_score(melaveId)
+        melave_score1, call_gap_avg, meet_gap_avg,group_meeting_gap_avg = melave_score(melaveId)
         score_melaveProfile.append({"melave_score1":melave_score1,"melaveId":melaveId})
         counts[melave_score1] = counts.get(melave_score1, 0) + 1
 
@@ -293,7 +293,7 @@ def get_closest_Events():
                 thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
                 gap = (date.today() - thisYearBirthday).days
             if Apprentice1.birthday:
-                gap_loazi=(date.today() - Apprentice1.birthday).days
+                gap_loazi=(datetime.today() - datetime(date.today().year, Apprentice1.birthday.month, Apprentice1.birthday.day)).days
 
             if (gap <= 0 and gap >= -30) or (gap_loazi <= 0 and gap_loazi >= -30) :
                 my_dict.append(

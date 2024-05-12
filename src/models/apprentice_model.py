@@ -11,10 +11,10 @@ class Apprentice(db.Model):
     last_name = db.Column(LAST_NAME_COL, db.String(50), nullable=False,default="")
     phone = db.Column(PHONE_COL, db.String(50), nullable=False,default="")
     email = db.Column(EMAIL_COL, db.String(50), nullable=False,default="")
-    birthday = db.Column(BIRTHDAY_COL, db.DateTime, nullable=False)
+    birthday = db.Column(BIRTHDAY_COL, db.DateTime, nullable=True)
     eshcol = db.Column("eshcol", db.String(20), nullable=False,default="")
     marriage_status = db.Column("maritalstatus", db.String(20), nullable=False,default="")
-    marriage_date = db.Column(MARRIAGE_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
+    marriage_date = db.Column(MARRIAGE_DATE_COL, db.DateTime, nullable=True)
     contact1_email =db.Column("contact1_email", db.String(50), nullable=False,default="")
     contact1_first_name=db.Column("contact1_first_name", db.String(50), nullable=False,default="")
     contact1_last_name=db.Column("contact1_last_name", db.String(50), nullable=False,default="")
@@ -49,8 +49,8 @@ class Apprentice(db.Model):
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False,default="")
     army_role = db.Column(ARMY_ROLE_COL, db.String(50), nullable=False,default="")
     serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False,default="")
-    recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
-    release_date = db.Column(RELEASE_DATE_COL, db.DateTime, nullable=False,default="2022-01-01")
+    recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=True)
+    release_date = db.Column(RELEASE_DATE_COL, db.DateTime, nullable=True)
     paying = db.Column(PAYING_COL, db.String(50), nullable=False,default="")
     spirit_status = db.Column("matsber", db.String(50), nullable=False,default="")
     accompany_connect_status = db.Column("onlinestatus", db.Integer, nullable=False,default=0)
@@ -71,10 +71,12 @@ class Apprentice(db.Model):
     militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")
     association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
     birthday_ivry=db.Column("birthday_ivry", db.String(50), nullable=False,default="ה' בטבת")
-    marriage_date_ivry=db.Column("marriage_date_ivry", db.DateTime, nullable=False,default="ה' בטבת")
+    marriage_date_ivry=db.Column("marriage_date_ivry", db.DateTime, nullable=True)
 
 
 front_end_dict={
+"address": "address",
+
 "highSchoolRavMelamed_phone": "high_school_teacher_phone"
 ,"highSchoolRavMelamed_name":"high_school_teacher",
 "highSchoolRavMelamed_email":"high_school_teacher_email",
@@ -120,7 +122,7 @@ front_end_dict={
 "marriage_date":"marriage_date",
 "highSchoolInstitution":"highSchoolInstitution",
 "army_role":"army_role",
-"unit_name":"unit_name",
+"militaryUnit":"unit_name",
 "matsber":"spirit_status",
 "militaryDateOfDischarge":"release_date",
 "militaryDateOfEnlistment":"recruitment_date"

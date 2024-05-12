@@ -128,46 +128,48 @@ def add_user_excel():
     path = 'data/user_enter.xlsx'
     wb = load_workbook(file)
     sheet = wb.active
+    uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
-        if row[5].value is None:
+        if row[0].value is None or row[1].value is None or row[2].value is None or row[5].value is None:
+            uncommited_ids.append(row[5].value)
             continue
-        role_ids=""
-        if "מלווה" in row[2].value.strip()  :
-            role_ids+="0,"
+        role_ids = ""
+        if "מלווה" in row[2].value.strip():
+            role_ids += "0,"
         if "רכז מוסד" in row[2].value.strip():
-            role_ids+="1,"
+            role_ids += "1,"
         if "רכז אשכול" in row[2].value.strip():
-            role_ids+="2,"
-        if  "אחראי תוכנית" in row[2].value.strip() :
-            role_ids+="3,"
-        print(role_ids)
-        role_ids=role_ids[:-1]
-        first_name =row[0].value.strip()
+            role_ids += "2,"
+        if "אחראי תוכנית" in row[2].value.strip():
+            role_ids += "3,"
+        role_ids = role_ids[:-1]
+        first_name = row[0].value.strip()
         last_name = row[1].value.strip()
-        institution_name = row[3].value.strip()
-        phone = str(row[5].value).replace("-","").strip()
-        #email = row[3].value.strip()
-        eshcol = row[4].value.strip()
+        institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
+        eshcol = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
+        phone = str(row[5].value).replace("-", "").strip()
+        # email = row[3].value.strip()
         try:
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
+
             user = user1(
-                id=int(str(phone).replace("-","")),
+                id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
                 role_ids=role_ids,
-                #email=str(email),
+                # email=str(email),
                 eshcol=eshcol,
-                institution_id=institution_id.id,
+                institution_id=institution_id[0],
             )
 
             db.session.add(user)
-            db.session.commit()
 
+            db.session.commit()
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+    return jsonify({'result': "success" ,"uncommited_ids" :[x for x in uncommited_ids if x is not None]})
 
-    return jsonify({'result': 'success'}), HTTPStatus.OK
 
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
 def add_user_manual():
@@ -222,6 +224,7 @@ def myPersonas():
         user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
+            print(apprenticeList)
             userList=[]
 
         if "1" in user1ent.role_ids:
@@ -237,6 +240,7 @@ def myPersonas():
         my_dict = []
 
         for noti in apprenticeList:
+            print(noti.id)
             accompany = db.session.query(user1.name,user1.last_name).filter(user1.id == Apprentice.accompany_id).first()
             call_status=visit_gap_color(config.call_report, noti, 30, 15)
             personalMeet_status=visit_gap_color(config.personalMeet_report, noti, 100, 80)
@@ -308,7 +312,7 @@ def myPersonas():
                  "serve_type": noti.serve_type,
                  "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
                  "phone": str(noti.id), "email": noti.email, "teudatZehut": noti.teudatZehut,
-                 "birthday": toISO(noti.birthday),  "marriage_date": toISO(noti.marriage_date),
+                 "birthday": toISO(noti.birthday) if noti.birthday else "",  "marriage_date": toISO(noti.marriage_date),
                  "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
                  "unit_name": noti.unit_name,
                   "matsber": str(noti.spirit_status),
@@ -320,89 +324,89 @@ def myPersonas():
                  "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
 
                  })
-            for noti in userList:
-                reportList = db.session.query(Visit.id).filter(Visit.user_id == noti.id).all()
-                city = db.session.query(City).filter(City.id == noti.city_id).first()
-                my_dict.append(
-                    {"Horim_status": "",
-                     "personalMeet_status": "",
-                     "call_status": "",
-                     "highSchoolRavMelamed_phone": ""
-                        , "highSchoolRavMelamed_name": "",
-                     "highSchoolRavMelamed_email": "",
+        for noti in userList:
+            reportList = db.session.query(Visit.id).filter(Visit.user_id == noti.id).all()
+            city = db.session.query(City).filter(City.id == noti.city_id).first()
+            my_dict.append(
+                {"Horim_status": "",
+                 "personalMeet_status": "",
+                 "call_status": "",
+                 "highSchoolRavMelamed_phone": ""
+                    , "highSchoolRavMelamed_name": "",
+                 "highSchoolRavMelamed_email": "",
 
-                     "thRavMelamedYearA_name": "",
-                     "thRavMelamedYearA_phone": "",
-                     "thRavMelamedYearA_email": "",
+                 "thRavMelamedYearA_name": "",
+                 "thRavMelamedYearA_phone": "",
+                 "thRavMelamedYearA_email": "",
 
-                     "thRavMelamedYearB_name": "",
-                     "thRavMelamedYearB_phone": "",
-                     "thRavMelamedYearB_email": "",
-                     "address": {
-                         "country": "IL",
-                         "city": city.name if city else "",
-                         "cityId": str(noti.city_id),
-                         "street": noti.address,
-                         "houseNumber": "1",
-                         "apartment": "1",
-                         "region": str(city.cluster_id) if city else "",
-                         "entrance": "a",
-                         "floor": "1",
-                         "postalCode": "12131",
-                         "lat": 32.04282620026557,  # no need city cord
-                         "lng": 34.75186193813887
-                     },
-                     "contact1_first_name": "",
-                     "contact1_last_name": "",
-                     "contact1_phone": "",
-                     "contact1_email": "",
-                     "contact1_relation": "",
-                     "contact2_first_name": "",
-                     "contact2_last_name": "",
-                     "contact2_phone": "",
-                     "contact2_email": "",
-                     "contact2_relation": "",
-                     "contact3_first_name": "",
-                     "contact3_last_name": "",
-                     "contact3_phone": "",
-                     "contact3_email": "",
-                     "contact3_relation": "",
-                     "activity_score": len(reportList),
+                 "thRavMelamedYearB_name": "",
+                 "thRavMelamedYearB_phone": "",
+                 "thRavMelamedYearB_email": "",
+                 "address": {
+                     "country": "IL",
+                     "city": city.name if city else "",
+                     "cityId": str(noti.city_id),
+                     "street": noti.address,
+                     "houseNumber": "1",
+                     "apartment": "1",
+                     "region": str(city.cluster_id) if city else "",
+                     "entrance": "a",
+                     "floor": "1",
+                     "postalCode": "12131",
+                     "lat": 32.04282620026557,  # no need city cord
+                     "lng": 34.75186193813887
+                 },
+                 "contact1_first_name": "",
+                 "contact1_last_name": "",
+                 "contact1_phone": "",
+                 "contact1_email": "",
+                 "contact1_relation": "",
+                 "contact2_first_name": "",
+                 "contact2_last_name": "",
+                 "contact2_phone": "",
+                 "contact2_email": "",
+                 "contact2_relation": "",
+                 "contact3_first_name": "",
+                 "contact3_last_name": "",
+                 "contact3_phone": "",
+                 "contact3_email": "",
+                 "contact3_relation": "",
+                 "activity_score": len(reportList),
 
-                     "reports":
-                         ""
-                        ,
-                     "events":
+                 "reports":
+                     ""
+                    ,
+                 "events":
 
-                         ""
+                     ""
 
-                        , "id": str(noti.id),
-                     "thMentor": "",
-                     "militaryPositionNew": ""
-                        ,
-                     "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                     "name": str(noti.name), "last_name": str(noti.last_name),
-                     "institution_id": str(noti.institution_id), "thPeriod": "",
-                     "serve_type": "",
-                     "marriage_status": "", "militaryCompoundId": "",
-                     "phone": str(noti.id),
-                     "email": noti.email,
-                     "teudatZehut": noti.teudatZehut,
-                     "birthday": "",
-                     "marriage_date": "",
-                     "highSchoolInstitution": "",
-                     "army_role": "",
-                     "unit_name": "",
-                     "matsber": "",
-                     "militaryDateOfDischarge": "",
-                     "militaryDateOfEnlistment": ""
-                        , "militaryUpdatedDateTime": "",
-                     "militaryPositionOld": "", "educationalInstitution": ""
-                        , "educationFaculty": "", "workOccupation": "",
-                     "workType": "", "workPlace": "", "workStatus": "",
-                     "paying": ""
+                    , "id": str(noti.id),
+                 "thMentor": "",
+                 "militaryPositionNew": ""
+                    ,
+                 "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
+                 "name": str(noti.name), "last_name": str(noti.last_name),
+                 "institution_id": str(noti.institution_id), "thPeriod": "",
+                 "serve_type": "",
+                 "marriage_status": "", "militaryCompoundId": "",
+                 "phone": str(noti.id),
+                 "email": noti.email,
+                 "teudatZehut": noti.teudatZehut,
+                 "birthday": "",
+                 "marriage_date": "",
+                 "highSchoolInstitution": "",
+                 "army_role": "",
+                 "unit_name": "",
+                 "matsber": "",
+                 "militaryDateOfDischarge": "",
+                 "militaryDateOfEnlistment": ""
+                    , "militaryUpdatedDateTime": "",
+                 "militaryPositionOld": "", "educationalInstitution": ""
+                    , "educationFaculty": "", "workOccupation": "",
+                 "workType": "", "workPlace": "", "workStatus": "",
+                 "paying": ""
 
-                     })
-            return  jsonify(my_dict)
+                 })
+        return  jsonify(my_dict)
     except Exception as e:
         return jsonify({'result': str(e)}), 401

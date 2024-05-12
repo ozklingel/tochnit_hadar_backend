@@ -21,17 +21,21 @@ personalMeet_report="פגישה פיזית"
 groupMeet_report="מפגש קבוצתי"
 basis_report="ביקור בבסיס"
 HorimCall_report="שיחת הורים"
-professional_report="כנס מלווים מקצועי חודשי"#2 חודשים
-cenes_report="כנס מלווים שנתי"
+
 matzbar_report ="ישיבת מצב”ר"#3 חודשים
 hazanatMachzor_report="הזנת מחזור"
-doForBogrim_report="עשיה לטובת בוגרים"
-MelavimMeeting_report="מפגש מלווים קבוצתי"#1 חודשים
-MOsadEshcolMeeting_report="ישיבת מוסד אשכול"
-tochnitMeeting_report="ישיבת רכזי תוכנית"
 mahzorMeeting_report="מפגש מחזור"
 mahzorShabat_report="שבת מחזור"
+doForBogrim_report="עשיה לטובת בוגרים"
+professional_report="כנס מלווים מקצועי חודשי"#2 חודשים
+MelavimMeeting_report="ישיבה מוסדית"#1 חודשים
 
+MOsadEshcolMeeting_report="ישיבת חודשית עם רכז"
+tochnitMeeting_report="ישיבת מלוים ורכזים"
+cenes_report="כנס מלווים שנתי"
+
+mosad_reports=[MelavimMeeting_report,matzbar_report,hazanatMachzor_report,doForBogrim_report,professional_report]
+eshcol_reports=[MOsadEshcolMeeting_report,tochnitMeeting_report,cenes_report]
 reports_as_call=[call_report,zoom_report,fiveMess_report]
 report_as_meet=[personalMeet_report,groupMeet_report,basis_report]
 report_as_DoForBogrim=[mahzorShabat_report,mahzorMeeting_report,doForBogrim_report]
@@ -74,16 +78,17 @@ class SendMessages:
         token_expiration_date: '14/02/2026 12:40:17'
 Ivry_month={"ניסן":"1",
    "אייר": "2",
-   "סיון": "3",
+   "סיוון": "3",
   "תמוז":  "4",
   "אב": "5",
    "אלול": "6",
    "תשרי": "7",
-   "חשון": "8",
+   "חשוון": "8",
    "כסליו": "9",
     "טבת": "10",
     "שבט": "11",
    "אדר א ": "12",
+"אדר": "12",
     "אדר ב":"13"}
 
 

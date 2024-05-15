@@ -36,7 +36,6 @@ def export_lowScoreApprentice_mosad(type="extenal"):
             data = db.session.query( system_report.value).filter(system_report.type == "lowScoreApprentice_mosad",system_report.creation_date ==export_date).first()
             if data is None:
                 return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
-
             return data.value
         lowScoreApprentice_dict= md.lowScoreApprentice()[0].json
         #print(lowScoreApprentice_dict)

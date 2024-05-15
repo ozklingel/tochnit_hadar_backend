@@ -96,9 +96,9 @@ def filter_by_request(request):
                 ent_group_dict["preiods"] = str(preiods).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.institution_mahzor.in_(preiods))
-            if statuses:
+            if statuses :
                 ent_group_dict["statuses"] = str(statuses).replace("[", "").replace("]", "")
-
+                print(statuses)
                 query = query.filter(Apprentice.marriage_status.in_(statuses))
             if bases:
                 ent_group_dict["bases"] = str(bases).replace("[", "").replace("]", "")
@@ -112,6 +112,7 @@ def filter_by_request(request):
             if region:
                 ent_group_dict["region"] = region
                 query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id, Cluster.name == region)
+            print(eshcols)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
                 query = query.filter(Apprentice.eshcol.in_(eshcols))

@@ -5,7 +5,6 @@ from datetime import datetime,date,timedelta
 
 from pyluach import dates
 from sqlalchemy import func, or_
-from sqlalchemy.event import contains
 
 import config
 from src.services import db, red
@@ -312,6 +311,7 @@ def getMelaveMadadim():
     try:
         melaveId = request.args.get("melaveId")
         ApprenticeCount = db.session.query(Apprentice.id).filter(Apprentice.accompany_id == melaveId).all()
+        #call
         Apprentice_ids_call=[r[0] for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=21)
         Oldvisitcalls = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Visit.title.in_(config.reports_as_call),
@@ -319,6 +319,7 @@ def getMelaveMadadim():
         for i in Oldvisitcalls:
             if i[0] in  Apprentice_ids_call:
                 Apprentice_ids_call.remove(i[0])
+        #meet personal
         Apprentice_ids_meet=[r[0] for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=90)
         Oldvisitmeet = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Visit.title.in_(config.report_as_meet),
@@ -326,7 +327,7 @@ def getMelaveMadadim():
         for i in Oldvisitmeet:
             if i[0] in  Apprentice_ids_meet:
                 Apprentice_ids_meet.remove(i[0])
-    #מפגש_מקצועי
+        #professional_report
         current_month=datetime.today().month
         start_Of_year = datetime.today() - timedelta(days=30*current_month)
         numOfQuarter_passed=int(current_month/3)
@@ -336,7 +337,7 @@ def getMelaveMadadim():
             sadna_score=100
         else:
             sadna_score=100*len(newvisitProffesionalMeet_year)/numOfQuarter_passed
-
+        #cenes_report
         start_Of_prev_year = datetime.today() - timedelta(days=30*current_month+30*12)
         _yearly_cenes = db.session.query(system_report).filter(system_report.type==config.cenes_report,
                                                                 system_report.creation_date > start_Of_prev_year).all()
@@ -348,41 +349,35 @@ def getMelaveMadadim():
         else:
             cenes_score=100
         Apprentice_ids_Horim=[r[0] for r in ApprenticeCount]
+        #HorimCall_report
         OldvisitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Visit.title == config.HorimCall_report,
                                             Visit.visit_date>start_Of_year  ).all()
         for i in OldvisitHorim:
             if i[0] in  Apprentice_ids_Horim:
                 Apprentice_ids_Horim.remove(i[0])
-
+        #meetInArmy
         Apprentice_ids_meetInArmy=[r[0] for r in ApprenticeCount]
         OldvisitmeetInArmy = db.session.query(Visit.ent_reported,Visit.visit_date).distinct(Visit.visit_date).filter(Visit.user_id==melaveId,Visit.title.in_(config.report_as_meet),Visit.visit_in_army==True,
                                                                      Visit.visit_date > start_Of_year).all()
         for i in OldvisitmeetInArmy:
             if i[0] in  Apprentice_ids_meetInArmy:
                 Apprentice_ids_meetInArmy.remove(i[0])
-
+        #forgoten-no reports_as_call
         Apprentice_ids_forgoten=[r[0] for r in ApprenticeCount]
         too_old = datetime.today() - timedelta(days=100)
         Oldvisitcalls = db.session.query(Visit.ent_reported).filter(Visit.user_id==melaveId,Apprentice.id==Visit.ent_reported,Institution.id==Apprentice.institution_id,Visit.title.in_(config.reports_as_call),
                                                                      Visit.visit_date > too_old).all()
-        print("Oldvisitcalls",Oldvisitcalls)
-        print("Apprentice_ids_forgoten",Apprentice_ids_forgoten)
-
         for i in Oldvisitcalls:
             if i[0] in  Apprentice_ids_forgoten:
                 Apprentice_ids_forgoten.remove(i[0])
-        forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
-                                                           Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
-
-        done_forgoten_dict = [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
-                                         "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
-                                         "serve_type": row[7],"hadar_plan_session": row[8]} for row in
-                            [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
+        # forgotenApprentice_full_details = db.session.query(Institution.name,Apprentice.name,Apprentice.last_name,Apprentice.base_address,Apprentice.army_role,Apprentice.unit_name,
+        #                                                    Apprentice.marriage_status,Apprentice.serve_type,Apprentice.hadar_plan_session).filter(Apprentice.id.in_(list(Apprentice_ids_forgoten)),Apprentice.institution_id==Institution.id).all()
+        #
+        # done_forgoten_dict = [{"Institution_name": row[0], "name": row[1], "last_name": row[2],"base_address" :row[3],
+        #                                  "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],
+        #                                  "serve_type": row[7],"hadar_plan_session": row[8]} for row in
+        #                     [tuple(row) for row in forgotenApprentice_full_details]] if forgotenApprentice_full_details is not None else []
         melave_score1,call_gap_avg,meet_gap_avg,group_meeting_gap_avg=melave_score(melaveId)
-
-        print(fetch_Diagram_rivonly(melaveId, config.proffesionalMeet_presence))
-
-        print(fetch_Diagram_rivonly(melaveId, config.forgotenApprentice_cnt))
 
         return jsonify({
             'melave_score': melave_score1,
@@ -418,14 +413,13 @@ def mosadCoordinator(mosadCoordinator="empty"):
     try:
         if mosadCoordinator=="empty":
             mosadCoordinator = request.args.get("mosadCoordinator")
-
         current_month=datetime.today().month
         start_Of_year = datetime.today() - timedelta(days=30*current_month)
         numOfQuarter_passed=int(current_month/3)
-
         institutionId = db.session.query(user1.institution_id).filter(user1.id == mosadCoordinator).first()[0]
         all_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),user1.institution_id == institutionId).all()
 
+        #professional_report
         old_Melave_ids_professional=[r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=90)
         newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id==user1.id,user1.institution_id==institutionId,Visit.title == config.professional_report,
@@ -433,7 +427,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in newvisit_professional:
             if i[0] in  old_Melave_ids_professional:
                 old_Melave_ids_professional.remove(i[0])
-
+        #matzbar_report
         old_Melave_ids_matzbar = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=60)
         Oldvisit_matzbar = db.session.query(Visit.user_id).filter(Visit.user_id == user1.id,
@@ -443,9 +437,8 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in Oldvisit_matzbar:
             if i[0] in old_Melave_ids_matzbar:
                 old_Melave_ids_matzbar.remove(i[0])
-
+        #call
         all_apprenties_mosad = db.session.query(Apprentice.id).filter(Apprentice.institution_id == institutionId).all()
-
         old_apprenties_mosad_ids_call = [r[0] for r in all_apprenties_mosad]
         too_old = datetime.today() - timedelta(days=60)
         Oldvisit_call = db.session.query(Visit.ent_reported).filter(Visit.ent_reported == Apprentice.id,
@@ -455,7 +448,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in Oldvisit_call:
             if i[0] in old_apprenties_mosad_ids_call:
                 old_apprenties_mosad_ids_call.remove(i[0])
-
+        #meet personal
         old_apprenties_mosad_ids_meet = [r[0] for r in all_apprenties_mosad]
         too_old = datetime.today() - timedelta(days=60)
         Oldvisit_meet = db.session.query(Visit.ent_reported).filter(Visit.ent_reported == Apprentice.id,
@@ -465,7 +458,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in Oldvisit_meet:
             if i[0] in old_apprenties_mosad_ids_meet:
                 old_apprenties_mosad_ids_meet.remove(i[0])
-
+        #groupMeet
         old_apprentice_ids_groupMeet=[r[0] for r in all_apprenties_mosad]
         too_old = datetime.today() - timedelta(days=60)
         new_visit_groupMeet = db.session.query(Visit.user_id).filter(Visit.user_id==user1.id,user1.institution_id==institutionId,Visit.title ==config.groupMeet_report,
@@ -473,16 +466,16 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in new_visit_groupMeet:
             if i[0] in  old_apprentice_ids_groupMeet:
                 old_apprentice_ids_groupMeet.remove(i[0])
-
+        #hazanatMachzor_report
         too_old = datetime.today() - timedelta(days=365)
         isVisitenterMahzor=False
         visitenterMahzor = db.session.query(Visit.visit_date).filter(Visit.user_id==mosadCoordinator,Visit.title == config.hazanatMachzor_report,Visit.visit_date>too_old).all()
         if visitenterMahzor:
             isVisitenterMahzor=True
-
+        #DoForBogrim
         too_old = datetime.today() - timedelta(days=365)
         visitDoForBogrim = db.session.query(Visit.visit_date,Visit.title,Visit.description).filter(Visit.user_id==mosadCoordinator,Visit.title.in_(config.report_as_DoForBogrim),Visit.visit_date>too_old).all()
-
+        #MelavimMeeting
         old_Melave_ids_MelavimMeeting = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=120)
         new_MelavimMeeting = db.session.query(Visit.visit_date).distinct(Visit.visit_date).filter(Visit.user_id == user1.id,
@@ -498,7 +491,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
             if i[0] in old_Melave_ids_MelavimMeeting:
                 old_Melave_ids_MelavimMeeting.remove(i[0])
 
-
+        #forgoten apprentice
         Apprentice_ids_forgoten=[r[0] for r in all_apprenties_mosad]
         too_old = datetime.today() - timedelta(days=100)
         Oldvisitcalls = db.session.query(Visit.ent_reported).filter(Apprentice.id==Visit.ent_reported,institutionId==Apprentice.institution_id,Visit.title.in_(config.reports_as_call),
@@ -506,7 +499,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         for i in Oldvisitcalls:
             if i[0] in  Apprentice_ids_forgoten:
                 Apprentice_ids_forgoten.remove(i[0])
-        forgotenApprentice_full_details = db.session.query(Apprentice.id).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
+        #forgotenApprentice_full_details = db.session.query(Apprentice.id).filter(Apprentice.institution_id==Institution.id,Apprentice.id.in_(list(Apprentice_ids_forgoten))).all()
         mosad_Coordinators_score1,visitprofessionalMeet_melave_avg,avg_matzbarMeeting_gap,total_avg_call,total_avg_meet,total_avg_groupmeet=mosad_Coordinators_score(mosadCoordinator)
         return jsonify({
 
@@ -619,20 +612,20 @@ def melave_score(melaveId):
             return 100,0,0,0
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title.in_(config.reports_as_call), Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
-        call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,call_wight,21)
-
+        call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,call_wight,21,melaveId)
         visitmeetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
             Visit.title.in_(config.report_as_meet), Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
-        print(visitmeetings)
-        personal_meet_score,personal_meet_gap_avg=compute_visit_score(all_melave_Apprentices,visitmeetings,presonalMeet_wight,90)
-        print("personal_meet_score",personal_meet_score)
+        personal_meet_score,personal_meet_gap_avg=compute_visit_score(all_melave_Apprentices,visitmeetings,presonalMeet_wight,90,melaveId)
         group_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.ent_reported).filter(Visit.title == config.groupMeet_report, Visit.user_id == melaveId,Visit.visit_date>config.groupMeet_madad_date).all()
 
         group_meeting_gap=0
         for index in range(1, len(group_meeting)):
             group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
-        group_meeting_gap_avg = group_meeting_gap/len(group_meeting) if group_meeting else 1000
+        association_date = db.session.query(user1.association_date).filter(
+            user1.id == melaveId).first()
+        init_gap = (date.today() - association_date.association_date).days if association_date is not None else 0
+        group_meeting_gap_avg = group_meeting_gap/len(group_meeting) if group_meeting else init_gap
         group_meeting_score = 0
         if group_meeting_gap_avg <= 60:
             group_meeting_score += 12
@@ -648,12 +641,19 @@ def melave_score(melaveId):
         professional_2monthly_score = 0
         if gap < 90:
             professional_2monthly_score += proffesional_wight
+        current_month=datetime.today().month
+        start_Of_prev_year = datetime.today() - timedelta(days=30*current_month+30*12)
+        _yearly_cenes = db.session.query(system_report).filter(system_report.type==config.cenes_report,
+                                                                system_report.creation_date > start_Of_prev_year).all()
+        cenes_yearly_score=0
+        if len(_yearly_cenes)>0:
+            start_Of_year = datetime.today() - timedelta(days=30 * current_month)
 
-        cenes_yearly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.user_id).filter(Visit.title == config.cenes_report, Visit.ent_reported == melaveId).first()
-        gap = (date.today() - cenes_yearly.visit_date).days if cenes_yearly is not None else 400
-        cenes_yearly_score = 0
-        if gap < 365:
+            newvisit_cenes = db.session.query(Visit.user_id).filter(Visit.user_id==melaveId,Visit.title ==config.cenes_report,
+                                                                         Visit.visit_date > start_Of_year).all()
+            if len(newvisit_cenes)>0:
+                cenes_yearly_score += cenes_wight
+        else:
             cenes_yearly_score += cenes_wight
 
         yeshiva_monthly = db.session.query(Visit.user_id, func.max(Visit.visit_date).label("visit_date")).group_by(
@@ -702,28 +702,27 @@ def mosad_Coordinators_score(mosadCoord_id):
         call_gap_avg=0
         group_meeting_gap_avg=0
         for melaveId in all_Mosad_Melaves_list:
-            melave_score1=melave_score(melaveId)
-            print(melave_score1)
-            total_melave_score+=melave_score1[0]
-            personal_meet_gap_avg+=melave_score1[2]
-            call_gap_avg+=melave_score1[1]
-            group_meeting_gap_avg+=melave_score1[3]
+            melave_score1,call_gap_avg,personal_meet_gap_avg,group_meeting_gap_avg=melave_score(melaveId)
+            total_melave_score+=melave_score1
+            personal_meet_gap_avg+=personal_meet_gap_avg
+            call_gap_avg+=call_gap_avg
+            group_meeting_gap_avg+=group_meeting_gap_avg
         total_melave_score=total_melave_score/len(all_Mosad_Melaves_list)
         personal_meet_gap_avg=personal_meet_gap_avg/len(all_Mosad_Melaves_list)
         call_gap_avg=call_gap_avg/len(all_Mosad_Melaves_list)
         group_meeting_gap_avg=group_meeting_gap_avg/len(all_Mosad_Melaves_list)
 
-        #melave score=30
+        #interaction=30
         Mosad_coord_score +=melaveScore_wight*total_melave_score/100
         #מצבר==20
         visit_matzbar_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.matzbarmeet_madad_date,Visit.title == config.matzbar_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-        visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score(all_Mosad_Melave, visit_matzbar_meetings, matzbar_wight, 90)
+        visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score(all_Mosad_Melave, visit_matzbar_meetings, matzbar_wight, 90,mosadCoord_id)
         Mosad_coord_score+=visit_matzbar_meetings_score
         #מפגש_מקצועי=10
         visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-        visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score(all_Mosad_Melave, visit_mosad_professional_meetings, proffesional_wight, 90)
+        visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score(all_Mosad_Melave, visit_mosad_professional_meetings, proffesional_wight, 90,mosadCoord_id)
 
         Mosad_coord_score+=visit_mosad_professional_meetings_score
 
@@ -737,7 +736,7 @@ def mosad_Coordinators_score(mosadCoord_id):
                 Visit.visit_date > config.eshcolMosadMeet_madad_date,
                 Visit.title == config.MelavimMeeting_report).filter(
                 Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-            visit_mosad_yeshiva_score, visitprofessionalMeet_melave_avg = compute_visit_score(all_Mosad_Melave, visit_mosad_yeshiva, monthlyYeshiva_wight, 30)
+            visit_mosad_yeshiva_score, visitprofessionalMeet_melave_avg = compute_visit_score(all_Mosad_Melave, visit_mosad_yeshiva, monthlyYeshiva_wight, 30,mosadCoord_id)
             Mosad_coord_score += visit_mosad_professional_meetings_score
         #עשייה_לבוגרים=5
         d = user_prof.association_date
@@ -787,6 +786,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     all_eshcol_mosadCoord_list = [r[0] for r in all_eshcol_mosadCoord]
     total_eshcol_mosad_gap=0
     for mosadCoordId in all_eshcol_mosadCoord_list:
+        #MosadEshcolMeeting personal
         visitEvent = db.session.query(Visit).filter(Visit.ent_reported == mosadCoordId,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
         if visitEvent ==[] or visitEvent is None:
             total_eshcol_mosad_gap=1000
@@ -802,7 +802,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     else:
         score_with_panish=60-(total_eshcol_mosad_gap-30)/2
         total_eshcol_mosad_score=score_with_panish if score_with_panish>0 else 0
-
+    #tochnitMeeting_report
     too_old = datetime.today() - timedelta(days=31)
     is_tochnitMeeting_exist = db.session.query(Visit.user_id,
                                                      ).filter(Visit.title == config.tochnitMeeting_report,Visit.visit_date > too_old).first()
@@ -813,7 +813,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     tohnit_yeshiva_score = 0
     if not is_tochnitMeeting_exist or gap < 30:
         tohnit_yeshiva_score += 40
-
+    #forgoten apprentice
     Apprentice_ids_forgoten = [r[0] for r in all_eshcol_apprentices]
     too_old = datetime.today() - timedelta(days=100)
     Oldvisitcalls = db.session.query(Visit.ent_reported).filter(
@@ -856,11 +856,13 @@ def mosad_score(institution_id):
             return 100,[]
         all_Mosad_Melaves_list = [r[0] for r in all_Mosad_Melave]
         total_melave_score=0
+        #melave score
         for melaveId in all_Mosad_Melaves_list:
             total_melave_score+=melave_score(melaveId)[0]
 
         total_melave_score=total_melave_score/len(all_Mosad_Melaves_list)
         mosad_score+=melaveScore_wight*total_melave_score/100
+        #mosad coordinator score
         mosad_Coordinators_score1, visitprofessionalMeet_melave_avg, avg_matzbarMeeting_gap, total_avg_call, total_avg_meet, groupNeeting_gap_avg = mosad_Coordinators_score(
             mosadCoord_id[0])
         mosad_score+=mosad_Coordinators_score_wight*mosad_Coordinators_score1/100
@@ -875,7 +877,6 @@ def mosad_score(institution_id):
                                                          ).filter(Visit.title.in_(config.report_as_DoForBogrim), Visit.user_id == mosadCoord_id[0],
                                   Visit.visit_date > too_old).all()
         mosad_score+=bogrim_wight*len(visit_did_for_apprentice)
-        Mosad_coord_score,visitprofessionalMeet_melave_avg,visitMatzbar_melave_avg,total_avg_call,total_avg_meet,groupNeeting_gap_avg=mosad_Coordinators_score(mosadCoord_id[0])
         return mosad_score,forgoten_Apprentice_count
     except Exception as e:
         print(str(e))
@@ -883,27 +884,37 @@ def mosad_score(institution_id):
 
 
 
-def compute_visit_score(all_children,visits,maxScore,expected_gap):
+def compute_visit_score(all_children,visits,maxScore,expected_gap,user_id):
     all_children_ids = [r[0] for r in all_children]
 
     from collections import defaultdict
     visitcalls_melave_list = defaultdict(list)
     # key is apprenticeId and value is list of  gaps visits date
-    for index in range(1, len(visits)):
-        gap = (visits[index][1] - visits[index - 1][1]).days if visits[index] is not None else 21
-        visitcalls_melave_list[visits[index][0]].append(gap)
+    for index in range(0, len(visits)):
+        visitcalls_melave_list[visits[index][0]].append(visits[index][1])
+    #print(visitcalls_melave_list)
     visitcalls_melave_avg = 0
+    gap_melave_list = defaultdict(list)
+
     for k, v in visitcalls_melave_list.items():
-        if k in all_children_ids:
-            all_children_ids.remove(k)
-        visitcalls_melave_avg += (sum(v) / len(v))
-    print("visitcalls_melave_avg",visitcalls_melave_avg)
+        association_date = db.session.query(Apprentice.association_date).filter(
+            Apprentice.id == k).first()
+        init_gap = (v[0] - association_date.association_date).days if association_date is not None else 0
+        gap_melave_list[k]=init_gap
+        for index in range(1, len(v)):
+            gap = (v[index] - v[index - 1]).days if v[index] is not None else 0
+            gap_melave_list[k]+= gap
+            #all_children_ids.remove(k)
+        gap_melave_list[k]=gap_melave_list[k]/len(v)
     #at least one apprentice with no calls
-    if len(all_children_ids) != 0:
-        visitcalls_melave_avg = 1000
+    if len(all_children_ids) !=len(gap_melave_list):
+        association_date = db.session.query(user1.association_date).filter(
+            user1.id == user_id).first()
+        init_gap = (date.today() - association_date.association_date).days if association_date is not None else 0
+        visitcalls_melave_avg = init_gap
     else:
-        visitcalls_melave_avg = visitcalls_melave_avg / len(visitcalls_melave_list) if len(
-            visitcalls_melave_list) != 0 else 1000
+        visitcalls_melave_avg = sum(gap_melave_list.values()) / len(gap_melave_list) if len(
+             gap_melave_list) != 0 else 1000
     call_panish = visitcalls_melave_avg - expected_gap
     if call_panish > 0:
         call_score = maxScore - call_panish / 2

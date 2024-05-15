@@ -1,4 +1,5 @@
-
+import boto3
+from boto3 import s3, session
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from openpyxl.reader.excel import load_workbook
@@ -40,7 +41,14 @@ def update():
         updatedEnt = Apprentice.query.get(apprenticetId)
 
         for key in data:
-
+            if key == "avatar" :
+                s3_client = session.client('s3',
+                                           aws_access_key_id=AWS_access_key_id,
+                                           aws_secret_access_key=AWS_secret_access_key)
+                s3 = boto3.resource('s3',
+                                    aws_access_key_id=AWS_access_key_id,
+                                    aws_secret_access_key=AWS_secret_access_key)
+                s3.Object("th01-s3", data[key]).delete()
             if key == "email" :
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
@@ -52,7 +60,6 @@ def update():
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
-                print(front_end_dict[key])
                 setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:

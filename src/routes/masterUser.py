@@ -256,6 +256,9 @@ def initDB():
             wb = load_workbook(filename=path)
             for i in addApperntice(wb):
                 uncommited_ids.append(i)
+            for row in db.session.query(Apprentice).all():
+                setattr(row, "association_date", '2024-05-01')
+            db.session.commit()
             print("appretice lab loaded")
             path = 'data/user_enter_lab.xlsx'
             wb = load_workbook(filename=path)

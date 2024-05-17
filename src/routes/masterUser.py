@@ -1,3 +1,4 @@
+import uuid
 from http import HTTPStatus
 
 import requests
@@ -189,7 +190,6 @@ def addApperntice(wb):
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     db.session.commit()
-    print(uncommited_ids)
     return [x for x in uncommited_ids if x is not None]
 
 
@@ -262,16 +262,99 @@ def initDB():
             for i in addUsers(wb):
                 uncommited_ids.append(i)
             print("user  lab loaded")
-
         else :
             path = 'data/טבלת הכנסת חניכים - סופית ינון.xlsx'
             wb = load_workbook(filename=path)
             for i in addApperntice(wb):
                 uncommited_ids.append(i)
+            print("appretice  loaded")
             path = 'data/טבלת הכנסת משתמשים  - סופית ינון.xlsx'
             wb = load_workbook(filename=path)
             for i in addUsers(wb):
                 uncommited_ids.append(i)
+            print("user  loaded")
+            path = 'data/messages.xlsx'
+            wb = load_workbook(filename=path)
+            add_message(wb)
+            print("message  loaded")
+            path = 'data/report.xlsx'
+            wb = load_workbook(filename=path)
+            add_report(wb)
+            print("report  loaded")
+
         return jsonify({'result': 'success', "uncommited_ids": uncommited_ids}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+def add_message(wb):
+    # /home/ubuntu/flaskapp/
+
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        created_by_id = row[0].value
+        created_for_id = row[1].value
+        created_at = row[2].value
+        subject = row[3].value
+        content = row[4].value
+        ent_group = row[6].value.strip() if row[6].value else ""
+        attachments = str(row[5].value).split(",")
+        icon = row[7].value.strip()
+        type = row[8].value.strip()
+
+        if attachments == ["None"]:
+            attachments = []
+        rep = ContactForm(
+            icon=icon,
+            id=int(str(uuid.uuid4().int)[:5]),
+            type=type,
+            created_by_id=created_by_id or "",
+            created_at=created_at,
+            ent_group=ent_group or "",
+            content=content or "",
+            subject=subject or "",
+            attachments=attachments,
+            allreadyread=False,
+            created_for_id=created_for_id or ""
+        )
+        db.session.add(rep)
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK
+
+def add_report(wb):
+    #/home/ubuntu/flaskapp/
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2):
+        user_id = row[0].value
+        ent_reported = row[1].value
+        visit_date = row[2].value
+        title = row[3].value
+        visit_in_army = row[4].value
+        description = row[5].value
+        attachments = str(row[6].value).split(",")
+        ent_group = row[7].value
+        if attachments==["None"]:
+            attachments=[]
+        rep = Visit(
+
+            id=int(str(uuid.uuid4().int)[:5]),
+            user_id=user_id,
+            ent_reported = ent_reported,
+            visit_date = visit_date,
+            title = title,
+            visit_in_army = visit_in_army,
+            description = description,
+            attachments = attachments,
+            allreadyread=False,
+            ent_group = ent_group
+        )
+        db.session.add(rep)
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+
+    return jsonify({'result': 'success'}), HTTPStatus.OK

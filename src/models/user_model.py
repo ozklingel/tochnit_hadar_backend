@@ -49,7 +49,7 @@ front_end_dict={
 "date_of_birth":"birthday",
 "email":"email",
 "teudatZehut":"teudatZehut",
-"role": "role_id",
+"role": "role_ids",
 "last_name":"last_name",
 "firstName":"name",
 "city":"city",

@@ -96,6 +96,7 @@ def getProfileAtributes_form():
     try:
         created_by_id = request.args.get('userId')
         userEnt = user1.query.get(created_by_id)
+        print(userEnt)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             regionName=db.session.query(Cluster.name).filter(Cluster.id==city.cluster_id).first()
@@ -125,7 +126,6 @@ def getmyApprenticesNames(created_by_id):
 def add_user_excel():
 
     file = request.files['file']
-    path = 'data/user_enter.xlsx'
     wb = load_workbook(file)
     sheet = wb.active
     uncommited_ids = []

@@ -208,38 +208,56 @@ def forgotenApprentice_Mosad(institution_id='empty'):
 def missingCallsApprentice_Mosad():
     try:
         institution = request.args.get("institutionId")
-        too_old = datetime.today() - timedelta(days=45)
-        Oldvisitcalls = db.session.query(Visit,Apprentice).filter(Visit.ent_reported==Apprentice.id,Visit.title.in_(config.reports_as_call),
-                                                                     Visit.visit_date < too_old).filter(Apprentice.institution_id==institution).all()
-        list=[]
-        for ent in Oldvisitcalls:
-            vIsDate=ent[0].visit_date
-            now=date.today()
-            gap = (now-vIsDate).days if vIsDate is not None else 0
-            list.append({"apprentice":ent[1].name+ent[1].last_name,"gap":gap})
+        ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
+                                          Apprentice.association_date,
+                                          Apprentice.name, Apprentice.last_name, Apprentice.birthday).filter(
+            Apprentice.institution_id == institution).all()
+        no_visit_dict = dict()
+        for Apprentice1 in ApprenticeList:
+            # call
+            visitEvent = db.session.query(Visit).filter(Visit.ent_reported == Apprentice1.id,
+                                                        Visit.title.in_(config.reports_as_call)).order_by(
+                Visit.visit_date.desc()).first()
+            print("visitEvent", visitEvent)
+            if visitEvent is None:
 
-        return jsonify({
-            'gapList': list,
-        }), HTTPStatus.OK
+                daysFromNow = (
+                            date.today() - Apprentice1.association_date).days if Apprentice1.association_date is not None else 100
+                print(daysFromNow)
+                no_visit_dict[Apprentice1.id] = daysFromNow
+
+            elif (date.today() - visitEvent.visit_date).days > 21 and Visit.ent_reported not in no_visit_dict:
+                daysFromNow = (date.today() - Visit.visit_date).days if Visit.visit_date is not None else 100
+                no_visit_dict[Apprentice1.id] = daysFromNow
+
+        print(no_visit_dict)
+        return jsonify([{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
+                       ), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/missingMeetingsApprentice_Mosad", methods=['GET'])
 def missingMeetingsApprentice_Mosad():
     try:
         institution = request.args.get("institutionId")
-        too_old = datetime.today() - timedelta(days=45)
-        Oldvisitcalls = db.session.query(Visit,Apprentice).filter(Visit.ent_reported==Apprentice.id,or_(Visit.title.in_(config.report_as_meet),Visit.title==config.groupMeet_report ),
-                                                                     Visit.visit_date < too_old).filter(Apprentice.institution_id==institution).all()
-        list=[]
-        for ent in Oldvisitcalls:
-            vIsDate=ent[0].visit_date
-            now=date.today()
-            gap = (now-vIsDate).days if vIsDate is not None else 0
-            list.append({"apprentice":ent[1].name+ent[1].last_name,"gap":gap})
+        ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,Apprentice.association_date,
+                                          Apprentice.name, Apprentice.last_name, Apprentice.birthday).filter(Apprentice.institution_id == institution).all()
+        no_visit_dict=dict()
+        for Apprentice1 in ApprenticeList:
 
-        return jsonify({
-            'gapList': list,
-        }), HTTPStatus.OK
+            # personal meet
+            visitEvent = db.session.query(Visit).filter(
+                                                        Visit.ent_reported == str(Apprentice1.id),
+                                                        Visit.title.in_(config.report_as_meet)).order_by(
+                Visit.visit_date.desc()).first()
+            if visitEvent is None :
+                daysFromNow = (date.today() - Apprentice1.association_date).days if Apprentice1.association_date is not None else 100
+                no_visit_dict[Apprentice1.id] = daysFromNow
+            elif (date.today() - visitEvent.visit_date).days > 90 and Visit.ent_reported not in no_visit_dict:
+                    daysFromNow = (date.today() - Visit.visit_date).days if Visit.visit_date is not None else 100
+                    no_visit_dict[Apprentice1.id] = daysFromNow
+        print(no_visit_dict)
+        return jsonify([{"apprentice":str(k),"gap":v} for k,v in no_visit_dict.items()],
+        ), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @madadim_form_blueprint.route("/lowScoreApprentice_mosad", methods=['GET'])
@@ -253,18 +271,34 @@ def lowScoreApprentice_mosad():
         forgotenApprenticeList={}
 
         for ent in Oldvisitcalls:
-            forgotenApprenticCount+=1
             if ent[1] not in forgotenApprenticeList:
-                forgotenApprenticeList[ent[1]] =0
-            forgotenApprenticeList[ent[1] ]+=1
+                forgotenApprenticeList[ent[0]] =0
 
-
+        print(forgotenApprenticeList)
         return jsonify({
         'lowScoreApprentice_Count': forgotenApprenticCount ,
-        'lowScoreApprentice_List': [{"name":key,"value":value} for key, value in forgotenApprenticeList.items()],
+        'lowScoreApprentice_List': [str(key) for key, value in forgotenApprenticeList.items()],
                    }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+@madadim_form_blueprint.route("/melave_score_tochnit", methods=['GET'])
+def melave_score_tochnit():
+    Institution_all=db.session.query(Institution.id).all()
+    inst_melave_dict=dict()
+    for inst in  Institution_all:
+        from src.routes.homepage import get_melave_score
+        counts_melave_score, score_melaveProfile_list = get_melave_score(mosad=inst.id)
+        inst_melave_dict[str(inst.id)]=len(score_melaveProfile_list)
+    return jsonify([{"name":k ,"value":v} for k,v in inst_melave_dict.items()]), HTTPStatus.OK
+
+@madadim_form_blueprint.route("/melave_score_mosad", methods=['GET'])
+def melave_score_mosad():
+    institution = request.args.get("institutionId")
+    print(institution)
+    from src.routes.homepage import get_melave_score
+    counts_melave_score, score_melaveProfile_list = get_melave_score(mosad=institution)
+    return jsonify(score_melaveProfile_list), HTTPStatus.OK
 
 def fetch_Diagram_monthly(related_id,type="melave_Score"):
     too_old = datetime.today() - timedelta(days=30*12)
@@ -422,13 +456,13 @@ def mosadCoordinator(mosadCoordinator="empty"):
         all_Melave = db.session.query(user1.id).filter(user1.role_ids.contains("0"),user1.institution_id == institutionId).all()
 
         #professional_report
-        old_Melave_ids_professional=[r[0] for r in all_Melave]
+        Melaves_old_professional=[r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=90)
         newvisit_professional = db.session.query(Visit.user_id).filter(Visit.user_id==user1.id,user1.institution_id==institutionId,Visit.title == config.professional_report,
                                                                      Visit.visit_date > too_old).all()
         for i in newvisit_professional:
-            if i[0] in  old_Melave_ids_professional:
-                old_Melave_ids_professional.remove(i[0])
+            if i[0] in  Melaves_old_professional:
+                Melaves_old_professional.remove(i[0])
         #matzbar_report
         old_Melave_ids_matzbar = [r[0] for r in all_Melave]
         too_old = datetime.today() - timedelta(days=60)
@@ -507,7 +541,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
         return jsonify({
 
             'mosadCoordinator_score': mosad_Coordinators_score1,
-            'good_Melave_ids_sadna': len(all_Melave) - len(old_Melave_ids_professional),
+            'good_Melave_ids_sadna': len(all_Melave) - len(Melaves_old_professional),
             'all_Melave_mosad_count': len(all_Melave),
             'good_Melave_ids_matzbar': len(all_Melave) - len(old_Melave_ids_matzbar),
             'all_apprenties_mosad': len(all_apprenties_mosad),
@@ -526,11 +560,9 @@ def mosadCoordinator(mosadCoordinator="empty"):
             'avg_apprenticeCall_gap': total_avg_call,
             'avg_apprenticeMeeting_gap': total_avg_meet,
             'avg_groupMeeting_gap': total_avg_groupmeet,
-
             "visitDoForBogrim_list":[{"visit_date" :toISO(row[0]),"title":row[1],"description":row[2],"daysFromNow":(date.today() - row[0]).days} for row in visitDoForBogrim],
             'forgotenApprentice_full_details': forgotenApprentice_full_details,
             'MelavimMeeting_todo': numOfQuarter_passed*3,
-
             'avg_presence_professionalMeeting_monthly': fetch_Diagram_monthly(mosadCoordinator,
                                                                               config.proffesionalMeet_presence),
             'avg_matzbarMeeting_gap_monthly': fetch_Diagram_monthly(mosadCoordinator, config.matzbarMeeting_gap),
@@ -629,24 +661,24 @@ def melave_score(melaveId):
         #group_meeting
         group_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.ent_reported).filter(Visit.title == config.groupMeet_report, Visit.user_id == melaveId,Visit.visit_date>config.groupMeet_madad_date).all()
-        group_meeting_gap=0
-        for index in range(1, len(group_meeting)):
-            group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
         association_date = db.session.query(user1.association_date).filter(
             user1.id == melaveId).first()
-        init_gap = (date.today() - association_date.association_date).days if association_date is not None else 0
-        group_meeting_gap_avg = group_meeting_gap/len(group_meeting) if group_meeting else init_gap
-        group_meeting_score = 0
-        if group_meeting_gap_avg <= 60:
-            group_meeting_score += 12
-        group_meeting_panish = group_meeting_gap - 60
+        init_gap = (group_meeting[0][1] - association_date.association_date).days if association_date is not None else 0
+        group_meeting_gap=init_gap
+        for index in range(1, len(group_meeting)):
+            group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
+
+        group_meeting_gap_avg = group_meeting_gap / len(group_meeting+1)
+        group_meeting_panish = group_meeting_gap_avg - 60
         if group_meeting_panish > 0:
-            group_meeting_score = groupMeet_wight - group_meeting_panish / 2 #half point for each day delay
-        if group_meeting_score<0:
-            group_meeting_score=0
+            group_meeting_score = groupMeet_wight - group_meeting_panish / 2
+        else:
+            group_meeting_score = groupMeet_wight
+        if group_meeting_score < 0:
+            group_meeting_score = 0
+
         #professional_2monthly
-        professional_2monthly = db.session.query(Visit.user_id,
-                                                 func.max(Visit.visit_date).label("visit_date")).group_by(
+        professional_2monthly = db.session.query(Visit.user_id,func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.user_id).filter(Visit.title == config.professional_report, Visit.ent_reported == melaveId).first()
         gap = (date.today() - professional_2monthly.visit_date).days if professional_2monthly is not None else 100
         professional_2monthly_score = 0
@@ -731,12 +763,12 @@ def mosad_Coordinators_score(mosadCoord_id):
         #מצבר==20
         visit_matzbar_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.matzbarmeet_madad_date,Visit.title == config.matzbar_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-        visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score(all_Mosad_Melave, visit_matzbar_meetings, matzbar_wight, 90,mosadCoord_id)
+        visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score_users(all_Mosad_Melave, visit_matzbar_meetings, matzbar_wight, 90,mosadCoord_id)
         Mosad_coord_score+=visit_matzbar_meetings_score
         #מפגש_מקצועי=10
         visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-        visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score(all_Mosad_Melave, visit_mosad_professional_meetings, proffesional_wight, 90,mosadCoord_id)
+        visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score_users(all_Mosad_Melave, visit_mosad_professional_meetings, proffesional_wight, 90,mosadCoord_id)
         Mosad_coord_score+=visit_mosad_professional_meetings_score
 
         #ישיבת_מלוים=10
@@ -749,7 +781,7 @@ def mosad_Coordinators_score(mosadCoord_id):
                 Visit.visit_date > config.eshcolMosadMeet_madad_date,
                 Visit.title == config.MelavimMeeting_report).filter(
                 Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
-            visit_mosad_yeshiva_score, visitprofessionalMeet_melave_avg = compute_visit_score(all_Mosad_Melave, visit_mosad_yeshiva, monthlyYeshiva_wight, 30,mosadCoord_id)
+            visit_mosad_yeshiva_score, visitprofessionalMeet_melave_avg = compute_visit_score_users(all_Mosad_Melave, visit_mosad_yeshiva, monthlyYeshiva_wight, 30,mosadCoord_id)
             Mosad_coord_score += visit_mosad_professional_meetings_score
         #עשייה_לבוגרים=5
         d = user_prof.association_date

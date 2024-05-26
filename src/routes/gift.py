@@ -30,8 +30,7 @@ def add_giftCode_excel():
                 db.session.commit()
             except Exception as e:
                 not_commited.append(code)
-                return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': 'success',"not_commited":not_commited}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @gift_blueprint.route('/getGift', methods=['GET'])

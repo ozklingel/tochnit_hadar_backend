@@ -1,5 +1,6 @@
 import csv
 import datetime
+import json
 import uuid
 
 import boto3
@@ -29,7 +30,7 @@ from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordina
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
 base_dir="/home/ubuntu/flaskapp/"
 @export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
-def export_lowScoreApprentice_mosad(type="extenal"):
+def import_lowScoreApprentice_mosad(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -69,7 +70,7 @@ def export_lowScoreApprentice_mosad(type="extenal"):
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
-def export_lowScoreApprentice_tohnit(type="extenal"):
+def import_lowScoreApprentice_tohnit(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -110,7 +111,7 @@ def export_lowScoreApprentice_tohnit(type="extenal"):
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/melave_corrdintors_score", methods=['post'])
-def export_melave_corrdintors_score(type="extenal"):
+def import_melave_corrdintors_score(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -144,7 +145,7 @@ def export_melave_corrdintors_score(type="extenal"):
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
-def export_mosad_melavim_cnt(type="extenal"):
+def import_mosad_melavim_cnt(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -167,7 +168,7 @@ def export_mosad_melavim_cnt(type="extenal"):
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/mosad_corrdintors_score", methods=['post'])
-def export_mosad_corrdintors_score(type="extenal"):
+def import_mosad_corrdintors_score(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -195,7 +196,7 @@ def export_mosad_corrdintors_score(type="extenal"):
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/Eshcol_corrdintors_score", methods=['post'])
-def export_Eshcol_corrdintors_score(type="extenal"):
+def import_Eshcol_corrdintors_score(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -223,7 +224,7 @@ def export_Eshcol_corrdintors_score(type="extenal"):
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 @export_import_blueprint.route("/forgoten_Tohnit", methods=['post'])
-def export_forgoten_Tohnit(type="extenal"):
+def import_forgoten_Tohnit(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -272,7 +273,7 @@ def export_forgoten_Tohnit(type="extenal"):
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 @export_import_blueprint.route("/forgoten_mosad", methods=['post'])
-def export_forgoten_mosad(type="extenal"):
+def import_forgoten_mosad(type="extenal"):
     try:
         export_date = request.args.get("export_date")
         if export_date !=str(date.today()) and export_date is not  None:
@@ -386,23 +387,59 @@ def add_giftCode_excel():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
+
+
+@export_import_blueprint.route('/mosad_generalInfo', methods=['GET'])
+def mosad_generalInfo():
+    institution_id = request.args.get('institution_id')
+    all_Apprentices = db.session.query(Apprentice.paying,Apprentice.militaryPositionNew,Apprentice.spirit_status,Apprentice.army_role,Apprentice.institution_mahzor).filter(Apprentice.institution_id == institution_id).all()
+    all_melaves = db.session.query(user1.id).filter(user1.institution_id == institution_id).all()
+    coordinator = db.session.query(user1.id).filter(user1.institution_id == institution_id,user1.role_ids.contains("1")).first()
+
+    paying_dict=dict()
+    Picud_dict=dict()
+    matzbar_dict=dict()
+    sugSherut_dict=dict()
+    mahzor_dict=dict()
+
+    for apprentice1 in all_Apprentices:
+        paying_dict[apprentice1.paying] =paying_dict.get(apprentice1.paying,0)+1
+        Picud_dict[apprentice1.militaryPositionNew] =Picud_dict.get(apprentice1.militaryPositionNew,0)+1
+        matzbar_dict[apprentice1.spirit_status] =matzbar_dict.get(apprentice1.spirit_status,0)+1
+        sugSherut_dict[apprentice1.army_role] =sugSherut_dict.get(apprentice1.army_role,0)+1
+        mahzor_dict[apprentice1.institution_mahzor] =mahzor_dict.get(apprentice1.institution_mahzor,0)+1
+    mitztainim=[]
+    for melaveId in all_melaves:
+         melave_score,call_gap_avg,personal_meet_gap_avg,group_meeting_gap_avg=md.melave_score(melaveId.id)
+         if melave_score>95:
+            mitztainim.append(melaveId.id)
+    Mosad_coord_score, visitprofessionalMeet_melave_avg, visitMatzbar_melave_avg, call_gap_avg, personal_meet_gap_avg, group_meeting_gap_avg= md.mosad_Coordinators_score(coordinator.id)
+    mosad_score, forgoten_Apprentice_count=md.mosad_score(institution_id)
+    resJson=md.mosadCoordinator(coordinator.id)
+    mosadCoordinatorJson = resJson[0].json
+
+    return jsonify({
+        'good_Melave_ids_matzbar': mosadCoordinatorJson["good_Melave_ids_matzbar"],
+        'visitDoForBogrim_list': mosadCoordinatorJson["visitDoForBogrim_list"],
+
+        'mitztainim': mitztainim,
+        'forgoten_Apprentice_count': len(forgoten_Apprentice_count),
+        'call_gap_avg': call_gap_avg,
+        'personal_meet_gap_avg': personal_meet_gap_avg,
+        'group_meeting_gap_avg': group_meeting_gap_avg,
+
+        'paying_dict': [{k:v} for k,v in paying_dict.items()],
+        'mahzor_dict': [{k:v} for k,v in mahzor_dict.items()],
+        'sugSherut_dict': [{k:v} for k,v in sugSherut_dict.items()],
+        'matzbar_dict': [{k: v} for k, v in matzbar_dict.items()],
+        'Picud_dict': [{k: v} for k, v in Picud_dict.items()],
+
+    })
 @export_import_blueprint.route('/monthly', methods=['GET'])
 def monthly():
     try:
-        #export_lowScoreApprentice_tohnit_csv
-        export_lowScoreApprentice_tohnit_csv=export_lowScoreApprentice_tohnit("local")
-        print("export_lowScoreApprentice_tohnit_csv",export_lowScoreApprentice_tohnit_csv)
-        system_report1 = system_report(
-            id=int(str(uuid.uuid4().int)[:5]),
-            related_id=0,
-            type="lowScoreApprentice_tohnit",
-            value=export_lowScoreApprentice_tohnit_csv,
-            creation_date=date.today(),
-        )
-        db.session.add(system_report1)
-
         #export_lowScoreApprentice_mosad
-        export_lowScoreApprentice_mosad_csv=export_lowScoreApprentice_mosad("local")
+        export_lowScoreApprentice_mosad_csv=import_lowScoreApprentice_mosad("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -413,7 +450,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_Eshcol_corrdintors_score
-        export_Eshcol_corrdintors_score_csv=export_Eshcol_corrdintors_score("local")
+        export_Eshcol_corrdintors_score_csv=import_Eshcol_corrdintors_score("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -424,7 +461,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_forgoten_mosad
-        export_forgoten_mosad_csv=export_forgoten_mosad("local")
+        export_forgoten_mosad_csv=import_forgoten_mosad("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -435,7 +472,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_forgoten_Tohnit
-        export_forgoten_Tohnit_csv=export_forgoten_Tohnit("local")
+        export_forgoten_Tohnit_csv=import_forgoten_Tohnit("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -446,7 +483,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_melave_corrdintors_score
-        export_melave_corrdintors_score_csv=export_melave_corrdintors_score("local")
+        export_melave_corrdintors_score_csv=import_melave_corrdintors_score("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -457,7 +494,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_lowScoreApprentice_tohnit_csv
-        export_mosad_melavim_cnt_csv=export_mosad_melavim_cnt("local")
+        export_mosad_melavim_cnt_csv=import_mosad_melavim_cnt("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -468,7 +505,7 @@ def monthly():
         db.session.add(system_report1)
 
         #export_mosad_corrdintors_score
-        export_mosad_corrdintors_score_csv=export_mosad_corrdintors_score("local")
+        export_mosad_corrdintors_score_csv=import_mosad_corrdintors_score("local")
         system_report1 = system_report(
             id=int(str(uuid.uuid4().int)[:5]),
             related_id=0,
@@ -649,6 +686,16 @@ def rivony():
 def yearly():
     current_month=date.today().month
     start_Of_year = datetime.today() - timedelta(days=30*current_month)
+    all_Apprentices = db.session.query(Apprentice.spirit_status,Apprentice.id).all()
+    for apprentice1 in all_Apprentices:
+        system_report1 = system_report(
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=apprentice1.id,
+            type="spirit_status",
+            value=apprentice1.spirit_status,
+            creation_date=date.today(),
+        )
+        db.session.add(system_report1)
     all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]

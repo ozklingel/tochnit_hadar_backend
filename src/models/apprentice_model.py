@@ -20,19 +20,16 @@ class Apprentice(db.Model):
     contact1_last_name=db.Column("contact1_last_name", db.String(50), nullable=False,default="")
     contact1_phone=db.Column("contact1_phone", db.String(50), nullable=False,default="")
     contact1_relation=db.Column("contact1_relation", db.String(50), nullable=False,default="")
-
     contact2_email=db.Column("contact2_email", db.String(50), nullable=False,default="")
     contact2_phone=db.Column("contact2_phone", db.String(50), nullable=False,default="")
     contact2_first_name=db.Column("contact2_first_name", db.String(50), nullable=False,default="")
     contact2_last_name=db.Column("contact2_last_name", db.String(50), nullable=False,default="")
     contact2_relation=db.Column("contact2_relation", db.String(50), nullable=False,default="")
-
     contact3_phone    =db.Column("contact3_phone", db.String(50), nullable=False,default="")
     contact3_first_name=db.Column("contact3_first_name", db.String(50), nullable=False,default="")
     contact3_last_name=db.Column("contact3_last_name", db.String(50), nullable=False,default="")
     contact3_email=db.Column("contact3_email", db.String(50), nullable=False,default="")
     contact3_relation=db.Column("contact3_relation", db.String(50), nullable=False,default="")
-
     city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(CITIES_TBL, ID_COL)), nullable=False,default=313)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False,default="")
     high_school_name = db.Column(HIGH_SCHOOL_NAME_COL, db.String(50), nullable=False,default="")
@@ -46,9 +43,6 @@ class Apprentice(db.Model):
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False,default=0)
     hadar_plan_session = db.Column("thperiod", db.String(10), nullable=False,default=0)#mahzor
     base_address = db.Column("militarycompoundid", db.Integer, nullable=False,default=14509)
-    unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False,default="")
-    army_role = db.Column(ARMY_ROLE_COL, db.String(50), nullable=False,default="")
-    serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False,default="")
     recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=True)
     release_date = db.Column(RELEASE_DATE_COL, db.DateTime, nullable=True)
     paying = db.Column(PAYING_COL, db.String(50), nullable=False,default="")
@@ -68,10 +62,14 @@ class Apprentice(db.Model):
     teudatZehut = db.Column("teudatzehut", db.String(50), nullable=False,default="")
     institution_mahzor = db.Column("institution_mahzor", db.String(10), nullable=False,default="")
     photo_path=db.Column("photo_path", db.String(50), nullable=False,default="https://www.gravatar.com/avatar")
-    militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")
     association_date=db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
     birthday_ivry=db.Column("birthday_ivry", db.String(50), nullable=False,default="ה' בטבת")
     marriage_date_ivry=db.Column("marriage_date_ivry", db.DateTime, nullable=True)
+
+    militaryPositionNew=db.Column("militarypositionnew", db.String(50), nullable=False,default="")#מפקד כיתה
+    serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False,default="")#קבע
+    army_role = db.Column(ARMY_ROLE_COL, db.String(50), nullable=False,default="")#סיירות
+    unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False,default="")# צנחנים
 
 
 front_end_dict={
@@ -115,7 +113,7 @@ front_end_dict={
 "thPeriod":"hadar_plan_session",
 "serve_type":"serve_type",
 "marriage_status":"marriage_status",
-"militaryCompoundId":"base_id",
+"militaryCompoundId":"base_address",
 "phone":'id',
 "email":"email",
 "teudatZehut":"teudatZehut",

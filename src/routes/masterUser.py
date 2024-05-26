@@ -19,38 +19,83 @@ from src.models.user_model import user1
 from src.models.visit_model import Visit
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
-
+homeDir="/home/ubuntu/flaskapp/"
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
     data = request.json
     try:
         config.call_madad_date = data['call_madad_date']
+    except:
+        print()
+    try:
         config.meet_madad_date = data['meet_madad_date']
+    except:
+        print()
+    try:
         config.groupMeet_madad_date = data['groupMeet_madad_date']
+    except:
+        print()
+    try:
         config.callHorim_madad_date = data['callHorim_madad_date']
-        config.madadA_date = data['madadA_date']
-        config.madadB_date = data['madadB_date']
-        config.madadC_date = data['madadC_date']
-        config.madadD_date = data['madadD_date']
-    except Exception as e:
-        return jsonify({'result': "fail-"+str(e)}), HTTPStatus.OK
+    except:
+        print()
+    try:
+        config.basis_madad_date = data['basis_madad_date']
+    except:
+        print()
+    try:
+        config.doForBogrim_madad_date = data['doForBogrim_madad_date']
+    except:
+        print()
+    try:
+        config.matzbarmeet_madad_date = data['matzbarmeet_madad_date']
+    except:
+        print()
+    try:
+        config.professionalMeet_madad_date = data['professionalMeet_madad_date']
+    except:
+        print()
+    try:
+        config.hazana_madad_date = data['hazana_madad_date']
+    except:
+        print()
+    try:
+        config.mosadYeshiva_madad_date = data['mosadYeshiva_madad_date']
+    except:
+        print()
+    try:
+        config.eshcolMosadMeet_madad_date = data['eshcolMosadMeet_madad_date']
+    except:
+        print()
+    try:
+        config.tochnitMeet_madad_date = data['tochnitMeet_madad_date']
+    except:
+        print()
+    try:
+        config.cenes_madad_date = data['cenes_madad_date']
+    except:
+        print()
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 @master_user_form_blueprint.route('/getAllSetting_madadim', methods=['GET'])
 def getNotificationSetting_form():
     try:
-        return jsonify({"eshcolMosadMeet_madad_date":config.eshcolMosadMeet_madad_date,
-                        "tochnitMeet_madad_date":config.tochnitMeet_madad_date
-                        ,"doForBogrim_madad_date":config.doForBogrim_madad_date,
+        return jsonify({"call_madad_date":config.call_madad_date,
+                        "meet_madad_date":config.meet_madad_date
+                        ,"groupMeet_madad_date":config.groupMeet_madad_date,
+                        "callHorim_madad_date": config.callHorim_madad_date,
+                        "basis_madad_date": config.basis_madad_date
+
+                           , "doForBogrim_madad_date": config.doForBogrim_madad_date,
                         "matzbarmeet_madad_date": config.matzbarmeet_madad_date,
                         "professionalMeet_madad_date": config.professionalMeet_madad_date
-                           , "callHorim_madad_date": config.callHorim_madad_date,
-                        "groupMeet_madad_date": config.groupMeet_madad_date,
-                        "meet_madad_date": config.meet_madad_date
-                           , "call_madad_date": config.call_madad_date
-                           , "cenes_report": config.cenes_report
+                           , "hazana_madad_date": config.hazana_madad_date
+                           , "mosadYeshiva_madad_date": config.mosadYeshiva_madad_date,
 
+                        "eshcolMosadMeet_madad_date": config.eshcolMosadMeet_madad_date
+                           , "tochnitMeet_madad_date": config.tochnitMeet_madad_date
+                           , "cenes_madad_date": config.cenes_madad_date
                         }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -108,9 +153,9 @@ def addApperntice(wb):
         educationfaculty = row[40].value.strip()  if not row[40].value is None else ""
         workoccupation = row[41].value.strip()  if not row[41].value is None else ""
         #worktype = row[42].value.strip()  #
-        unit_name = row[42].value.strip()  if not row[42].value is None else ""# חיל שריון
-        army_role = row[43].value.strip()  if not row[43].value is None else ""# צנחנים
-        militaryPositionNew = row[45].value.strip() if not row[45].value is None else "" # מפקצ
+        army_role = row[42].value.strip()  if not row[43].value is None else ""#סיירות
+        unit_name = row[43].value.strip()  if not row[42].value is None else ""# צנחנים
+        militaryPositionNew = row[45].value.strip() if not row[45].value is None else "" # מפקד כיתה
         militaryPositionOld = row[46].value.strip()  if not row[46].value is None else ""# צנחנים
         recruitment_date = row[47].value if not row[47].value is None else None # צנחנים
         release_date = row[48].value if not row[48].value is None else None # צנחנים
@@ -257,7 +302,7 @@ def initDB():
             for i in addApperntice(wb):
                 uncommited_ids.append(i)
             for row in db.session.query(Apprentice).all():
-                setattr(row, "association_date", '2024-05-01')
+                setattr(row, "association_date", '2023-05-01')
             db.session.commit()
             print("appretice lab loaded")
             path = 'data/user_enter_lab.xlsx'
@@ -266,12 +311,12 @@ def initDB():
                 uncommited_ids.append(i)
             print("user  lab loaded")
         else :
-            path = 'data/טבלת הכנסת חניכים - סופית ינון.xlsx'
+            path = 'data/apprentice_PROD.xlsx'
             wb = load_workbook(filename=path)
             for i in addApperntice(wb):
                 uncommited_ids.append(i)
             print("appretice  loaded")
-            path = 'data/טבלת הכנסת משתמשים  - סופית ינון.xlsx'
+            path = 'data/user_PROD.xlsx'
             wb = load_workbook(filename=path)
             for i in addUsers(wb):
                 uncommited_ids.append(i)

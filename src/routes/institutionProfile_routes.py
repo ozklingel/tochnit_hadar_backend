@@ -283,6 +283,7 @@ def add_mosad_excel():
     print(file)
     wb = load_workbook(file)
     sheet = wb.active
+    not_commited = []
     for row in sheet.iter_rows(min_row=2):
         name = row[0].value.strip()
         phone = str(row[1].value)
@@ -299,9 +300,7 @@ def add_mosad_excel():
         contact_name = row[12].value.strip()
         contact_phone = row[13].value
         try:
-
             CityId = db.session.query(City.id).filter(City.name == city).first()
-
             Institution1 = Institution(
                 #email=email,
                 id=int(str(uuid.uuid4().int)[:5]),
@@ -320,12 +319,10 @@ def add_mosad_excel():
                 address=address
             )
             db.session.add(Institution1)
+            db.session.commit()
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-    db.session.commit()
-
-    return jsonify({'result': 'success'}), HTTPStatus.OK
-
+            not_commited.append(name)
+    return jsonify({'result': 'success', "not_commited": not_commited}), HTTPStatus.OK
 
 
 @institutionProfile_form_blueprint.route('/delete', methods=['DELETE', 'post'])

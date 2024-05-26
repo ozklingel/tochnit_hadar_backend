@@ -53,13 +53,15 @@ def update():
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "email or date -wrong format"}), 401
+                    return jsonify({'result': "email -wrong format"}), 401
             elif  key == "birthday":
                 if validate_date(data[key][:-9]):
                     setattr(updatedEnt, key, data[key])
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
+                print("front_end_dict[key]",front_end_dict[key])
+                print("data[key]",data[key])
                 setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
@@ -192,8 +194,8 @@ def add_apprentice_excel():
         educationfaculty = row[40].value.strip()  if not row[40].value is None else ""
         workoccupation = row[41].value.strip()  if not row[41].value is None else ""
         #worktype = row[42].value.strip()  #
-        unit_name = row[42].value.strip()  if not row[42].value is None else ""# חיל שריון
-        army_role = row[43].value.strip()  if not row[43].value is None else ""# צנחנים
+        army_role = row[42].value.strip()  if not row[43].value is None else ""#סיירות
+        unit_name = row[43].value.strip()  if not row[42].value is None else ""# צנחנים
         militaryPositionNew = row[45].value.strip() if not row[45].value is None else "" # מפקצ
         militaryPositionOld = row[46].value.strip()  if not row[46].value is None else ""# צנחנים
         recruitment_date = row[47].value if not row[47].value is None else None # צנחנים

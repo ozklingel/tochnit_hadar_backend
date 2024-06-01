@@ -28,7 +28,7 @@ import src.routes.madadim as md
 from src.routes.homepage import get_Eshcol_corrdintors_score, get_mosad_Coordinators_score, get_melave_score
 
 export_import_blueprint = Blueprint('export_import', __name__, url_prefix='/export_import')
-base_dir="/home/ubuntu/flaskapp/"
+base_dir=""#"/home/ubuntu/flaskapp/"
 @export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
 def import_lowScoreApprentice_mosad(type="extenal"):
     try:

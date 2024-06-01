@@ -301,6 +301,10 @@ def add_mosad_excel():
         contact_phone = row[13].value
         try:
             CityId = db.session.query(City.id).filter(City.name == city).first()
+            Institution1 = db.session.query(Institution.id).filter(Institution.name == name).first()
+            if Institution1:
+                not_commited.append(name)
+                continue
             Institution1 = Institution(
                 #email=email,
                 id=int(str(uuid.uuid4().int)[:5]),

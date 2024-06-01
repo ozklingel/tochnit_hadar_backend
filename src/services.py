@@ -3,4 +3,4 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-red = redis.StrictRedis(host='redis', port=6379, db=0)
+red = redis.StrictRedis(host='localhost', port=6379, db=0)

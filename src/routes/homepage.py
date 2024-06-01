@@ -188,12 +188,13 @@ def init_eshcolCoord():
         print("accessToken:",accessToken)
         userId = request.args.get("userId")
         print("Userid:", str(userId))
-        '''
+        red.hset(userId, "accessToken", "123")
+
         redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
         print("redisaccessToken:",redisaccessToken)
         if not redisaccessToken==accessToken:
             return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
-            '''
+
         record = user1.query.filter_by(id=userId).first()
         '''
         red.hset(userId, "id", record.id)

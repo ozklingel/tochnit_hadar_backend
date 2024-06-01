@@ -42,9 +42,7 @@ def update():
 
         for key in data:
             if key == "avatar" :
-                s3_client = session.client('s3',
-                                           aws_access_key_id=AWS_access_key_id,
-                                           aws_secret_access_key=AWS_secret_access_key)
+
                 s3 = boto3.resource('s3',
                                     aws_access_key_id=AWS_access_key_id,
                                     aws_secret_access_key=AWS_secret_access_key)

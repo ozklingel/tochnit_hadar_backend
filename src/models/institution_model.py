@@ -12,7 +12,7 @@ class Institution(db.Model):
     contact_phone = db.Column(CONTACT_PHONE_COL, db.String(50), nullable=False,default="")
     logo_path = db.Column(LOGO_PATH_COL, db.String(50), nullable=False,default="")
     owner_id = db.Column(OWNER_ID_COL, db.Integer, nullable=False,default=0)
-    name = db.Column(NAME_COL, db.String(20), nullable=False,default="")
+    name = db.Column(NAME_COL, db.String(20),primary_key=True,  nullable=False,default="")
     admin_name = db.Column("admin_name", db.String(50), nullable=False,default="")
     admin_phone = db.Column("admin_phone", db.String(50), nullable=False,default="")
     roshYeshiva_name = db.Column("roshyeshiva_name", db.String(50), nullable=False,default="")

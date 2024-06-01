@@ -7,6 +7,7 @@ from pyluach import dates
 from sqlalchemy import func, or_
 
 import config
+from src.models.madadim_setting import madadim_setting
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
 
@@ -643,6 +644,7 @@ def melave_score(melaveId):
         proffesional_wight=5
         monthlyYeshiva_wight=10
         basis_wight=10
+        madadim_setting1 = db.session.query(madadim_setting).first()
 
     # compute score diagram
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
@@ -652,31 +654,32 @@ def melave_score(melaveId):
             return 100,0,0,0
         #call_score
         visitcalls = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title.in_(config.reports_as_call), Visit.user_id == melaveId,Visit.visit_date>config.call_madad_date).order_by(Visit.visit_date).all()
+            Visit.title.in_(config.reports_as_call), Visit.user_id == melaveId,Visit.visit_date>madadim_setting1.call_madad_date).order_by(Visit.visit_date).all()
         call_score,call_gap_avg=compute_visit_score(all_melave_Apprentices,visitcalls,call_wight,21,melaveId)
         #personal_meet_score
         visitmeetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-            Visit.title.in_(config.report_as_meet), Visit.user_id == melaveId,Visit.visit_date>config.meet_madad_date).order_by(Visit.visit_date).all()
+            Visit.title.in_(config.report_as_meet), Visit.user_id == melaveId,Visit.visit_date>madadim_setting1.meet_madad_date).order_by(Visit.visit_date).all()
         personal_meet_score,personal_meet_gap_avg=compute_visit_score(all_melave_Apprentices,visitmeetings,presonalMeet_wight,90,melaveId)
         #group_meeting
         group_meeting = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-            Visit.ent_reported).filter(Visit.title == config.groupMeet_report, Visit.user_id == melaveId,Visit.visit_date>config.groupMeet_madad_date).all()
+            Visit.ent_reported).filter(Visit.title == config.groupMeet_report, Visit.user_id == melaveId,Visit.visit_date>madadim_setting1.groupMeet_madad_date).all()
         association_date = db.session.query(user1.association_date).filter(
             user1.id == melaveId).first()
-        init_gap = (group_meeting[0][1] - association_date.association_date).days if association_date is not None else 0
-        group_meeting_gap=init_gap
-        for index in range(1, len(group_meeting)):
-            group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
-
-        group_meeting_gap_avg = group_meeting_gap / len(group_meeting+1)
-        group_meeting_panish = group_meeting_gap_avg - 60
-        if group_meeting_panish > 0:
-            group_meeting_score = groupMeet_wight - group_meeting_panish / 2
-        else:
-            group_meeting_score = groupMeet_wight
-        if group_meeting_score < 0:
-            group_meeting_score = 0
-
+        group_meeting_score=0
+        group_meeting_gap_avg=(date.today()- association_date.association_date).days
+        if group_meeting_score:
+            init_gap = (group_meeting[0][1] - association_date.association_date).days if association_date is not None else 0
+            group_meeting_gap=init_gap
+            for index in range(1, len(group_meeting)):
+                group_meeting_gap += (group_meeting[index][1] - group_meeting[index - 1][1]).days if group_meeting[index] is not None else 21
+            group_meeting_gap_avg = group_meeting_gap / len(group_meeting+1)
+            group_meeting_panish = group_meeting_gap_avg - 60
+            if group_meeting_panish > 0:
+                group_meeting_score = groupMeet_wight - group_meeting_panish / 2
+            else:
+                group_meeting_score = groupMeet_wight
+            if group_meeting_score < 0:
+                group_meeting_score = 0
         #professional_2monthly
         professional_2monthly = db.session.query(Visit.user_id,func.max(Visit.visit_date).label("visit_date")).group_by(
             Visit.user_id).filter(Visit.title == config.professional_report, Visit.ent_reported == melaveId).first()
@@ -731,6 +734,7 @@ def mosad_Coordinators_score(mosadCoord_id):
     hazana_wight = 10
     ahraiYeshva_wight = 5
     matzbar_wight = 30
+    madadim_setting1 = db.session.query(madadim_setting).first()
 
     try:
         user_prof = db.session.query( user1.institution_id,user1.association_date).filter(user1.id==mosadCoord_id).first()
@@ -761,12 +765,12 @@ def mosad_Coordinators_score(mosadCoord_id):
         #interaction=30
         Mosad_coord_score +=melaveScore_wight*total_melave_score/100
         #מצבר==20
-        visit_matzbar_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.matzbarmeet_madad_date,Visit.title == config.matzbar_report).filter(
+        visit_matzbar_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>madadim_setting1.matzbarmeet_madad_date,Visit.title == config.matzbar_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
         visit_matzbar_meetings_score,visitMatzbar_melave_avg=compute_visit_score_users(all_Mosad_Melave, visit_matzbar_meetings, matzbar_wight, 90,mosadCoord_id)
         Mosad_coord_score+=visit_matzbar_meetings_score
         #מפגש_מקצועי=10
-        visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>config.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
+        visit_mosad_professional_meetings = db.session.query(Visit.ent_reported, Visit.visit_date).filter(Visit.visit_date>madadim_setting1.professionalMeet_madad_date,Visit.title == config.professional_report).filter(
             Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
         visit_mosad_professional_meetings_score,visitprofessionalMeet_melave_avg=compute_visit_score_users(all_Mosad_Melave, visit_mosad_professional_meetings, proffesional_wight, 90,mosadCoord_id)
         Mosad_coord_score+=visit_mosad_professional_meetings_score
@@ -778,7 +782,7 @@ def mosad_Coordinators_score(mosadCoord_id):
             Mosad_coord_score += 5 #precence of melavim
         else:
             visit_mosad_yeshiva = db.session.query(Visit.ent_reported, Visit.visit_date).filter(
-                Visit.visit_date > config.eshcolMosadMeet_madad_date,
+                Visit.visit_date > madadim_setting1.eshcolMosadMeet_madad_date,
                 Visit.title == config.MelavimMeeting_report).filter(
                 Visit.ent_reported.in_(list(all_Mosad_Melaves_list))).order_by(Visit.visit_date).all()
             visit_mosad_yeshiva_score, visitprofessionalMeet_melave_avg = compute_visit_score_users(all_Mosad_Melave, visit_mosad_yeshiva, monthlyYeshiva_wight, 30,mosadCoord_id)
@@ -828,8 +832,10 @@ def eshcol_Coordinators_score(eshcolCoord_id):
                                                          Apprentice.eshcol == eshcol).all()
     if len(all_eshcol_mosadCoord) == 0:
         return 100,0
+    madadim_setting1 = db.session.query(madadim_setting).first()
+
     all_eshcol_mosadCoord_list = [r[0] for r in all_eshcol_mosadCoord]
-    visit_MOsadEshcolMeeting_report = db.session.query(Visit).filter(Visit.user_id == eshcolCoord_id,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>config.eshcolMosadMeet_madad_date).all()
+    visit_MOsadEshcolMeeting_report = db.session.query(Visit).filter(Visit.user_id == eshcolCoord_id,Visit.title==config.MOsadEshcolMeeting_report ,Visit.visit_date>madadim_setting1.eshcolMosadMeet_madad_date).all()
     MOsadEshcolMeeting_score,MOsadEshcolMeeting_avg=compute_visit_score_users(all_eshcol_mosadCoord, visit_MOsadEshcolMeeting_report, 60, 30, eshcolCoord_id)
     #tochnitMeeting_report
     too_old = datetime.today() - timedelta(days=31)

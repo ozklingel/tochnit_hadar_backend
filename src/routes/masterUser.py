@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
+from src.models.madadim_setting import madadim_setting
 from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
@@ -23,20 +24,41 @@ homeDir="/home/ubuntu/flaskapp/"
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
     data = request.json
+    madadim_setting1 = db.session.query(madadim_setting).first()
+    if madadim_setting1 is None:
+        rep = madadim_setting(
+            call_madad_date = '1995-09-09'
+        ,cenes_madad_date = '1995-09-09'
+        ,tochnitMeet_madad_date = '1995-09-09'
+        ,eshcolMosadMeet_madad_date = '1995-09-09'
+        ,mosadYeshiva_madad_date = '1995-09-09'
+        ,hazana_madad_date = '1995-09-09'
+        ,professionalMeet_madad_date = '1995-09-09'
+        ,doForBogrim_madad_date = '1995-09-09'
+        ,basis_madad_date = '1995-09-09'
+        ,callHorim_madad_date = '1995-09-09'
+        ,groupMeet_madad_date = '1995-09-09'
+        ,matzbarmeet_madad_date = '1995-09-09'
+
+        ,meet_madad_date = '1995-09-09'
+        )
+        db.session.add(rep)
+
+
     try:
-        config.call_madad_date = data['call_madad_date']
+        madadim_setting1.call_madad_date = data['call_madad_date']
     except:
         print()
     try:
-        config.meet_madad_date = data['meet_madad_date']
+        madadim_setting1.meet_madad_date = data['meet_madad_date']
     except:
         print()
     try:
-        config.groupMeet_madad_date = data['groupMeet_madad_date']
+        madadim_setting1.groupMeet_madad_date = data['groupMeet_madad_date']
     except:
         print()
     try:
-        config.callHorim_madad_date = data['callHorim_madad_date']
+        madadim_setting1.callHorim_madad_date = data['callHorim_madad_date']
     except:
         print()
     try:
@@ -44,58 +66,62 @@ def setSetting_madadim():
     except:
         print()
     try:
-        config.doForBogrim_madad_date = data['doForBogrim_madad_date']
+        madadim_setting1.doForBogrim_madad_date = data['doForBogrim_madad_date']
     except:
         print()
     try:
-        config.matzbarmeet_madad_date = data['matzbarmeet_madad_date']
+        madadim_setting1.matzbarmeet_madad_date = data['matzbarmeet_madad_date']
     except:
         print()
     try:
-        config.professionalMeet_madad_date = data['professionalMeet_madad_date']
+        madadim_setting1.professionalmeet_madad_date = data['professionalMeet_madad_date']
     except:
         print()
     try:
-        config.hazana_madad_date = data['hazana_madad_date']
+        madadim_setting1.hazana_madad_date = data['hazana_madad_date']
     except:
         print()
     try:
-        config.mosadYeshiva_madad_date = data['mosadYeshiva_madad_date']
+        madadim_setting1.mosadYeshiva_madad_date = data['mosadYeshiva_madad_date']
     except:
         print()
     try:
-        config.eshcolMosadMeet_madad_date = data['eshcolMosadMeet_madad_date']
+        madadim_setting1.eshcolMosadMeet_madad_date = data['eshcolMosadMeet_madad_date']
     except:
         print()
     try:
-        config.tochnitMeet_madad_date = data['tochnitMeet_madad_date']
+        madadim_setting1.tochnitMeet_madad_date = data['tochnitMeet_madad_date']
     except:
         print()
     try:
-        config.cenes_madad_date = data['cenes_madad_date']
+        madadim_setting1.cenes_madad_date = data['cenes_madad_date']
     except:
         print()
+    db.session.commit()
+
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 @master_user_form_blueprint.route('/getAllSetting_madadim', methods=['GET'])
 def getNotificationSetting_form():
     try:
-        return jsonify({"call_madad_date":config.call_madad_date,
-                        "meet_madad_date":config.meet_madad_date
-                        ,"groupMeet_madad_date":config.groupMeet_madad_date,
-                        "callHorim_madad_date": config.callHorim_madad_date,
-                        "basis_madad_date": config.basis_madad_date
+        madadim_setting1 = db.session.query(madadim_setting).first()
 
-                           , "doForBogrim_madad_date": config.doForBogrim_madad_date,
-                        "matzbarmeet_madad_date": config.matzbarmeet_madad_date,
-                        "professionalMeet_madad_date": config.professionalMeet_madad_date
-                           , "hazana_madad_date": config.hazana_madad_date
-                           , "mosadYeshiva_madad_date": config.mosadYeshiva_madad_date,
+        return jsonify({"call_madad_date":str(madadim_setting1.call_madad_date),
+                        "meet_madad_date":str(madadim_setting1.meet_madad_date)
+                        ,"groupMeet_madad_date":str(madadim_setting1.groupMeet_madad_date),
+                        "callHorim_madad_date": str(madadim_setting1.callHorim_madad_date),
+                        "basis_madad_date": str(madadim_setting1.basis_madad_date)
 
-                        "eshcolMosadMeet_madad_date": config.eshcolMosadMeet_madad_date
-                           , "tochnitMeet_madad_date": config.tochnitMeet_madad_date
-                           , "cenes_madad_date": config.cenes_madad_date
+                           , "doForBogrim_madad_date": str(madadim_setting1.doForBogrim_madad_date),
+                        "matzbarmeet_madad_date":str( madadim_setting1.matzbarmeet_madad_date),
+                        "professionalMeet_madad_date": str(madadim_setting1.professionalMeet_madad_date)
+                           , "hazana_madad_date": str(madadim_setting1.hazana_madad_date)
+                           , "mosadYeshiva_madad_date":str( madadim_setting1.mosadYeshiva_madad_date),
+
+                        "eshcolMosadMeet_madad_date":str( madadim_setting1.eshcolMosadMeet_madad_date)
+                           , "tochnitMeet_madad_date":str( madadim_setting1.tochnitMeet_madad_date)
+                           , "cenes_madad_date": str(madadim_setting1.cenes_madad_date)
                         }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -263,9 +289,9 @@ def addUsers(wb):
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
+            print("institution_name",institution_name)
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
-
             user = user1(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
@@ -280,6 +306,7 @@ def addUsers(wb):
 
             db.session.commit()
         except Exception as e:
+            print(str(e))
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     return [x for x in uncommited_ids if x is not None]
 
@@ -311,16 +338,16 @@ def initDB():
                 uncommited_ids.append(i)
             print("user  lab loaded")
         else :
-            path = 'data/apprentice_PROD.xlsx'
-            wb = load_workbook(filename=path)
-            for i in addApperntice(wb):
-                uncommited_ids.append(i)
-            print("appretice  loaded")
             path = 'data/user_PROD.xlsx'
             wb = load_workbook(filename=path)
             for i in addUsers(wb):
                 uncommited_ids.append(i)
             print("user  loaded")
+            path = 'data/apprentice_PROD.xlsx'
+            wb = load_workbook(filename=path)
+            for i in addApperntice(wb):
+                uncommited_ids.append(i)
+            print("appretice  loaded")
             path = 'data/messages.xlsx'
             wb = load_workbook(filename=path)
             add_message(wb)
@@ -329,9 +356,10 @@ def initDB():
             wb = load_workbook(filename=path)
             add_report(wb)
             print("report  loaded")
-
+            print(uncommited_ids)
         return jsonify({'result': 'success', "uncommited_ids": uncommited_ids}), HTTPStatus.OK
     except Exception as e:
+        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 def add_message(wb):

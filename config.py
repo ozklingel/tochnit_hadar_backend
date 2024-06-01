@@ -2,23 +2,7 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:TH@localhost/t_h'#db/postgres
 SECRET_KEY = 'test'
 AWS_secret_access_key="+r/OQQDQg8LUC4uALmaVTy7VDbGGHODZKRfw9NML"
 AWS_access_key_id="AKIAZ27KJ4ZSWO3I7VFD"
-#melave
-call_madad_date='2023-01-01'
-meet_madad_date='2023-01-01'
-groupMeet_madad_date='2023-01-01'
-callHorim_madad_date='2023-01-01'
-basis_madad_date='2023-01-01'
-#mosad
-doForBogrim_madad_date='2023-01-01'
-matzbarmeet_madad_date='2023-01-01'
-professionalMeet_madad_date='2023-01-01'
-hazana_madad_date='2023-01-01'
-mosadYeshiva_madad_date='2023-01-01'
-#eshcol
-eshcolMosadMeet_madad_date='2023-01-01'
-tochnitMeet_madad_date='2023-01-01'
-#ahraih tohnit
-cenes_madad_date='2023-01-01'
+
 
 
 call_report="שיחה טלפונית"

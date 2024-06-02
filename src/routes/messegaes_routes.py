@@ -46,7 +46,7 @@ def send_per_persona():
         print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         if icon == "INTERNAL":
             for key in created_for_ids:
-                ContactForm1 = ContactForm(
+                contact_form_1 = ContactForm(
                     id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                     created_for_id=key,
                     created_by_id=created_by_id,
@@ -59,7 +59,7 @@ def send_per_persona():
                     ent_group="",
                     icon=icon
                 )
-                db.session.add(ContactForm1)
+                db.session.add(contact_form_1)
             db.session.commit()
             return jsonify({'result': 'success'}), HTTPStatus.OK
         if icon == "WHATSAPP":
@@ -114,9 +114,9 @@ def send_one_sms_019(message, recipients, sources):
 
 
 def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_milliseconds: int = 0):
-    APIUrl: str = "https://7103.api.greenapi.com"  # TODO - put in config
-    idInstance: str = "7103922187"  # TODO - put in config
-    apiTokenInstance: str = "2a53bacca96949e5a92d03125886fd12cefb7415bf974f4a87"  # TODO - put in config
+    api_url: str = "https://7103.api.greenapi.com"  # TODO - put in config
+    id_instance: str = "7103922187"  # TODO - put in config
+    api_token_instance: str = "2a53bacca96949e5a92d03125886fd12cefb7415bf974f4a87"  # TODO - put in config
     responses = []
     for number in numbers:
         # number validation, assuming only israeli numbers, without the 0 in the beginning
@@ -139,7 +139,7 @@ def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_mi
 
         payload = json.dumps(payload)
 
-        url = f"{APIUrl}/waInstance{idInstance}/sendMessage/{apiTokenInstance}"
+        url = f"{api_url}/waInstance{id_instance}/sendMessage/{api_token_instance}"
 
         headers = {
             'Content-Type': 'application/json'
@@ -196,14 +196,14 @@ def add_contact_form():
         created_by_id = str(data['created_by_id'])
         created_for_ids = data['created_for_ids']
         if created_for_ids == [""]:
-            achrahTohnit = user1.query.filter(user1.role_id == "3").all()
-            created_for_ids = [str(a.id) for a in achrahTohnit]
+            achrah_tohnit = user1.query.filter(user1.role_id == "3").all()
+            created_for_ids = [str(a.id) for a in achrah_tohnit]
         if type == "draft":
             created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
         print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
-            ContactForm1 = ContactForm(
+            contact_form1 = ContactForm(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                 created_for_id=key,
                 created_by_id=created_by_id,
@@ -216,8 +216,8 @@ def add_contact_form():
                 ent_group=ent_group_name,
                 icon=icon
             )
-            db.session.add(ContactForm1)
-            print(ContactForm1.created_at)
+            db.session.add(contact_form1)
+            print(contact_form1.created_at)
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
@@ -225,22 +225,22 @@ def add_contact_form():
 
 
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
-def getAll_messegases_form():
+def get_all_messages_form():
     try:
         user = request.args.get('userId')
         print(user)
         user_role = db.session.query(user1.role_id).filter(
             user == user1.id).first()[0]
-        messegasesList = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
-                                          ContactForm.attachments, ContactForm.type, ContactForm.icon,
-                                          ContactForm.allreadyread, ContactForm.subject, ContactForm.content
-                                          , ContactForm.ent_group, ContactForm.created_by_id) \
+        messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
+                                         ContactForm.attachments, ContactForm.type, ContactForm.icon,
+                                         ContactForm.allreadyread, ContactForm.subject, ContactForm.content,
+                                         ContactForm.ent_group, ContactForm.created_by_id) \
             .filter(or_(ContactForm.created_for_id == user, ContactForm.created_by_id == user)).all()
         my_dict = []
         groped_mess = []
         group_report_dict = dict()
-        print(messegasesList)
-        for mess in messegasesList:
+        print(messages_list)
+        for mess in messages_list:
             if mess.type == "יוצאות" and user_role == "0":
                 continue
             if mess.ent_group != "":
@@ -289,7 +289,7 @@ def getAll_messegases_form():
 
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_message_form():
+def set_was_read_message_form():
     data = request.json
     message_id = data['message_id']
     print(message_id)
@@ -307,11 +307,11 @@ def setWasRead_message_form():
 
 
 @messegaes_form_blueprint.route('/delete', methods=['DELETE', 'post'])
-def deleteEnt():
+def delete_ent():
     data = request.json
     try:
-        entityId = str(data['entityId'])
-        res = db.session.query(ContactForm).filter(ContactForm.id == entityId).delete()
+        entity_id = str(data['entityId'])
+        res = db.session.query(ContactForm).filter(ContactForm.id == entity_id).delete()
         db.session.commit()
         return jsonify({'result': 'sucess'}), HTTPStatus.OK
     except Exception as e:
@@ -336,7 +336,7 @@ def filter_to():
 
 
 @messegaes_form_blueprint.route("/filter_meesages", methods=['GET'])
-def filter_meesages():
+def filter_messages():
     try:
         users, apprentice, ent_group_dict = filter_by_request(request)
         mess_user = db.session.query(ContactForm.id).filter(
@@ -356,22 +356,22 @@ def filter_meesages():
 
 
 @messegaes_form_blueprint.route('/getById', methods=['GET'])
-def getById():
+def get_by_id():
     try:
         message_id = request.args.get('message_id')
         print(message_id)
-        messegasesList = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
-                                          ContactForm.attachments, ContactForm.type, ContactForm.icon,
-                                          ContactForm.allreadyread, ContactForm.subject, ContactForm.content
-                                          , ContactForm.ent_group, ContactForm.created_by_id) \
+        messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
+                                         ContactForm.attachments, ContactForm.type, ContactForm.icon,
+                                         ContactForm.allreadyread, ContactForm.subject, ContactForm.content,
+                                         ContactForm.ent_group, ContactForm.created_by_id) \
             .filter(or_(ContactForm.id == message_id)).all()
 
         my_dict = []
         groped_mess = []
         group_report_dict = dict()
-        print(messegasesList)
-        for mess in messegasesList:
-            daysFromNow = (date.today() - mess.created_at).days if mess.created_at is not None else None
+        print(messages_list)
+        for mess in messages_list:
+            days_from_now = (date.today() - mess.created_at).days if mess.created_at is not None else None
             if mess.ent_group != "":
                 if mess.ent_group + str(mess.id) in group_report_dict:
                     group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))

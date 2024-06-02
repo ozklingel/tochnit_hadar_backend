@@ -188,7 +188,7 @@ def send_whatsapp():
         return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
                 HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:
-        return jsonify({'result': str(e), "input:": str(data)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': str(e), "input, request:": str(request)}), HTTPStatus.BAD_REQUEST
 
 
 # from chat box

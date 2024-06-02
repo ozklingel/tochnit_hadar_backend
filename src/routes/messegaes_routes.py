@@ -69,30 +69,10 @@ def send_per_persona():
             if count_200 == len(returned):
                 return jsonify({'result': 'success'}), HTTPStatus.OK
         if icon == "SMS":
-            created_for_ids_SMS = ["0" + a for a in created_for_ids]
-            responses = send_sms_019("559482844", created_for_ids_SMS, content)
-            if responses is not None:
-                numbers_to_add_to_019 = []
-                for number in responses:
-                    if isinstance(responses[number], dict):
-                        if (config.SendMessages.Sms.error_message_019
-                                in responses[number].values()):
-                            numbers_to_add_to_019.append(number)
-                    else:
-                        if (config.SendMessages.Sms.error_message_019
-                                in responses[number]):
-                            numbers_to_add_to_019.append(number)
-                if len(numbers_to_add_to_019) > 0:
-                    return jsonify({'result': {
-                        "response": str(responses),
-                        config.SendMessages.Sms.at_least_one_error: config.SendMessages.Sms.message_add_to_019 + str(
-                            numbers_to_add_to_019)
-                    }
-                    }), HTTPStatus.INTERNAL_SERVER_ERROR
-                return jsonify({'result': str(responses)}), HTTPStatus.INTERNAL_SERVER_ERROR
-            return jsonify({'result': 'success'}), HTTPStatus.OK
+            created_for_ids_sms = ["0" + a for a in created_for_ids]
+            sources: str = "559482844"
+            return send_one_sms_019(sources=sources, recipients=created_for_ids_sms, message=content)
         return jsonify({'result': "general error"}), HTTPStatus.BAD_REQUEST
-
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -104,30 +84,33 @@ def send_sms():
         message: str = data['message']
         recipients: List[str] = data['recipients']
         sources: Union[List[str], str] = data['sources']
-        responses = send_sms_019(sources, recipients, message)
-        if responses is not None:
-            numbers_to_add_to_019 = []
-            for number in responses:
-                if isinstance(responses[number], dict):
-                    if (config.SendMessages.Sms.error_message_019
-                            in responses[number].values()):
-                        numbers_to_add_to_019.append(number)
-                else:
-                    if (config.SendMessages.Sms.error_message_019
-                            in responses[number]):
-                        numbers_to_add_to_019.append(number)
-            if len(numbers_to_add_to_019) > 0:
-                return jsonify({'result': {
-                    "response": str(responses),
-                    config.SendMessages.Sms.at_least_one_error: config.SendMessages.Sms.message_add_to_019 + str(
-                        numbers_to_add_to_019)
-                }
-                }), HTTPStatus.INTERNAL_SERVER_ERROR
-            return jsonify({'result': str(responses)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        return send_one_sms_019(message, recipients, sources)
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
+def send_one_sms_019(message, recipients, sources):
+    responses = send_sms_019(sources=sources, recipients=recipients, message=message)
+    if responses is not None:
+        numbers_to_add_to_019 = []
+        for number in responses:
+            if isinstance(responses[number], dict):
+                if (config.SendMessages.Sms.error_message_019
+                        in responses[number].values()):
+                    numbers_to_add_to_019.append(number)
+            else:
+                if (config.SendMessages.Sms.error_message_019
+                        in responses[number]):
+                    numbers_to_add_to_019.append(number)
+        if len(numbers_to_add_to_019) > 0:
+            return jsonify({'result': {
+                "response": str(responses),
+                config.SendMessages.Sms.at_least_one_error: config.SendMessages.Sms.message_add_to_019 + str(
+                    numbers_to_add_to_019)
+            }
+            }), HTTPStatus.INTERNAL_SERVER_ERROR
+        return jsonify({'result': str(responses)}), HTTPStatus.INTERNAL_SERVER_ERROR
+    return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
 def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_milliseconds: int = 0):

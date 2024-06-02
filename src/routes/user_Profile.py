@@ -21,19 +21,21 @@ from src.models.institution_model import Institution
 from src.models.notification_model import notifications
 from src.models.user_model import user1, front_end_dict
 from src.models.visit_model import Visit
-from datetime import datetime,date
+from datetime import datetime, date
 
 from src.routes.apprentice_Profile import visit_gap_color
 from src.routes.setEntityDetails_form_routes import validate_email
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
+
+
 @userProfile_form_blueprint.route('/delete', methods=['post'])
 def delete():
     try:
         data = request.json
         userId = data['userId']
         updatedEnt = user1.query.get(userId)
-        if updatedEnt :
+        if updatedEnt:
             db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
             db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
             db.session.query(notifications).filter(notifications.userid == userId, ).delete()
@@ -49,8 +51,9 @@ def delete():
 
         db.session.commit()
     except Exception as e:
-        return jsonify({"result": str(e)}),HTTPStatus.BAD_REQUEST
-    return jsonify({"result":"success"}), HTTPStatus.OK
+        return jsonify({"result": str(e)}), HTTPStatus.BAD_REQUEST
+    return jsonify({"result": "success"}), HTTPStatus.OK
+
 
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
@@ -60,17 +63,17 @@ def update():
         print(userId)
         data = request.json
         updatedEnt = user1.query.get(userId)
-        print("data:",data)
+        print("data:", data)
         for key in data:
             if key == "city":
                 CityId = db.session.query(City).filter(
                     City.name == str(data[key])).first()
-                print("CityId",CityId)
+                print("CityId", CityId)
                 setattr(updatedEnt, "city_id", CityId.id)
             if key == "region":
                 ClusterId = db.session.query(Cluster.id).filter(
                     Cluster.name == str(data[key])).first()
-                print("ClusterId",ClusterId.id)
+                print("ClusterId", ClusterId.id)
                 setattr(updatedEnt, "cluster_id", ClusterId.id)
             elif key == "email" or key == "birthday":
                 if validate_email(data[key]):
@@ -90,7 +93,6 @@ def update():
         return jsonify({'result': str(e)}), 401
 
 
-
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     try:
@@ -99,12 +101,17 @@ def getProfileAtributes_form():
         print(userEnt)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            regionName=db.session.query(Cluster.name).filter(Cluster.id==city.cluster_id).first()
-            myApprenticesNamesList=getmyApprenticesNames(created_by_id)
+            regionName = db.session.query(Cluster.name).filter(Cluster.id == city.cluster_id).first()
+            myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            list = {"id":str(userEnt.id), "firstName":userEnt.name, "lastName":userEnt.last_name, "date_of_birth": toISO(userEnt.birthday), "email":userEnt.email,
-                           "city":city.name, "region":str(regionName[0]), "role":[int(r) for r in userEnt.role_ids.split(",")], "institution":str(userEnt.institution_id), "cluster":str(userEnt.eshcol),
-                           "apprentices":myApprenticesNamesList, "phone":str(userEnt.id),"teudatZehut":str(userEnt.teudatZehut), "avatar":userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
+            list = {"id": str(userEnt.id), "firstName": userEnt.name, "lastName": userEnt.last_name,
+                    "date_of_birth": toISO(userEnt.birthday), "email": userEnt.email,
+                    "city": city.name, "region": str(regionName[0]),
+                    "role": [int(r) for r in userEnt.role_ids.split(",")], "institution": str(userEnt.institution_id),
+                    "cluster": str(userEnt.eshcol),
+                    "apprentices": myApprenticesNamesList, "phone": str(userEnt.id),
+                    "teudatZehut": str(userEnt.teudatZehut),
+                    "avatar": userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
             return jsonify(list), HTTPStatus.OK
         else:
             return jsonify(results="no such id"), HTTPStatus.OK
@@ -114,17 +121,15 @@ def getProfileAtributes_form():
 
 def getmyApprenticesNames(created_by_id):
     try:
-        apprenticeList = db.session.query(Apprentice.id,Apprentice.name,Apprentice.last_name).filter(Apprentice.accompany_id == created_by_id).all()
+        apprenticeList = db.session.query(Apprentice.id, Apprentice.name, Apprentice.last_name).filter(
+            Apprentice.accompany_id == created_by_id).all()
         return [{"id": str(row[0]), "name": row[1], "last_name": row[2]} for row in apprenticeList]
     except Exception as e:
         return jsonify({'result': str(e)}), 401
 
 
-
-
 @userProfile_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
-
     file = request.files['file']
     wb = load_workbook(file)
     sheet = wb.active
@@ -168,7 +173,7 @@ def add_user_excel():
             db.session.commit()
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-    return jsonify({'result': "success" ,"uncommited_ids" :[x for x in uncommited_ids if x is not None]})
+    return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
 
 
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
@@ -180,15 +185,15 @@ def add_user_manual():
         last_name = data['last_name']
         phone = data['phone']
         institution_id = data['institution_id']
-        city_name="עלי"
+        city_name = "עלי"
         try:
             city_name = data['city_name'] or "עלי"
         except:
             print("no city")
         role_ids = data['role_ids']
-        CityId = db.session.query(City).filter(City.name==city_name).first()
-        #institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
-        institution_id=institution_id[0] if institution_id else 0
+        CityId = db.session.query(City).filter(City.name == city_name).first()
+        # institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
+        institution_id = institution_id[0] if institution_id else 0
         print(institution_id)
         useEnt = user1(
             id=int(phone[1:]),
@@ -203,11 +208,12 @@ def add_user_manual():
         db.session.add(useEnt)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting'+str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     if useEnt:
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
+
 
 def toISO(d):
     if d:
@@ -215,20 +221,23 @@ def toISO(d):
     else:
         return None
 
+
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
 def myPersonas():
     try:
         created_by_id = request.args.get('userId')
         print(created_by_id)
-        apprenticeList=[]
-        user1ent = db.session.query(user1.role_ids,user1.institution_id,user1.eshcol).filter(user1.id==created_by_id).first()
+        apprenticeList = []
+        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol).filter(
+            user1.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
             print(apprenticeList)
-            userList=[]
+            userList = []
 
         if "1" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == user1ent.institution_id).all()
+            apprenticeList = db.session.query(Apprentice).filter(
+                Apprentice.institution_id == user1ent.institution_id).all()
             userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()
         if "2" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
@@ -241,46 +250,48 @@ def myPersonas():
 
         for noti in apprenticeList:
             print(noti.id)
-            accompany = db.session.query(user1.name,user1.last_name).filter(user1.id == Apprentice.accompany_id).first()
-            call_status=visit_gap_color(config.call_report, noti, 30, 15)
-            personalMeet_status=visit_gap_color(config.personalMeet_report, noti, 100, 80)
-            Horim_status=visit_gap_color(config.HorimCall_report, noti, 365, 350)
+            accompany = db.session.query(user1.name, user1.last_name).filter(
+                user1.id == Apprentice.accompany_id).first()
+            call_status = visit_gap_color(config.call_report, noti, 30, 15)
+            personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
+            Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
-            eventlist = db.session.query(notifications.id,notifications.event,notifications.details,notifications.date).filter(
-                                                                               notifications.subject == str(noti.id),
-                                                                               notifications.numoflinesdisplay == 3).all()
+            eventlist = db.session.query(notifications.id, notifications.event, notifications.details,
+                                         notifications.date).filter(
+                notifications.subject == str(noti.id),
+                notifications.numoflinesdisplay == 3).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
-                {"Horim_status":Horim_status,
-                 "personalMeet_status":personalMeet_status,
-                 "call_status":call_status,
+                {"Horim_status": Horim_status,
+                 "personalMeet_status": personalMeet_status,
+                 "call_status": call_status,
                  "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
-                         ,"highSchoolRavMelamed_name": noti.high_school_teacher,
-                      "highSchoolRavMelamed_email": noti.high_school_teacher_email,
+                    , "highSchoolRavMelamed_name": noti.high_school_teacher,
+                 "highSchoolRavMelamed_email": noti.high_school_teacher_email,
 
-                     "thRavMelamedYearA_name": noti.teacher_grade_a,
-                     "thRavMelamedYearA_phone": noti.teacher_grade_a_phone,
-                     "thRavMelamedYearA_email": noti.teacher_grade_a_email,
+                 "thRavMelamedYearA_name": noti.teacher_grade_a,
+                 "thRavMelamedYearA_phone": noti.teacher_grade_a_phone,
+                 "thRavMelamedYearA_email": noti.teacher_grade_a_email,
 
-                     "thRavMelamedYearB_name": noti.teacher_grade_b,
-                     "thRavMelamedYearB_phone": noti.teacher_grade_b_phone,
-                     "thRavMelamedYearB_email": noti.teacher_grade_b_email,
-                    "address": {
-                        "country": "IL",
-                        "city": city.name if city else "",
-                        "cityId": str(noti.city_id),
-                        "street": noti.address,
-                        "houseNumber": "1",
-                        "apartment": "1",
-                        "region": str(city.cluster_id) if city else "",
-                        "entrance": "a",
-                        "floor": "1",
-                        "postalCode": "12131",
-                        "lat": 32.04282620026557,#no need city cord
-                        "lng": 34.75186193813887
-                    },
+                 "thRavMelamedYearB_name": noti.teacher_grade_b,
+                 "thRavMelamedYearB_phone": noti.teacher_grade_b_phone,
+                 "thRavMelamedYearB_email": noti.teacher_grade_b_email,
+                 "address": {
+                     "country": "IL",
+                     "city": city.name if city else "",
+                     "cityId": str(noti.city_id),
+                     "street": noti.address,
+                     "houseNumber": "1",
+                     "apartment": "1",
+                     "region": str(city.cluster_id) if city else "",
+                     "entrance": "a",
+                     "floor": "1",
+                     "postalCode": "12131",
+                     "lat": 32.04282620026557,  # no need city cord
+                     "lng": 34.75186193813887
+                 },
                  "contact1_first_name": noti.contact1_first_name,
                  "contact1_last_name": noti.contact1_last_name,
                  "contact1_phone": noti.contact1_phone,
@@ -300,28 +311,32 @@ def myPersonas():
 
                  "reports":
                      [str(i[0]) for i in [tuple(row) for row in reportList]]
-                 ,
+                    ,
                  "events":
 
-                      [{"id" :str(row[0]),"title":row[1],"description":row[2],"date" : toISO(row[3])} for row in eventlist]
+                     [{"id": str(row[0]), "title": row[1], "description": row[2], "date": toISO(row[3])} for row in
+                      eventlist]
 
-                    , "id": str(noti.id), "thMentor_name": accompany.name+" "+accompany.last_name,"thMentor_id": str(Apprentice.accompany_id),
+                    , "id": str(noti.id), "thMentor_name": accompany.name + " " + accompany.last_name,
+                 "thMentor_id": str(Apprentice.accompany_id),
                  "militaryPositionNew": str(noti.militaryPositionNew)
-                    , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar' , "name": str(noti.name), "last_name": str(noti.last_name),
+                    , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
+                 "name": str(noti.name), "last_name": str(noti.last_name),
                  "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
                  "serve_type": noti.serve_type,
                  "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
                  "phone": str(noti.id), "email": noti.email, "teudatZehut": noti.teudatZehut,
-                 "birthday": toISO(noti.birthday) if noti.birthday else "",  "marriage_date": toISO(noti.marriage_date),
+                 "birthday": toISO(noti.birthday) if noti.birthday else "", "marriage_date": toISO(noti.marriage_date),
                  "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
                  "unit_name": noti.unit_name,
-                  "matsber": str(noti.spirit_status),
+                 "matsber": str(noti.spirit_status),
                  "militaryDateOfDischarge": toISO(noti.release_date),
                  "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
                  "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus, "paying": noti.paying
+                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,
+                 "paying": noti.paying
 
                  })
         for noti in userList:
@@ -407,6 +422,6 @@ def myPersonas():
                  "paying": ""
 
                  })
-        return  jsonify(my_dict)
+        return jsonify(my_dict)
     except Exception as e:
         return jsonify({'result': str(e)}), 401

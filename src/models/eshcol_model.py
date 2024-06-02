@@ -1,7 +1,9 @@
 from . import *
 
 from src.services import db
-#לא בשימוש###########
+
+
+# לא בשימוש###########
 class Eshcol(db.Model):
     __tablename__ = "eshcol"
 

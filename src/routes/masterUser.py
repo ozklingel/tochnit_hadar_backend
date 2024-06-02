@@ -20,30 +20,31 @@ from src.models.user_model import user1
 from src.models.visit_model import Visit
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
-homeDir="/home/ubuntu/flaskapp/"
+homeDir = "/home/ubuntu/flaskapp/"
+
+
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
     data = request.json
     madadim_setting1 = db.session.query(madadim_setting).first()
     if madadim_setting1 is None:
         rep = madadim_setting(
-            call_madad_date = '1995-09-09'
-        ,cenes_madad_date = '1995-09-09'
-        ,tochnitMeet_madad_date = '1995-09-09'
-        ,eshcolMosadMeet_madad_date = '1995-09-09'
-        ,mosadYeshiva_madad_date = '1995-09-09'
-        ,hazana_madad_date = '1995-09-09'
-        ,professionalMeet_madad_date = '1995-09-09'
-        ,doForBogrim_madad_date = '1995-09-09'
-        ,basis_madad_date = '1995-09-09'
-        ,callHorim_madad_date = '1995-09-09'
-        ,groupMeet_madad_date = '1995-09-09'
-        ,matzbarmeet_madad_date = '1995-09-09'
+            call_madad_date='1995-09-09'
+            , cenes_madad_date='1995-09-09'
+            , tochnitMeet_madad_date='1995-09-09'
+            , eshcolMosadMeet_madad_date='1995-09-09'
+            , mosadYeshiva_madad_date='1995-09-09'
+            , hazana_madad_date='1995-09-09'
+            , professionalMeet_madad_date='1995-09-09'
+            , doForBogrim_madad_date='1995-09-09'
+            , basis_madad_date='1995-09-09'
+            , callHorim_madad_date='1995-09-09'
+            , groupMeet_madad_date='1995-09-09'
+            , matzbarmeet_madad_date='1995-09-09'
 
-        ,meet_madad_date = '1995-09-09'
+            , meet_madad_date='1995-09-09'
         )
         db.session.add(rep)
-
 
     try:
         madadim_setting1.call_madad_date = data['call_madad_date']
@@ -107,20 +108,20 @@ def getNotificationSetting_form():
     try:
         madadim_setting1 = db.session.query(madadim_setting).first()
 
-        return jsonify({"call_madad_date":str(madadim_setting1.call_madad_date),
-                        "meet_madad_date":str(madadim_setting1.meet_madad_date)
-                        ,"groupMeet_madad_date":str(madadim_setting1.groupMeet_madad_date),
+        return jsonify({"call_madad_date": str(madadim_setting1.call_madad_date),
+                        "meet_madad_date": str(madadim_setting1.meet_madad_date)
+                           , "groupMeet_madad_date": str(madadim_setting1.groupMeet_madad_date),
                         "callHorim_madad_date": str(madadim_setting1.callHorim_madad_date),
                         "basis_madad_date": str(madadim_setting1.basis_madad_date)
 
                            , "doForBogrim_madad_date": str(madadim_setting1.doForBogrim_madad_date),
-                        "matzbarmeet_madad_date":str( madadim_setting1.matzbarmeet_madad_date),
+                        "matzbarmeet_madad_date": str(madadim_setting1.matzbarmeet_madad_date),
                         "professionalMeet_madad_date": str(madadim_setting1.professionalMeet_madad_date)
                            , "hazana_madad_date": str(madadim_setting1.hazana_madad_date)
-                           , "mosadYeshiva_madad_date":str( madadim_setting1.mosadYeshiva_madad_date),
+                           , "mosadYeshiva_madad_date": str(madadim_setting1.mosadYeshiva_madad_date),
 
-                        "eshcolMosadMeet_madad_date":str( madadim_setting1.eshcolMosadMeet_madad_date)
-                           , "tochnitMeet_madad_date":str( madadim_setting1.tochnitMeet_madad_date)
+                        "eshcolMosadMeet_madad_date": str(madadim_setting1.eshcolMosadMeet_madad_date)
+                           , "tochnitMeet_madad_date": str(madadim_setting1.tochnitMeet_madad_date)
                            , "cenes_madad_date": str(madadim_setting1.cenes_madad_date)
                         }), HTTPStatus.OK
     except Exception as e:
@@ -129,7 +130,7 @@ def getNotificationSetting_form():
 
 def addApperntice(wb):
     sheet = wb.active
-    uncommited_ids=[]
+    uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
         if row[0].value is None or row[1].value is None:
             uncommited_ids.append(row[2].value)
@@ -139,12 +140,12 @@ def addApperntice(wb):
         phone = row[2].value
         city = row[3].value.strip() if not row[3].value is None else "לא ידוע"
         address = row[4].value.strip() if not row[4].value is None else ""
-        teudatZehut = row[5].value  if not row[5].value is None else ""
-        birthday_Ivry_month = row[6].value.strip()  if not row[6].value is None else ""
-        birthday_Ivry_day = row[7].value.strip()  if not row[7].value is None else ""
+        teudatZehut = row[5].value if not row[5].value is None else ""
+        birthday_Ivry_month = row[6].value.strip() if not row[6].value is None else ""
+        birthday_Ivry_day = row[7].value.strip() if not row[7].value is None else ""
         birthday_Ivry = birthday_Ivry_day + " " + birthday_Ivry_month
         birthday_loazi = row[8].value if not row[8].value is None else None
-        mail = row[9].value.strip()  if not row[9].value is None else ""
+        mail = row[9].value.strip() if not row[9].value is None else ""
         marriage_status = row[10].value.strip() if not row[10].value is None else ""
         serve_type = row[11].value.strip() if not row[11].value is None else ""
         hadar_plan_session = row[12].value if not row[12].value is None else ""
@@ -174,20 +175,20 @@ def addApperntice(wb):
         high_school_name = row[35].value.strip() if not row[35].value is None else ""
         high_school_teacher = row[36].value if not row[36].value is None else ""
         high_school_teacher_phone = row[37].value if not row[37].value is None else ""
-        workstatus = row[38].value.strip()   if not row[38].value is None else ""
-        workplace = row[39].value.strip()  if not row[39].value is None else ""
-        educationfaculty = row[40].value.strip()  if not row[40].value is None else ""
-        workoccupation = row[41].value.strip()  if not row[41].value is None else ""
-        #worktype = row[42].value.strip()  #
-        army_role = row[42].value.strip()  if not row[43].value is None else ""#סיירות
-        unit_name = row[43].value.strip()  if not row[42].value is None else ""# צנחנים
-        militaryPositionNew = row[45].value.strip() if not row[45].value is None else "" # מפקד כיתה
-        militaryPositionOld = row[46].value.strip()  if not row[46].value is None else ""# צנחנים
-        recruitment_date = row[47].value if not row[47].value is None else None # צנחנים
-        release_date = row[48].value if not row[48].value is None else None # צנחנים
+        workstatus = row[38].value.strip() if not row[38].value is None else ""
+        workplace = row[39].value.strip() if not row[39].value is None else ""
+        educationfaculty = row[40].value.strip() if not row[40].value is None else ""
+        workoccupation = row[41].value.strip() if not row[41].value is None else ""
+        # worktype = row[42].value.strip()  #
+        army_role = row[42].value.strip() if not row[43].value is None else ""  # סיירות
+        unit_name = row[43].value.strip() if not row[42].value is None else ""  # צנחנים
+        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקד כיתה
+        militaryPositionOld = row[46].value.strip() if not row[46].value is None else ""  # צנחנים
+        recruitment_date = row[47].value if not row[47].value is None else None  # צנחנים
+        release_date = row[48].value if not row[48].value is None else None  # צנחנים
         base_name = row[49].value.strip() if not row[49].value is None else "לא ידוע"
         institution_name = row[50].value.strip() if not row[50].value is None else ""
-        accompany_id = row[51].value if not row[51].value is None else "" # מפקד?
+        accompany_id = row[51].value if not row[51].value is None else ""  # מפקד?
 
         CityId = db.session.query(City.id).filter(City.name == city).first()
         militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()
@@ -205,8 +206,8 @@ def addApperntice(wb):
             Apprentice1 = Apprentice(
                 email=mail,
                 high_school_teacher=high_school_teacher,
-                 release_date=release_date,
-                 recruitment_date=recruitment_date,
+                release_date=release_date,
+                recruitment_date=recruitment_date,
                 militaryPositionOld=militaryPositionOld,
                 militaryPositionNew=militaryPositionNew,
                 institution_mahzor=institution_mahzor,
@@ -234,17 +235,17 @@ def addApperntice(wb):
                 contact1_first_name=contact1_first_name,
                 teudatZehut=teudatZehut,
                 birthday_ivry=birthday_Ivry,
-                 birthday=birthday_loazi,
+                birthday=birthday_loazi,
                 unit_name=unit_name,
                 accompany_id=accompany_id,
                 contact3_email=contact3_email,
                 contact3_first_name=contact3_first_name,
                 contact3_phone=contact3_phone,
                 marriage_date_ivry=marriage_date,
-                 marriage_date=marriage_date_loazi,
+                marriage_date=marriage_date_loazi,
                 spirit_status=matzbar,
                 contact2_email=contact2_email,
-                #worktype=worktype,
+                # worktype=worktype,
                 workoccupation=workoccupation,
                 educationfaculty=educationfaculty,
                 workplace=workplace,
@@ -265,9 +266,8 @@ def addApperntice(wb):
 
 
 def addUsers(wb):
-
     sheet = wb.active
-    uncommited_ids=[]
+    uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
         if row[0].value is None or row[1].value is None or row[2].value is None or row[5].value is None:
             uncommited_ids.append(row[5].value)
@@ -289,7 +289,7 @@ def addUsers(wb):
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
-            print("institution_name",institution_name)
+            print("institution_name", institution_name)
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
             user = user1(
@@ -310,6 +310,7 @@ def addUsers(wb):
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     return [x for x in uncommited_ids if x is not None]
 
+
 @master_user_form_blueprint.route("/initDB", methods=['put'])
 def initDB():
     try:
@@ -322,8 +323,8 @@ def initDB():
         giftCode = db.session.query(user1).delete()
         giftCode = db.session.query(Apprentice).delete()
         db.session.commit()
-        uncommited_ids=[]
-        if type=="lab":
+        uncommited_ids = []
+        if type == "lab":
             path = 'data/apprentice_enter_lab.xlsx'
             wb = load_workbook(filename=path)
             for i in addApperntice(wb):
@@ -337,7 +338,7 @@ def initDB():
             for i in addUsers(wb):
                 uncommited_ids.append(i)
             print("user  lab loaded")
-        else :
+        else:
             path = 'data/user_PROD.xlsx'
             wb = load_workbook(filename=path)
             for i in addUsers(wb):
@@ -361,6 +362,7 @@ def initDB():
     except Exception as e:
         print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
 
 def add_message(wb):
     # /home/ubuntu/flaskapp/
@@ -400,8 +402,9 @@ def add_message(wb):
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
 
+
 def add_report(wb):
-    #/home/ubuntu/flaskapp/
+    # /home/ubuntu/flaskapp/
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2):
         user_id = row[0].value
@@ -412,20 +415,20 @@ def add_report(wb):
         description = row[5].value
         attachments = str(row[6].value).split(",")
         ent_group = row[7].value
-        if attachments==["None"]:
-            attachments=[]
+        if attachments == ["None"]:
+            attachments = []
         rep = Visit(
 
             id=int(str(uuid.uuid4().int)[:5]),
             user_id=user_id,
-            ent_reported = ent_reported,
-            visit_date = visit_date,
-            title = title,
-            visit_in_army = visit_in_army,
-            description = description,
-            attachments = attachments,
+            ent_reported=ent_reported,
+            visit_date=visit_date,
+            title=title,
+            visit_in_army=visit_in_army,
+            description=description,
+            attachments=attachments,
             allreadyread=False,
-            ent_group = ent_group
+            ent_group=ent_group
         )
         db.session.add(rep)
     try:

@@ -1,6 +1,8 @@
 from . import *
 
 from src.services import db
+
+
 class Base(db.Model):
     __tablename__ = "base"
 

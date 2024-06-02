@@ -12,6 +12,7 @@ from src.models.user_model import user1
 
 search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/search_bar')
 
+
 @search_bar_form_blueprint.route("/search_entities", methods=['GET'])
 def search_entities():
     try:
@@ -27,13 +28,13 @@ def search_entities():
         return jsonify({'result': str(e)}), HTTPStatus.OK
 
 
-
 def filter_by_request(request):
     try:
         ent_group_dict = dict()
         roles = request.args.get("roles").split(",") if request.args.get("roles") is not None else None
         years = request.args.get("years").split(",") if request.args.get("years") is not None else None
-        institutions = request.args.get("institutions").split(",") if request.args.get("institutions") is not None else None
+        institutions = request.args.get("institutions").split(",") if request.args.get(
+            "institutions") is not None else None
         preiods = request.args.get("preiods").split(",") if request.args.get("preiods") is not None else None
         eshcols = request.args.get("eshcols").split(",") if request.args.get("eshcols") is not None else None
         statuses = request.args.get("statuses").split(",") if request.args.get("statuses") is not None else None
@@ -43,8 +44,8 @@ def filter_by_request(request):
             "region") else None
         city = request.args.get("city")
         entityType = []
-        if not roles :
-            return [],[],ent_group_dict
+        if not roles:
+            return [], [], ent_group_dict
         # query user table
         query = None
         if "מלוים" in roles:
@@ -96,22 +97,23 @@ def filter_by_request(request):
                 ent_group_dict["preiods"] = str(preiods).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.institution_mahzor.in_(preiods))
-            if statuses :
+            if statuses:
                 ent_group_dict["statuses"] = str(statuses).replace("[", "").replace("]", "")
                 print(statuses)
                 query = query.filter(Apprentice.marriage_status.in_(statuses))
             if bases:
                 ent_group_dict["bases"] = str(bases).replace("[", "").replace("]", "")
-                print("bases",bases)
+                print("bases", bases)
                 print(db.session.query(Base).filter(Base.name.in_(bases)).first())
-                query = query.filter(Base.id==Apprentice.base_address,Base.name.in_(bases))
+                query = query.filter(Base.id == Apprentice.base_address, Base.name.in_(bases))
             if hativa:
                 ent_group_dict["hativa"] = str(hativa).replace("[", "").replace("]", "")
 
                 query = query.filter(Apprentice.unit_name.in_(hativa))
             if region:
                 ent_group_dict["region"] = region
-                query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id, Cluster.name == region)
+                query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id,
+                                     Cluster.name == region)
             print(eshcols)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
@@ -129,6 +131,6 @@ def filter_by_request(request):
         print("user", res1)
         users = [str(i[0]) for i in [tuple(row) for row in res1]]
         apprentice = [str(i[0]) for i in [tuple(row) for row in res2]]
-        return  users,apprentice,ent_group_dict
+        return users, apprentice, ent_group_dict
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

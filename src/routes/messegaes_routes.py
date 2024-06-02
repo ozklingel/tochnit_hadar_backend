@@ -20,6 +20,7 @@ from ..models.user_model import user1
 
 messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
 
+
 @messegaes_form_blueprint.route('/send_per_persona', methods=['POST'])
 def send_per_persona():
     try:
@@ -40,10 +41,10 @@ def send_per_persona():
         personas = user1.query.filter(user1.role_id.in_(roles)).all()
         created_for_ids = [str(a.id) for a in personas]
         if type == "draft":
-            created_for_ids = [str(created_by_id)]#do not send any one
+            created_for_ids = [str(created_by_id)]  # do not send any one
         mess_id = str(uuid.uuid1().int)[:5]
-        print("date ",arrow.now().format('YYYY-MM-DDThh:mm:ss'))
-        if icon=="INTERNAL":
+        print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
+        if icon == "INTERNAL":
             for key in created_for_ids:
                 ContactForm1 = ContactForm(
                     id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
@@ -61,14 +62,14 @@ def send_per_persona():
                 db.session.add(ContactForm1)
             db.session.commit()
             return jsonify({'result': 'success'}), HTTPStatus.OK
-        if icon=="WHATSAPP":
-            created_for_ids_whatapp = ["0"+a for a in created_for_ids]
+        if icon == "WHATSAPP":
+            created_for_ids_whatapp = ["0" + a for a in created_for_ids]
             returned: List[int] = send_green_whatsapp(content, created_for_ids_whatapp)
             count_200 = returned.count(200)
             if count_200 == len(returned):
                 return jsonify({'result': 'success'}), HTTPStatus.OK
-        if icon=="SMS":
-            created_for_ids_SMS = ["0"+a for a in created_for_ids]
+        if icon == "SMS":
+            created_for_ids_SMS = ["0" + a for a in created_for_ids]
             responses = send_sms_019("559482844", created_for_ids_SMS, content)
             if responses is not None:
                 numbers_to_add_to_019 = []
@@ -94,6 +95,8 @@ def send_per_persona():
 
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+
+
 @messegaes_form_blueprint.route('/send_sms', methods=['POST'])
 def send_sms():
     try:
@@ -215,7 +218,7 @@ def add_contact_form():
         if type == "draft":
             created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
-        print("date ",arrow.now().format('YYYY-MM-DDThh:mm:ss'))
+        print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
             ContactForm1 = ContactForm(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
@@ -255,7 +258,7 @@ def getAll_messegases_form():
         group_report_dict = dict()
         print(messegasesList)
         for mess in messegasesList:
-            if mess.type=="יוצאות" and user_role=="0":
+            if mess.type == "יוצאות" and user_role == "0":
                 continue
             if mess.ent_group != "":
                 if mess.ent_group + str(mess.id) in group_report_dict:
@@ -264,26 +267,31 @@ def getAll_messegases_form():
                     group_report_dict[mess.ent_group + str(mess.id)] = [str(mess.created_for_id)]
                 groped_mess.append(mess)
             else:
-                created_for_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_for_id).first()
-                created_by_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_by_id).first()
+                created_for_id = db.session.query(user1.name, user1.last_name).filter(
+                    user1.id == mess.created_for_id).first()
+                created_by_id = db.session.query(user1.name, user1.last_name).filter(
+                    user1.id == mess.created_by_id).first()
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "to": [created_for_id.name+" " +created_for_id.last_name], "ent_group": "", "from": created_by_id.name+" " +created_by_id.last_name,
+                     "to": [created_for_id.name + " " + created_for_id.last_name], "ent_group": "",
+                     "from": created_by_id.name + " " + created_by_id.last_name,
                      "date": str(mess.created_at).replace(" ", "T"),
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "icon": mess.icon})
         for mess in groped_mess:
             if group_report_dict[mess.ent_group + str(mess.id)] != None:
-                created_for_id_str=""
+                created_for_id_str = ""
                 for id in group_report_dict[mess.ent_group + str(mess.id)]:
-                    created_for_id = db.session.query( user1.name, user1.last_name).filter(user1.id==id).first()
-                    created_for_id_str+=created_for_id.name+" " +created_for_id.last_name+","
-                created_for_id_str=created_for_id_str[:-1]
-                created_by_id = db.session.query( user1.name, user1.last_name).filter(user1.id==mess.created_by_id).first()
+                    created_for_id = db.session.query(user1.name, user1.last_name).filter(user1.id == id).first()
+                    created_for_id_str += created_for_id.name + " " + created_for_id.last_name + ","
+                created_for_id_str = created_for_id_str[:-1]
+                created_by_id = db.session.query(user1.name, user1.last_name).filter(
+                    user1.id == mess.created_by_id).first()
 
                 my_dict.append(
                     {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": created_by_id.name+" " +created_by_id.last_name, "date": str(mess.created_at).replace(" ", "T"),
+                     "from": created_by_id.name + " " + created_by_id.last_name,
+                     "date": str(mess.created_at).replace(" ", "T"),
                      "to": [created_for_id_str],
                      "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
                      "ent_group": mess.ent_group,

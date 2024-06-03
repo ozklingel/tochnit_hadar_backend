@@ -81,9 +81,9 @@ educationFaculty_COL = "educationfaculty"
 educationalInstitution_COL = "educationalinstitution"
 militaryPositionOld_COL = "militarypositionold"
 militaryUpdatedDateTime_COL = "militaryupdateddatetime"
-high_school_teacher_email_col="high_school_teacher_email"
-teacher_grade_a_email_col="teacher_grade_a_email"
-teacher_grade_b_email_col="teacher_grade_b_email"
+high_school_teacher_email_col = "high_school_teacher_email"
+teacher_grade_a_email_col = "teacher_grade_a_email"
+teacher_grade_b_email_col = "teacher_grade_b_email"
 
 ### Visits Table ###
 VISITS_TBL = "visits"
@@ -94,4 +94,4 @@ VISIT_IN_ARMY_COL = "visit_in_army"
 NOTE_COL = "note"
 TITLE_COL = "title"
 
-ALLREADYREAD="allreadyread"
+ALLREADYREAD = "allreadyread"

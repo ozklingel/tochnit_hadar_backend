@@ -1,10 +1,10 @@
-
 from . import *
 from .user_model import user1
 
 from datetime import datetime
 
-#דיוחחים על משתמש או חניך
+
+# דיוחחים על משתמש או חניך
 class madadim_setting(db.Model):
     __tablename__ = "madadim_setting"
 
@@ -20,9 +20,4 @@ class madadim_setting(db.Model):
     tochnitMeet_madad_date = db.Column("tochnitmeet_madad_date", db.DateTime, nullable=False)
     eshcolMosadMeet_madad_date = db.Column("eshcolmosadmeet_madad_date", db.DateTime, nullable=False)
     mosadYeshiva_madad_date = db.Column("mosadyeshiva_madad_date", db.DateTime, nullable=False)
-    hazana_madad_date = db.Column("hazana_madad_date", db.DateTime,primary_key=True, nullable=False)
-
-
-
-
-
+    hazana_madad_date = db.Column("hazana_madad_date", db.DateTime, primary_key=True, nullable=False)

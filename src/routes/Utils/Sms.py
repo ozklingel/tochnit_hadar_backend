@@ -93,7 +93,7 @@ def get_data_filled(source: str, recipients: List[str], message: str):
             "user": {
                 "username": config.SendMessages.Sms.username,
             },
-            "source": "0"+source,
+            "source": "0" + source,
             "destinations": {
                 "phone":
                     [
@@ -101,7 +101,7 @@ def get_data_filled(source: str, recipients: List[str], message: str):
                             "$": {
                                 "id": ""
                             },
-                            "_": str("0"+recipient)
+                            "_": str("0" + recipient)
                         }
                         for recipient in recipients]
             },
@@ -138,7 +138,7 @@ def send_sms_019(sources: Union[List[str], str], recipients: List[str], message:
     errors = {}
     for source in sources:
         data = get_data_filled(source=source, recipients=recipients, message=message)
-        print("data",data)
+        print("data", data)
         response = send_json_request(data)
         if response is not None:
             errors[source] = response

@@ -351,7 +351,7 @@ def fetch_Diagram_rivonly(related_id, type="melave_Score"):
     for row in data:
         rivon = row[0].month % 3
         value = row[1]
-        i = x_list.index(rivon)
+        i = x_list.index(rivon+1)
         y_list[i] = value
     return x_list, y_list
 
@@ -601,6 +601,7 @@ def mosadCoordinator(mosadCoordinator="empty"):
                                                            Apprentice.marriage_status, Apprentice.serve_type,
                                                            Apprentice.hadar_plan_session).filter(
             Apprentice.id.in_(list(all_apprenties_mosad_forgoten)), Apprentice.institution_id == Institution.id).all()
+
         forgotenApprentice_full_details = [
             {"Institution_name": row[0], "name": row[1], "last_name": row[2], "base_address": row[3],
              "army_role": row[4], "unit_name": row[5], "marriage_status": row[6],

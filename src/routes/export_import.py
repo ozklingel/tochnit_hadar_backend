@@ -428,6 +428,8 @@ def mosad_generalInfo():
     all_melaves = db.session.query(user1.id).filter(user1.institution_id == institution_id).all()
     coordinator = db.session.query(user1.id).filter(user1.institution_id == institution_id,
                                                     user1.role_ids.contains("1")).first()
+    if coordinator is None:
+        return jsonify({'result': "error-no coordinator or such institution"}), HTTPStatus.BAD_REQUEST
 
     paying_dict = dict()
     Picud_dict = dict()
@@ -517,7 +519,6 @@ def monthly():
             creation_date=date.today(),
         )
         db.session.add(system_report1)
-
         # export_melave_corrdintors_score
         export_melave_corrdintors_score_csv = import_melave_corrdintors_score("local")
         system_report1 = system_report(
@@ -557,7 +558,8 @@ def monthly():
             melaveId = melave[0]
             all_melave_Apprentices = db.session.query(Apprentice.id).filter(
                 Apprentice.accompany_id == melaveId).all()
-            melave_score1, call_gap_avg, meet_gap_avg = md.melave_score(melaveId)
+            print("asd",md.melave_score(melaveId))
+            melave_score1, call_gap_avg, meet_gap_avg,group_meeting_gap_avg = md.melave_score(melaveId)
             system_report1 = system_report(
                 id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
@@ -582,7 +584,6 @@ def monthly():
                 creation_date=date.today(),
             )
             db.session.add(system_report1)
-
             # mosad Madadim:
             all_MosadCoordinator = db.session.query(user1.id, user1.institution_id).filter(
                 user1.role_ids.contains("1")).all()

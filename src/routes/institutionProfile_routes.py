@@ -137,7 +137,8 @@ def getmyApprentices_form():
 @institutionProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     institution_id = request.args.get('institution_id')
-    institution_Ent = Institution.query.get(institution_id)
+    institution_Ent=db.session.query(Institution).filter(Institution.id == institution_id).first()
+    print(institution_Ent)
     if institution_Ent:
         city = db.session.query(City).filter(str(City.id) == institution_Ent.city_id).first()
         list = {"id": str(institution_Ent.id), "name": institution_Ent.name, "owner_id": institution_Ent.owner_id,

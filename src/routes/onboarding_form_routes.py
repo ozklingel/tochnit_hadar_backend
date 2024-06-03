@@ -46,6 +46,29 @@ def getOTP_form():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
+@onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['get'])
+def getOTP_whatsapp():
+    try:
+        created_by_phone = request.args.get('created_by_phone')
+        created_by_phone_asList = ["0" + str(created_by_phone)]
+        userEnt = user1.query.get(created_by_phone)
+        if userEnt is None:
+            return jsonify({"result": "not in system"}), 401
+        print(created_by_phone)
+        otp_code = hotp.at(int(created_by_phone))
+        print("your verify service verification code from tochnit hadar is:" + otp_code)
+        returned: List[int] = send_green_whatsapp(
+            "your verify service verification code from *tochnit hadar* is : " + otp_code, created_by_phone_asList)
+        user_otp_dict[str(created_by_phone)] = otp_code
+
+        count_200 = returned.count(200)
+        if count_200 == len(returned):
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
+                HTTPStatus.INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return jsonify({'result': str(e), "input:": str(created_by_phone)}), HTTPStatus.BAD_REQUEST
+
 
 @onboarding_form_blueprint.route('/verifyOTP', methods=['GET'])
 def verifyOTP_form():
@@ -101,26 +124,6 @@ def upload_CitiesDB():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
-
-@onboarding_form_blueprint.route('/getOTP_whatsapp', methods=['get'])
-def getOTP_whatsapp():
-    try:
-        created_by_phone = request.args.get('created_by_phone')
-        created_by_phone_asList = ["0" + str(created_by_phone)]
-        userEnt = user1.query.get(created_by_phone)
-        if userEnt is None:
-            return jsonify({"result": "not in system"}), 401
-        print(created_by_phone)
-        print("your verify service verification code from tochnit hadar is:" + otp.now())
-        returned: List[int] = send_green_whatsapp(
-            "your verify service verification code from *tochnit hadar* is : " + otp.now(), created_by_phone_asList)
-        count_200 = returned.count(200)
-        if count_200 == len(returned):
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-        return (jsonify({'result': str(f"success with: {count_200}, failed with: {(len(returned) - count_200)}")}),
-                HTTPStatus.INTERNAL_SERVER_ERROR)
-    except Exception as e:
-        return jsonify({'result': str(e), "input:": str(created_by_phone)}), HTTPStatus.BAD_REQUEST
 
 
 @onboarding_form_blueprint.route('/getOTP_whatsapp_twillo', methods=['GET'])

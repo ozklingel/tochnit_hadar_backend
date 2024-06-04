@@ -15,7 +15,7 @@ from .Utils.notifiacationDetails import groupMeet_details, personalMeet_details,
     personalCall_details, birthday_details, melavimLowScore_details, matzbar_details, doForBogrim_details, \
     yeshivatMelavim_details, forgottenApprentice_details, lowScore_mosdot_details, MOsadEshcolMeeting_details
 from .madadim import mosad_Coordinators_score, melave_score, mosad_score
-from .user_Profile import toISO
+from .user_Profile import toISO, correct_auth
 from ..models.apprentice_model import Apprentice
 from ..models.institution_model import Institution
 from ..models.user_model import user1
@@ -502,7 +502,9 @@ def add_notificaion_to_ahraiTohnit(user):
 
 
 @notification_form_blueprint.route('/getAll', methods=['GET'])
-def getAll_notification_form():
+def getAll_notification_form(isExternal=True):
+    if correct_auth(isExternal) == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     print("init_weekDay:", init_weekDay)
     print("weekday ", date.today().weekday())
     user = request.args.get('userId')
@@ -584,6 +586,8 @@ def getAll_notification_form():
 @notification_form_blueprint.route('/add1', methods=['POST'])
 def add_notification_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         json_object = request.json
         user = json_object["userId"]
         subject = json_object["subject"] if json_object["subject"] else ""
@@ -687,6 +691,8 @@ def add_visit_notification(user, apprenticeid, event, date):
 
 @notification_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_notification_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     notiId = data['noti_id']
     try:
@@ -703,6 +709,8 @@ def setWasRead_notification_form():
 
 @notification_form_blueprint.route('/setSetting', methods=['post'])
 def setSetting_notification_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
 
     notifyMorningval = data['notifyMorning']
@@ -731,6 +739,8 @@ def setSetting_notification_form():
 @notification_form_blueprint.route('/getAllSetting', methods=['GET'])
 def getNotificationSetting_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get('userId')
         notiSettingList = db.session.query(user1.notifyMorning, user1.notifyDayBefore, user1.notifyStartWeek).filter(
             user1.id == user).first()
@@ -751,6 +761,8 @@ def getNotificationSetting_form():
 @notification_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         NotificationId = data['NotificationId']
         res = db.session.query(notifications).filter(notifications.id == NotificationId).delete()
@@ -764,6 +776,8 @@ def delete():
 @notification_form_blueprint.route("/update", methods=['put'])
 def updateTask():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         # get tasksAndEvents
         NotificationId = request.args.get("NotificationId")
         data = request.json
@@ -781,62 +795,64 @@ def updateTask():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@notification_form_blueprint.route('/add_frequenced_notification', methods=['POST'])
-def add_frequenced_notification():
-    notiList = db.session.query(notifications).filter(notifications.frequency != "never").all()
-    my_dict = []
-    for noti in notiList:
-        daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
-        if noti.frequency == "daily" and daysFromNow == 1:
-            notification1 = notifications(
-                userid=noti.userid,
-                subject=str(noti.apprenticeid),
-                event=noti.event,
-                date=toISO(noti.date + datetime.timedelta(days=1)),
-                allreadyread=False,
-                numoflinesdisplay=2,
-                id=int(str(uuid.uuid4().int)[:5])
-
-            )
-        if noti.frequency == "weekly" and daysFromNow == 7:
-            notification1 = notifications(
-                userid=noti.userid,
-                apprenticeid=noti.apprenticeid,
-                event=noti.event,
-                date=toISO(noti.date + datetime.timedelta(days=7)),
-                allreadyread=False,
-                numoflinesdisplay=2,
-                id=int(str(uuid.uuid4().int)[:5])
-
-            )
-            if noti.frequency == "monthly" and daysFromNow == 30:
-                notification1 = notifications(
-                    userid=noti.userid,
-                    apprenticeid=noti.apprenticeid,
-                    event=noti.event,
-                    date=toISO(noti.date + 30),
-                    allreadyread=False,
-                    numoflinesdisplay=2,
-                    id=int(str(uuid.uuid4().int)[:5])
-
-                )
-                if noti.frequency == "yearly" and daysFromNow == 365:
-                    notification1 = notifications(
-                        userid=noti.userid,
-                        apprenticeid=noti.apprenticeid,
-                        event=noti.event,
-                        date=toISO(noti.date + 365),
-                        allreadyread=False,
-                        numoflinesdisplay=2,
-                        id=int(str(uuid.uuid4().int)[:5])
-
-                    )
-            db.session.add(notification1)
-    try:
-        db.session.commit()
-        return jsonify({'result': 'success'}), HTTPStatus.OK
-    except Exception:
-        return jsonify({'result': str(Exception)}), HTTPStatus.BAD_REQUEST
+# @notification_form_blueprint.route('/add_frequenced_notification', methods=['POST'])
+# def add_frequenced_notification():
+#     if correct_auth() == False:
+#         return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+#     notiList = db.session.query(notifications).filter(notifications.frequency != "never").all()
+#     my_dict = []
+#     for noti in notiList:
+#         daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
+#         if noti.frequency == "daily" and daysFromNow == 1:
+#             notification1 = notifications(
+#                 userid=noti.userid,
+#                 subject=str(noti.apprenticeid),
+#                 event=noti.event,
+#                 date=toISO(noti.date + datetime.timedelta(days=1)),
+#                 allreadyread=False,
+#                 numoflinesdisplay=2,
+#                 id=int(str(uuid.uuid4().int)[:5])
+#
+#             )
+#         if noti.frequency == "weekly" and daysFromNow == 7:
+#             notification1 = notifications(
+#                 userid=noti.userid,
+#                 apprenticeid=noti.apprenticeid,
+#                 event=noti.event,
+#                 date=toISO(noti.date + datetime.timedelta(days=7)),
+#                 allreadyread=False,
+#                 numoflinesdisplay=2,
+#                 id=int(str(uuid.uuid4().int)[:5])
+#
+#             )
+#             if noti.frequency == "monthly" and daysFromNow == 30:
+#                 notification1 = notifications(
+#                     userid=noti.userid,
+#                     apprenticeid=noti.apprenticeid,
+#                     event=noti.event,
+#                     date=toISO(noti.date + 30),
+#                     allreadyread=False,
+#                     numoflinesdisplay=2,
+#                     id=int(str(uuid.uuid4().int)[:5])
+#
+#                 )
+#                 if noti.frequency == "yearly" and daysFromNow == 365:
+#                     notification1 = notifications(
+#                         userid=noti.userid,
+#                         apprenticeid=noti.apprenticeid,
+#                         event=noti.event,
+#                         date=toISO(noti.date + 365),
+#                         allreadyread=False,
+#                         numoflinesdisplay=2,
+#                         id=int(str(uuid.uuid4().int)[:5])
+#
+#                     )
+#             db.session.add(notification1)
+#     try:
+#         db.session.commit()
+#         return jsonify({'result': 'success'}), HTTPStatus.OK
+#     except Exception:
+#         return jsonify({'result': str(Exception)}), HTTPStatus.BAD_REQUEST
 
 
 import datetime

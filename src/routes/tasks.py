@@ -7,6 +7,7 @@ from http import HTTPStatus
 from datetime import datetime as dt, date, timedelta
 
 import config
+from src.routes.user_Profile import correct_auth
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.notification_model import notifications
@@ -23,6 +24,8 @@ tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form
 # frontend-if userid only melave-filter by title,else ,filter by status
 @tasks_form_blueprint.route("/getTasks", methods=['GET'])
 def getTasks():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     # get tasksAndEvents
     userId = request.args.get("userId")
     role = db.session.query(user1.role_ids).filter(
@@ -62,7 +65,7 @@ def getTasks():
              'date': str(task.date), 'daysfromnow': 373, 'event': task.event, 'id': str(task.id),
              'title': "own task"})
     # handle not  ahrai tohnit
-    res = getAll_notification_form()
+    res = getAll_notification_form(False)
     todo_dict = []
     todo_ids = []
     try:
@@ -133,6 +136,8 @@ def getTasks():
 def updateTask():
     # get tasksAndEvents
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         taskId = request.args.get("taskId")
         data = request.json
         updatedEnt = task_user_made.query.get(taskId)
@@ -151,6 +156,8 @@ def updateTask():
 @tasks_form_blueprint.route('/add', methods=['POST'])
 def add_task():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         json_object = request.json
         user = json_object["userId"]
         event = json_object["event"]
@@ -200,6 +207,8 @@ def add_task():
 @tasks_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         taskId = data['taskId']
         res = db.session.query(task_user_made).filter(task_user_made.id == taskId).delete()

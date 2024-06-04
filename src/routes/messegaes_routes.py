@@ -14,7 +14,7 @@ import config
 from src.services import db
 from .Utils.Sms import send_sms_019
 from .search_ent import filter_by_request
-from .user_Profile import toISO
+from .user_Profile import toISO, correct_auth
 from ..models.contact_form_model import ContactForm
 from ..models.user_model import user1
 
@@ -24,6 +24,8 @@ messegaes_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/me
 @messegaes_form_blueprint.route('/send_per_persona', methods=['POST'])
 def send_per_persona():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         roles = data['roles']
         subject = data['subject']
@@ -80,6 +82,8 @@ def send_per_persona():
 @messegaes_form_blueprint.route('/send_sms', methods=['POST'])
 def send_sms():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         message: str = data['message']
         recipients: List[str] = data['recipients']
@@ -156,6 +160,8 @@ def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_mi
 @messegaes_form_blueprint.route('/send_whatsapp', methods=['POST'])
 def send_whatsapp():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         if 'message' not in data or 'recipients' not in data:
             return jsonify({'result': 'missing message or recipients'}), HTTPStatus.BAD_REQUEST
@@ -178,6 +184,8 @@ def send_whatsapp():
 @messegaes_form_blueprint.route('/add', methods=['POST'])
 def add_contact_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         subject = data['subject']
         content = data['content']
@@ -227,6 +235,8 @@ def add_contact_form():
 @messegaes_form_blueprint.route('/getAll', methods=['GET'])
 def get_all_messages_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get('userId')
         print(user)
         user_role = db.session.query(user1.role_id).filter(
@@ -290,6 +300,8 @@ def get_all_messages_form():
 
 @messegaes_form_blueprint.route('/setWasRead', methods=['post'])
 def set_was_read_message_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     message_id = data['message_id']
     print(message_id)
@@ -310,6 +322,8 @@ def set_was_read_message_form():
 def delete_ent():
     data = request.json
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         entity_id = str(data['entityId'])
         res = db.session.query(ContactForm).filter(ContactForm.id == entity_id).delete()
         db.session.commit()
@@ -321,6 +335,8 @@ def delete_ent():
 @messegaes_form_blueprint.route("/filter_to", methods=['GET'])
 def filter_to():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
         ent_group_concat = ""
         if apprentice != [] or users != []:
@@ -338,6 +354,8 @@ def filter_to():
 @messegaes_form_blueprint.route("/filter_meesages", methods=['GET'])
 def filter_messages():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
         mess_user = db.session.query(ContactForm.id).filter(
             or_(ContactForm.created_by_id.in_(users), ContactForm.created_for_id.in_(users))).all()
@@ -358,6 +376,8 @@ def filter_messages():
 @messegaes_form_blueprint.route('/getById', methods=['GET'])
 def get_by_id():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         message_id = request.args.get('message_id')
         print(message_id)
         messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
@@ -403,6 +423,8 @@ def get_by_id():
 
 @messegaes_form_blueprint.route("/add_message_excel", methods=['put'])
 def add_message_excel():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     # /home/ubuntu/flaskapp/
     file = request.files['file']
 
@@ -447,6 +469,8 @@ def add_message_excel():
 @messegaes_form_blueprint.route("/get_recipients", methods=['GET'])
 def get_recipients():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users = db.session.query(user1.id, user1.name, user1.last_name).all()
         return jsonify([{"id": str(row.id), "name": row.name, "last_name": row.last_name} for row in users],
                        ), HTTPStatus.OK

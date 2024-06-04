@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from openpyxl.reader.excel import load_workbook
 
+from src.routes.user_Profile import correct_auth
 from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
@@ -22,6 +23,8 @@ institutionProfile_form_blueprint = Blueprint('institutionProfile_form', __name_
 
 @institutionProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     if request.method == "POST":
         institution_id = request.args.get('institution_id')
         print(institution_id)
@@ -53,6 +56,8 @@ def uploadPhoto_form():
 
 @institutionProfile_form_blueprint.route('/apprentice_and_melave', methods=['GET'])
 def getmyApprentices_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     institution_id = int(request.args.get('institution_id'))
     print(institution_id)
     melave_List = db.session.query(user1).filter(user1.institution_id == institution_id,
@@ -136,6 +141,8 @@ def getmyApprentices_form():
 
 @institutionProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     institution_id = request.args.get('institution_id')
     institution_Ent=db.session.query(Institution).filter(Institution.id == institution_id).first()
     print(institution_Ent)
@@ -156,6 +163,8 @@ def getProfileAtributes_form():
 
 @institutionProfile_form_blueprint.route("/add_mosad", methods=['post'])
 def add_mosad():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     print(data)
     name = data['name']
@@ -200,6 +209,8 @@ def add_mosad():
 
 @institutionProfile_form_blueprint.route('/getAll', methods=['GET'])
 def getAll():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     inst_List = db.session.query(Institution).all()
     if inst_List == []:
         return jsonify([]), HTTPStatus.OK
@@ -213,10 +224,12 @@ def getAll():
             region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
         melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_ids.contains("0")).all()
         apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
+        owner_details = db.session.query(user1.name,user1.last_name).filter(user1.id == r.owner_id).first()
+
         my_list.append(
             {"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
              "admin_name": r.admin_name, "admin_phone": r.admin_phone,
-             "name": r.name, "racaz_id": r.owner_id, "logo_path": r.logo_path or "",
+             "name": r.name, "racaz_firstName": owner_details.name if owner_details else "no owner","racaz_lastName": owner_details.last_name if owner_details else "no owner", "logo_path": r.logo_path or "",
              "contact_phone": r.contact_phone, "address": {
                 "country": "IL",
                 "city": city.name if city else "",
@@ -244,6 +257,8 @@ def getAll():
 @institutionProfile_form_blueprint.route('/getMahzors', methods=['get'])
 def getMahzors():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         eshcols_appren = db.session.query(Apprentice.institution_mahzor).distinct(Apprentice.institution_mahzor).all()
         eshcols_appren_ids = [str(row[0]) for row in eshcols_appren]
         return eshcols_appren_ids
@@ -254,6 +269,8 @@ def getMahzors():
 @institutionProfile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         # get tasksAndEvents
         mosad_Id = request.args.get("mosad_Id")
         data = request.json
@@ -262,12 +279,10 @@ def update():
             if key == "city":
                 CityId = db.session.query(City).filter(
                     City.name == str(data[key])).first()
-                print("CityId", CityId)
                 setattr(updatedEnt, "city_id", CityId.id)
             if key == "region":
                 ClusterId = db.session.query(Cluster.id).filter(
                     Cluster.name == str(data[key])).first()
-                print("ClusterId", ClusterId.id)
                 setattr(updatedEnt, "cluster_id", ClusterId.id)
             elif key == "email" or key == "birthday":
                 if validate_email(data[key]):
@@ -278,8 +293,6 @@ def update():
                 setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
-            # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
     except Exception as e:
@@ -288,6 +301,8 @@ def update():
 
 @institutionProfile_form_blueprint.route("/add_mosad_excel", methods=['put'])
 def add_mosad_excel():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     file = request.files['file']
     print(file)
     wb = load_workbook(file)
@@ -340,6 +355,8 @@ def add_mosad_excel():
 
 @institutionProfile_form_blueprint.route('/delete', methods=['DELETE', 'post'])
 def deleteEnt():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     try:
         entityId = str(data['entityId'])

@@ -1,6 +1,8 @@
-role_dict = {
-    "3": "achraiTohnit",
-    "2": "racaz_eshcol",
-    "1": "racaz_mosad",
-    "0": "melave"
-}
+
+from . import *
+
+
+class role(db.Model):
+    __tablename__ = "role"
+    id = db.Column("id", nullable=False)
+    name = db.Column("name", db.String(20),  nullable=False)

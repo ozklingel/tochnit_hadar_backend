@@ -7,6 +7,7 @@ from openpyxl.reader.excel import load_workbook
 
 import config
 from src.models.madadim_setting import madadim_setting
+from src.routes.user_Profile import correct_auth
 from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
@@ -25,6 +26,8 @@ homeDir = "/home/ubuntu/flaskapp/"
 
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     madadim_setting1 = db.session.query(madadim_setting).first()
     if madadim_setting1 is None:
@@ -106,6 +109,8 @@ def setSetting_madadim():
 @master_user_form_blueprint.route('/getAllSetting_madadim', methods=['GET'])
 def getNotificationSetting_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         madadim_setting1 = db.session.query(madadim_setting).first()
 
         return jsonify({"call_madad_date": str(madadim_setting1.call_madad_date),

@@ -84,4 +84,4 @@ Ivry_month={"ניסן":"1",
     "אדר ב":"13"}
 
 
-prev_otp=0
+Authorization_is_On=False

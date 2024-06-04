@@ -32,6 +32,8 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 @userProfile_form_blueprint.route('/delete', methods=['post'])
 def delete():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         userId = data['userId']
         updatedEnt = user1.query.get(userId)
@@ -59,6 +61,8 @@ def delete():
 def update():
     # get tasksAndEvents
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         userId = request.args.get('userId')
         print(userId)
         data = request.json
@@ -96,6 +100,8 @@ def update():
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         userEnt = user1.query.get(created_by_id)
         print(userEnt)
@@ -115,8 +121,8 @@ def getProfileAtributes_form():
             return jsonify(list), HTTPStatus.OK
         else:
             return jsonify(results="no such id"), HTTPStatus.OK
-    except Exception:
-        return jsonify({'result': str(Exception)}), 401
+    except Exception as e:
+        return jsonify({'result': str(e)}), 401
 
 
 def getmyApprenticesNames(created_by_id):
@@ -130,6 +136,8 @@ def getmyApprenticesNames(created_by_id):
 
 @userProfile_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     file = request.files['file']
     wb = load_workbook(file)
     sheet = wb.active
@@ -178,6 +186,8 @@ def add_user_excel():
 
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
 def add_user_manual():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     print(data)
     try:
@@ -225,6 +235,8 @@ def toISO(d):
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
 def myPersonas():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList = []
@@ -425,3 +437,15 @@ def myPersonas():
         return jsonify(my_dict)
     except Exception as e:
         return jsonify({'result': str(e)}), 401
+def correct_auth(external=True):
+    print("external1",external)
+    if config.Authorization_is_On and external:
+        userId = request.args.get("userId")
+        accessToken = request.headers.get('Authorization')
+        redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+        print("accessToken:", accessToken)
+        print("redisaccessToken:", redisaccessToken)
+        if redisaccessToken != accessToken:
+            return False
+        return True
+    return True

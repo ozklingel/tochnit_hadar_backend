@@ -12,6 +12,7 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import func, or_
 
 import config
+from src.routes.user_Profile import correct_auth
 from src.services import db, red
 from config import AWS_access_key_id, AWS_secret_access_key, melave_Score, visitcalls_melave_avg, visitmeets_melave_avg, \
     proffesionalMeet_presence, forgotenApprentice_cnt, cenes_presence, horim_meeting, call_report, groupMeet_report, \
@@ -34,6 +35,8 @@ base_dir = ""  # "/home/ubuntu/flaskapp/"
 @export_import_blueprint.route("lowScoreApprentice_mosad", methods=['post'])
 def import_lowScoreApprentice_mosad(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "lowScoreApprentice_mosad",
@@ -41,11 +44,11 @@ def import_lowScoreApprentice_mosad(type="extenal"):
             if data is None:
                 return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
             return data.value
-        lowScoreApprentice_dict = md.lowScoreApprentice()[0].json
+        lowScoreApprentice_dict = md.lowScoreApprentice(False)[0].json
         # print(lowScoreApprentice_dict)
-        missingCalleApprentice_dict = md.missingCalleApprentice()[0].json
+        missingCalleApprentice_dict = md.missingCalleApprentice(False)[0].json
         # print(missingCalleApprentice_dict)
-        missingMeetingApprentice_dict = md.missingMeetingApprentice()[0].json
+        missingMeetingApprentice_dict = md.missingMeetingApprentice(False)[0].json
         # print(missingMeetingApprentice_dict)
         res = []
         lowScoreApprentice_List = lowScoreApprentice_dict["lowScoreApprentice_List"]
@@ -78,6 +81,8 @@ def import_lowScoreApprentice_mosad(type="extenal"):
 @export_import_blueprint.route("lowScoreApprentice_tohnit", methods=['post'])
 def import_lowScoreApprentice_tohnit(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "lowScoreApprentice_tohnit",
@@ -123,6 +128,8 @@ def import_lowScoreApprentice_tohnit(type="extenal"):
 @export_import_blueprint.route("/melave_corrdintors_score", methods=['post'])
 def import_melave_corrdintors_score(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "melave_corrdintors_score",
@@ -160,6 +167,8 @@ def import_melave_corrdintors_score(type="extenal"):
 @export_import_blueprint.route("/mosad_melavim_cnt", methods=['post'])
 def import_mosad_melavim_cnt(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "mosad_melavim_cnt",
@@ -187,6 +196,8 @@ def import_mosad_melavim_cnt(type="extenal"):
 @export_import_blueprint.route("/mosad_corrdintors_score", methods=['post'])
 def import_mosad_corrdintors_score(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "mosad_corrdintors_score",
@@ -218,6 +229,8 @@ def import_mosad_corrdintors_score(type="extenal"):
 @export_import_blueprint.route("/Eshcol_corrdintors_score", methods=['post'])
 def import_Eshcol_corrdintors_score(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "Eshcol_corrdintors_score",
@@ -248,6 +261,8 @@ def import_Eshcol_corrdintors_score(type="extenal"):
 @export_import_blueprint.route("/forgoten_Tohnit", methods=['post'])
 def import_forgoten_Tohnit(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "forgoten_Tohnit",
@@ -300,6 +315,8 @@ def import_forgoten_Tohnit(type="extenal"):
 @export_import_blueprint.route("/forgoten_mosad", methods=['post'])
 def import_forgoten_mosad(type="extenal"):
     try:
+        if type=="extenal" and correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         export_date = request.args.get("export_date")
         if export_date != str(date.today()) and export_date is not None:
             data = db.session.query(system_report.value).filter(system_report.type == "forgoten_mosad",
@@ -421,6 +438,8 @@ def add_giftCode_excel():
 
 @export_import_blueprint.route('/mosad_generalInfo', methods=['GET'])
 def mosad_generalInfo():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     institution_id = request.args.get('institution_id')
     all_Apprentices = db.session.query(Apprentice.paying, Apprentice.militaryPositionNew, Apprentice.spirit_status,
                                        Apprentice.army_role, Apprentice.institution_mahzor).filter(
@@ -451,7 +470,7 @@ def mosad_generalInfo():
     Mosad_coord_score, visitprofessionalMeet_melave_avg, visitMatzbar_melave_avg, call_gap_avg, personal_meet_gap_avg, group_meeting_gap_avg = md.mosad_Coordinators_score(
         coordinator.id)
     mosad_score, forgoten_Apprentice_count = md.mosad_score(institution_id)
-    resJson = md.mosadCoordinator(coordinator.id)
+    resJson = md.mosadCoordinator(coordinator.id,False)
     mosadCoordinatorJson = resJson[0].json
 
     return jsonify({
@@ -589,7 +608,7 @@ def monthly():
                 user1.role_ids.contains("1")).all()
             for mosadCoord in all_MosadCoordinator:
                 mosadCoord_id = mosadCoord[0]
-                res = md.mosadCoordinator(mosadCoord_id)[0].json
+                res = md.mosadCoordinator(mosadCoord_id,False)[0].json
 
                 system_report1 = system_report(
                     id=int(str(uuid.uuid4().int)[:5]),
@@ -801,6 +820,8 @@ def uploadfile():
     # print(reportId)
     # updatedEnt = Visit.query.get(reportId)
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         images_list = []
         for imagefile in request.files.getlist('file'):
             new_filename = uuid.uuid4().hex + '.' + imagefile.filename.rsplit('.', 1)[1].lower()

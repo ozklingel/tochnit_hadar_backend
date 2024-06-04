@@ -6,6 +6,8 @@ import boto3
 from openpyxl.reader.excel import load_workbook
 from flask import Blueprint, request, jsonify, send_file
 from http import HTTPStatus
+
+from src.routes.user_Profile import correct_auth
 from src.services import db, red
 from src.models.gift import gift
 from src.models.notification_model import notifications
@@ -16,6 +18,8 @@ gift_blueprint = Blueprint('gift', __name__, url_prefix='/gift')
 @gift_blueprint.route("/add_giftCode_excel", methods=['put'])
 def add_giftCode_excel():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         file = request.files['file']
         wb = load_workbook(file)
         sheet = wb.active
@@ -37,6 +41,8 @@ def add_giftCode_excel():
 @gift_blueprint.route('/getGift', methods=['GET'])
 def getGift():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         teudat_zehut = request.args.get('teudat_zehut')
         base = request.args.get('base')
         giftCode = db.session.query(gift).filter(gift.was_used == False).first()
@@ -53,6 +59,8 @@ def getGift():
 @gift_blueprint.route("/delete", methods=['put'])
 def delete():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         giftCode1 = request.args.get('giftCode')
         apprentice_id = request.args.get('')
 
@@ -75,7 +83,8 @@ def delete():
 @gift_blueprint.route("/deleteAll", methods=['put'])
 def deleteAll():
     try:
-
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         giftCode = db.session.query(gift).delete()
         db.session.commit()
 
@@ -87,7 +96,8 @@ def deleteAll():
 @gift_blueprint.route("/getGifts_cnt", methods=['get'])
 def getGifts_cnt():
     try:
-
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         giftCodes_all = db.session.query(gift).all()
         giftCodes_used = db.session.query(gift).filter(gift.was_used == True).all()
         giftCodes_all_cnt = len(giftCodes_all) or 0

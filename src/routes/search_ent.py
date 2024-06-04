@@ -2,6 +2,7 @@ from http import HTTPStatus
 from flask import Blueprint, request, jsonify
 from sqlalchemy import or_
 
+from src.routes.user_Profile import correct_auth
 from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
@@ -16,6 +17,8 @@ search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/searc
 @search_bar_form_blueprint.route("/search_entities", methods=['GET'])
 def search_entities():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
 
         result = set(users + apprentice)

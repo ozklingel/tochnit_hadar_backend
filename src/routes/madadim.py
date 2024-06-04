@@ -14,15 +14,16 @@ from src.models.institution_model import Institution
 from src.models.system_report import system_report
 from src.models.user_model import user1
 from src.models.visit_model import Visit
-from src.routes.user_Profile import toISO
+from src.routes.user_Profile import toISO, correct_auth
 
 madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 
 
 @madadim_form_blueprint.route("/lowScoreApprentice", methods=['GET'])
-def lowScoreApprentice():
+def lowScoreApprentice(external=True):
     try:
-
+        if correct_auth(external)==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         Oldvisitcalls = db.session.query(Visit.ent_reported, Institution.name).filter(
             Visit.ent_reported == Apprentice.id, Institution.id ==
             Apprentice.institution_id, Visit.title == config.failCall_report).all()
@@ -44,8 +45,10 @@ def lowScoreApprentice():
 
 
 @madadim_form_blueprint.route("/missingCalleApprentice", methods=['GET'])
-def missingCalleApprentice():
+def missingCalleApprentice(external=True):
     try:
+        if correct_auth(external)==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
@@ -85,8 +88,10 @@ def missingCalleApprentice():
 
 
 @madadim_form_blueprint.route("/missingMeetingApprentice", methods=['GET'])
-def missingMeetingApprentice():
+def missingMeetingApprentice(external=True):
     try:
+        if correct_auth(external)==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
@@ -127,6 +132,8 @@ def missingMeetingApprentice():
 @madadim_form_blueprint.route("/forgotenApprentices", methods=['GET'])
 def forgotenApprentice():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         all_Apprentices = db.session.query(Apprentice.id, Institution.id).filter(
             Apprentice.institution_id == Institution.id).all()
         # update apprentices meet
@@ -167,6 +174,8 @@ def forgotenApprentice():
 @madadim_form_blueprint.route("/forgotenApprentice_Mosad", methods=['GET'])
 def forgotenApprentices_mosad_outbound():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         institution_id = request.args.get("institutionId")
         all_Apprentices = db.session.query(Apprentice.id, ).filter(
             Apprentice.institution_id == institution_id).all()
@@ -198,8 +207,10 @@ def forgotenApprentices_mosad_outbound():
 
 
 @madadim_form_blueprint.route("/forgotenApprentice_inbound", methods=['GET'])
-def forgotenApprentice_Mosad(institution_id='empty'):
+def forgotenApprentice_Mosad(institution_id='empty',external=True):
     try:
+        if correct_auth(external)==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         if institution_id == 'empty':
             institution_id = request.args.get("institutionId")
         all_Apprentices = db.session.query(Apprentice.id, Apprentice.name, Apprentice.last_name).filter(
@@ -223,6 +234,8 @@ def forgotenApprentice_Mosad(institution_id='empty'):
 @madadim_form_blueprint.route("/missingCallsApprentice_Mosad", methods=['GET'])
 def missingCallsApprentice_Mosad():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         institution = request.args.get("institutionId")
         ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
                                           Apprentice.association_date,
@@ -256,6 +269,8 @@ def missingCallsApprentice_Mosad():
 @madadim_form_blueprint.route("/missingMeetingsApprentice_Mosad", methods=['GET'])
 def missingMeetingsApprentice_Mosad():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         institution = request.args.get("institutionId")
         ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
                                           Apprentice.association_date,
@@ -286,6 +301,8 @@ def missingMeetingsApprentice_Mosad():
 @madadim_form_blueprint.route("/lowScoreApprentice_mosad", methods=['GET'])
 def lowScoreApprentice_mosad():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         institution = request.args.get("institutionId")
 
         Oldvisitcalls = db.session.query(Visit.ent_reported, Institution.name).filter(
@@ -309,6 +326,8 @@ def lowScoreApprentice_mosad():
 
 @madadim_form_blueprint.route("/melave_score_tochnit", methods=['GET'])
 def melave_score_tochnit():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     Institution_all = db.session.query(Institution.id).all()
     inst_melave_dict = dict()
     for inst in Institution_all:
@@ -320,6 +339,8 @@ def melave_score_tochnit():
 
 @madadim_form_blueprint.route("/melave_score_mosad", methods=['GET'])
 def melave_score_mosad():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     institution = request.args.get("institutionId")
     print(institution)
     from src.routes.homepage import get_melave_score
@@ -374,6 +395,8 @@ def fetch_Diagram_yearly(related_id, type="melave_Score"):
 @madadim_form_blueprint.route("/melave", methods=['GET'])
 def Melave():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         melaveId = request.args.get("melaveId")
         Apprentice_melaveId = db.session.query(Apprentice.id).filter(Apprentice.accompany_id == melaveId).all()
         # call
@@ -494,8 +517,10 @@ def Melave():
 
 
 @madadim_form_blueprint.route("/mosadCoordinator", methods=['GET'])
-def mosadCoordinator(mosadCoordinator="empty"):
+def mosadCoordinator(mosadCoordinator="empty",external=True):
     try:
+        if correct_auth(external)==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         if mosadCoordinator == "empty":
             mosadCoordinator = request.args.get("mosadCoordinator")
         current_month = datetime.today().month
@@ -651,6 +676,8 @@ def mosadCoordinator(mosadCoordinator="empty"):
 @madadim_form_blueprint.route("/eshcolCoordinator", methods=['GET'])
 def EshcolCoordinator():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         eshcolCoordinatorId = request.args.get("eshcolCoordinator")
         # get  Eshcol id
         eshcol = db.session.query(user1.eshcol).filter(user1.id == eshcolCoordinatorId,
@@ -1034,7 +1061,7 @@ def mosad_score(institution_id):
         mosad_score += mosad_Coordinators_score_wight * mosad_Coordinators_score1 / 100
 
         # forgoten apppre
-        forgoten_Apprentice_count = forgotenApprentice_Mosad(institution_id)[0].json
+        forgoten_Apprentice_count = forgotenApprentice_Mosad(institution_id,False)[0].json
         mosad_score += forgtenAppren_wight * (len(all_Mosad_apprentices) - len(forgoten_Apprentice_count)) / len(
             all_Mosad_apprentices) if len(all_Mosad_apprentices) != 0 else 16.6
 

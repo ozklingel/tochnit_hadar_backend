@@ -85,11 +85,14 @@ def verifyOTP_form():
             return jsonify({"result": "not in system", "firsOnboarding": True}), 401
         if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
             print("not null")
-            red.hdel(int(str(created_by_phone)), "accessToken")
             accessToken = int(str(uuid.uuid4().int)[:5])
-            red.hset(int(str(created_by_phone)), "accessToken", accessToken)
+            red.hset(created_by_phone, "accessToken", accessToken)
+            redisaccessToken = red.hget(created_by_phone, "accessToken").decode("utf-8")
+            print(redisaccessToken)
             return jsonify({"result": accessToken, "firsOnboarding": False}), HTTPStatus.OK
+        red.hdel(created_by_phone, "accessToken")
         accessToken = int(str(uuid.uuid4().int)[:5])
+        red.hset(created_by_phone, "accessToken", accessToken)
         print(accessToken)
         # red.hset(int(str(created_by_phone)), "accessToken", accessToken)
         return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK

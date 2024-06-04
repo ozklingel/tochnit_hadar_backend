@@ -18,6 +18,8 @@ setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, u
 
 @setEntityDetails_form_blueprint.route('/setByType', methods=['PUT'])
 def setEntityDetailsByType():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     try:
         typeOfSet = data['typeOfSet']

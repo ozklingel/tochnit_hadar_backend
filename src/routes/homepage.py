@@ -4,6 +4,7 @@ from http import HTTPStatus
 from datetime import datetime, date
 from sqlalchemy import func, or_
 import config
+from src.routes.user_Profile import correct_auth
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
@@ -144,6 +145,8 @@ def red_green_orange_status(all_Apprentices):
 
 @homepage_form_blueprint.route("/initMaster", methods=['GET'])
 def homepageMaster():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     accessToken = request.headers.get('Authorization')
     print("accessToken:", accessToken)
     userId = request.args.get("userId")
@@ -194,16 +197,18 @@ def homepageMaster():
 @homepage_form_blueprint.route("/init_eshcolCoord", methods=['GET'])
 def init_eshcolCoord():
     try:
-        accessToken = request.headers.get('Authorization')
-        print("accessToken:", accessToken)
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        # accessToken = request.headers.get('Authorization')
+        # print("accessToken:", accessToken)
         userId = request.args.get("userId")
-        print("Userid:", str(userId))
-        red.hset(userId, "accessToken", "123")
-
-        redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-        print("redisaccessToken:", redisaccessToken)
-        if not redisaccessToken == accessToken:
-            return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
+        # print("Userid:", str(userId))
+        # red.hset(userId, "accessToken", "123")
+        #
+        # redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
+        # print("redisaccessToken:", redisaccessToken)
+        # if not redisaccessToken == accessToken:
+        #     return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
 
         record = user1.query.filter_by(id=userId).first()
         '''
@@ -243,11 +248,11 @@ def init_eshcolCoord():
 @homepage_form_blueprint.route("/init_mosadCoord", methods=['GET'])
 def init_mosadCoord():
     try:
-        print(request)
-        accessToken = request.headers.get('Authorization')
-        print("accessToken:", accessToken)
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         userId = request.args.get("userId")
-        print("Userid:", str(userId))
+
         '''
         redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
         print("redisaccessToken:",redisaccessToken)
@@ -295,8 +300,9 @@ class Apprentice1:
 @homepage_form_blueprint.route("/get_closest_Events", methods=['GET'])
 def get_closest_Events():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get("userId")
-
         ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
                                           Apprentice.name, Apprentice.last_name, Apprentice.birthday).filter(
             Apprentice.accompany_id == user).all()

@@ -8,6 +8,7 @@ import arrow as arrow
 
 import config
 from .search_ent import filter_by_request
+from .user_Profile import correct_auth
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
 from ..models.cluster_model import Cluster
@@ -22,6 +23,8 @@ reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/report
 
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     user = str(data['userId'])
     ent_group_name = ""
@@ -73,6 +76,8 @@ def add_reports_form():
 @reports_form_blueprint.route('/getById', methods=['GET'])
 def getById():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         report_id = request.args.get('report_id')
         user = request.args.get('userId')
         print(report_id)
@@ -97,6 +102,8 @@ def getById():
 @reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get('userId')
         reportList = db.session.query(Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date, Visit.id,
                                       Visit.title, Visit.description, Visit.attachments, Visit.allreadyread,
@@ -134,6 +141,8 @@ def getAll_reports_form():
 
 @reports_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_report_form():
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     data = request.json
     report_id = data['report_id']
     print(report_id)
@@ -159,6 +168,8 @@ def toISO(d):
 @reports_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         data = request.json
         reportIds = data['reportId']
         for id in reportIds:
@@ -173,6 +184,8 @@ def delete():
 @reports_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         # get tasksAndEvents
         reportId = request.args.get("reportId")
         data = request.json
@@ -192,6 +205,8 @@ def update():
 @reports_form_blueprint.route("/filter_report", methods=['GET'])
 def filter_report():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
         types = request.args.get("type").split(",") if request.args.get("type") is not None else None
         if types:
@@ -220,6 +235,8 @@ def filter_report():
 @reports_form_blueprint.route("/filter_to", methods=['GET'])
 def filter_to():
     try:
+        if correct_auth()==False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
 
         ent_group_concat = ""
@@ -240,6 +257,8 @@ def filter_to():
 @reports_form_blueprint.route("/add_report_excel", methods=['put'])
 def add_report_excel():
     # /home/ubuntu/flaskapp/
+    if correct_auth() == False:
+        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
     file = request.files['file']
 
     wb = load_workbook(file)

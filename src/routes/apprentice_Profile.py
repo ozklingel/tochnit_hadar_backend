@@ -23,8 +23,7 @@ apprentice_Profile_form_blueprint = Blueprint('apprentice_Profile_form', __name_
 @apprentice_Profile_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         data = request.json
         apprenticetId = data['apprenticetId']
         print(apprenticetId)
@@ -41,8 +40,7 @@ def delete():
 @apprentice_Profile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         # get tasksAndEvents
         apprenticetId = request.args.get("apprenticetId")
         data = request.json
@@ -81,8 +79,7 @@ def update():
 @apprentice_Profile_form_blueprint.route("/add_apprentice_manual", methods=['post'])
 def add_apprentice_manual():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         data = request.json
         first_name = data['first_name']
         last_name = data['last_name']
@@ -148,8 +145,7 @@ def add_apprentice_manual():
 
 @apprentice_Profile_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
-    if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
     # /home/ubuntu/flaskapp/
     file = request.files['file']
     wb = load_workbook(file)
@@ -423,8 +419,7 @@ def toISO(d):
 @apprentice_Profile_form_blueprint.route('/maps_apprentices', methods=['GET'])
 def maps_apprentices():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList = []

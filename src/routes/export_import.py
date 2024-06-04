@@ -483,11 +483,11 @@ def mosad_generalInfo():
         'personal_meet_gap_avg': personal_meet_gap_avg,
         'group_meeting_gap_avg': group_meeting_gap_avg,
 
-        'paying_dict': [{k: v} for k, v in paying_dict.items()],
-        'mahzor_dict': [{k: v} for k, v in mahzor_dict.items()],
-        'sugSherut_dict': [{k: v} for k, v in sugSherut_dict.items()],
-        'matzbar_dict': [{k: v} for k, v in matzbar_dict.items()],
-        'Picud_dict': [{k: v} for k, v in Picud_dict.items()],
+        'paying_dict': [{"key":k,"value": v} for k, v in paying_dict.items()],
+        'mahzor_dict': [{"key":k,"value": v} for k, v in mahzor_dict.items()],
+        'sugSherut_dict': [{"key":k,"value": v} for k, v in sugSherut_dict.items()],
+        'matzbar_dict': [{"key":k,"value": v} for k, v in matzbar_dict.items()],
+        'Picud_dict': [{"key":k,"value": v} for k, v in Picud_dict.items()],
 
     })
 

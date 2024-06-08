@@ -1,3 +1,6 @@
+import csv
+from io import StringIO
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from datetime import datetime, date, timedelta
@@ -196,17 +199,27 @@ def forgotenApprentices_mosad_outbound():
             vIsDate = i.visit_date
             now = date.today()
             gap = (now - vIsDate).days if vIsDate is not None else 0
-            ids_no_visit.append(i, gap)
-
-        return jsonify(
+            ids_no_visit.append([i, gap])
+        #compuite precentage of deacrese/increase
+        too_old = datetime.today() - timedelta(days=31)
+        forgoten_Tohnit=db.session.query(system_report).filter(system_report.type=="forgoten_Tohnit",system_report.creation_date>too_old).first()
+        inst_name = db.session.query(Institution.name, ).filter(
+            Institution.id == institution_id).first()
+        prev_weeek_forgoten=0
+        f = StringIO(forgoten_Tohnit.value)
+        reader = csv.reader(f, delimiter=',')
+        for row in reader:
+            if inst_name.name in row:
+                prev_weeek_forgoten=(len(ids_no_visit)-int(row[1]))/len(ids_no_visit)
+        return jsonify({"apprentice_list":
             [{"id": r[0], "gap": r[1]} for r in ids_no_visit],
-
-        ), HTTPStatus.OK
+            "percentage":prev_weeek_forgoten
+                        }), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': "no such instituiton .addidtional details:"+str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@madadim_form_blueprint.route("/forgotenApprentice_inbound", methods=['GET'])
+#@madadim_form_blueprint.route("/forgotenApprentice_inbound", methods=['GET'])
 def forgotenApprentice_Mosad(institution_id='empty',external=True):
     try:
         if correct_auth(external)==False:
@@ -226,6 +239,7 @@ def forgotenApprentice_Mosad(institution_id='empty',external=True):
         for i in Oldvisitcalls:
             if i[0] in Apprentice_ids_forgoten:
                 Apprentice_ids_forgoten.remove(i[0])
+
         return jsonify([str(r) for r in Apprentice_ids_forgoten]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

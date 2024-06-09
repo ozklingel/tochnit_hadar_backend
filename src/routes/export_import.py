@@ -436,61 +436,6 @@ def add_giftCode_excel():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@export_import_blueprint.route('/mosad_generalInfo', methods=['GET'])
-def mosad_generalInfo():
-    if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
-    institution_id = request.args.get('institution_id')
-    all_Apprentices = db.session.query(Apprentice.paying, Apprentice.militaryPositionNew, Apprentice.spirit_status,
-                                       Apprentice.army_role, Apprentice.institution_mahzor).filter(
-        Apprentice.institution_id == institution_id).all()
-    all_melaves = db.session.query(user1.id).filter(user1.institution_id == institution_id).all()
-    coordinator = db.session.query(user1.id).filter(user1.institution_id == institution_id,
-                                                    user1.role_ids.contains("1")).first()
-    if coordinator is None:
-        return jsonify({'result': "error-no coordinator or such institution"}), HTTPStatus.BAD_REQUEST
-
-    paying_dict = dict()
-    Picud_dict = dict()
-    matzbar_dict = dict()
-    sugSherut_dict = dict()
-    mahzor_dict = dict()
-
-    for apprentice1 in all_Apprentices:
-        paying_dict[apprentice1.paying] = paying_dict.get(apprentice1.paying, 0) + 1
-        Picud_dict[apprentice1.militaryPositionNew] = Picud_dict.get(apprentice1.militaryPositionNew, 0) + 1
-        matzbar_dict[apprentice1.spirit_status] = matzbar_dict.get(apprentice1.spirit_status, 0) + 1
-        sugSherut_dict[apprentice1.army_role] = sugSherut_dict.get(apprentice1.army_role, 0) + 1
-        mahzor_dict[apprentice1.institution_mahzor] = mahzor_dict.get(apprentice1.institution_mahzor, 0) + 1
-    mitztainim = []
-    for melaveId in all_melaves:
-        melave_score, call_gap_avg, personal_meet_gap_avg, group_meeting_gap_avg = md.melave_score(melaveId.id)
-        if melave_score > 95:
-            mitztainim.append(melaveId.id)
-    Mosad_coord_score, visitprofessionalMeet_melave_avg, visitMatzbar_melave_avg, call_gap_avg, personal_meet_gap_avg, group_meeting_gap_avg = md.mosad_Coordinators_score(
-        coordinator.id)
-    mosad_score, forgoten_Apprentice_count = md.mosad_score(institution_id)
-    resJson = md.mosadCoordinator(coordinator.id,False)
-    mosadCoordinatorJson = resJson[0].json
-
-    return jsonify({
-        'good_Melave_ids_matzbar': mosadCoordinatorJson["good_Melave_ids_matzbar"],
-        'visitDoForBogrim_list': mosadCoordinatorJson["visitDoForBogrim_list"],
-
-        'mitztainim': mitztainim,
-        'forgoten_Apprentice_count': len(forgoten_Apprentice_count),
-        'call_gap_avg': call_gap_avg,
-        'personal_meet_gap_avg': personal_meet_gap_avg,
-        'group_meeting_gap_avg': group_meeting_gap_avg,
-
-        'paying_dict': [{k: v} for k, v in paying_dict.items()],
-        'mahzor_dict': [{k: v} for k, v in mahzor_dict.items()],
-        'sugSherut_dict': [{k: v} for k, v in sugSherut_dict.items()],
-        'matzbar_dict': [{k: v} for k, v in matzbar_dict.items()],
-        'Picud_dict': [{k: v} for k, v in Picud_dict.items()],
-
-    })
-
 
 @export_import_blueprint.route('/monthly', methods=['GET'])
 def monthly():

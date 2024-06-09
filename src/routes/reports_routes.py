@@ -130,7 +130,7 @@ def getAll_reports_form():
             my_dict.append(
                 {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
                  "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
-                 "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),
+                 "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.description),
                  "attachments": noti.attachments})
 
         return jsonify(my_dict), HTTPStatus.OK
@@ -160,7 +160,7 @@ def setWasRead_report_form():
 
 def toISO(d):
     if d:
-        return datetime(d.year, d.month, d.day).isoformat()
+        return datetime(d.year, d.month, d.day, d.hour, d.minute, d.second).isoformat()
     else:
         return None
 

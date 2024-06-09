@@ -199,21 +199,25 @@ def forgotenApprentices_mosad_outbound():
             vIsDate = i.visit_date
             now = date.today()
             gap = (now - vIsDate).days if vIsDate is not None else 0
-            ids_no_visit.append([i, gap])
+            ids_no_visit.append([i.ent_reported, gap])
         #compuite precentage of deacrese/increase
         too_old = datetime.today() - timedelta(days=31)
         forgoten_Tohnit=db.session.query(system_report).filter(system_report.type=="forgoten_Tohnit",system_report.creation_date>too_old).first()
         inst_name = db.session.query(Institution.name, ).filter(
             Institution.id == institution_id).first()
-        prev_weeek_forgoten=0
-        f = StringIO(forgoten_Tohnit.value)
-        reader = csv.reader(f, delimiter=',')
-        for row in reader:
-            if inst_name.name in row:
-                prev_weeek_forgoten=(len(ids_no_visit)-int(row[1]))/len(ids_no_visit)
+        prev_month_forgoten_precentage=0
+        if forgoten_Tohnit is not  None:
+            f = StringIO(forgoten_Tohnit.value)
+            reader = csv.reader(f, delimiter=',')
+            for row in reader:
+                if inst_name.name in row:
+                    prev_month_forgoten_precentage=(len(ids_no_visit)-int(row[1]))/len(ids_no_visit)
+        print("prev_month_forgoten_precentage",prev_month_forgoten_precentage)
+        print("ids_no_visit",ids_no_visit)
+
         return jsonify({"apprentice_list":
             [{"id": r[0], "gap": r[1]} for r in ids_no_visit],
-            "percentage":prev_weeek_forgoten
+            "percentage":prev_month_forgoten_precentage
                         }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': "no such instituiton .addidtional details:"+str(e)}), HTTPStatus.BAD_REQUEST

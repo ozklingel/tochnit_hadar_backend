@@ -1,7 +1,7 @@
 import subprocess
 
 # Read the requirements.txt file
-with open('requirments.txt', 'r', encoding='utf-16') as file:
+with open("requirements.txt", "r", encoding="utf-16") as file:
     packages = file.readlines()
 
 list_problems = []
@@ -10,7 +10,7 @@ list_success = []
 for package in packages:
     package = package.strip()
     try:
-        subprocess.run(['pip', 'install', package], check=True)
+        subprocess.run(["pip", "install", package], check=True)
         list_success.append(package)
         print(f"Successfully installed {package}\n")
     except subprocess.CalledProcessError:

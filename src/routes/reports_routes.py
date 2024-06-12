@@ -160,7 +160,7 @@ def setWasRead_report_form():
 
 def toISO(d):
     if d:
-        return datetime(d.year, d.month, d.day, d.hour, d.minute, d.second).isoformat()
+        return datetime(d.year, d.month, d.day).isoformat()
     else:
         return None
 

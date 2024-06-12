@@ -1,10 +1,21 @@
-# Prerequisites to install:
+# Flask backend for TH project
+
+The backend consists of a Flask server and a PostgreSQL database.
+
+## CI/CD deployment:
+Using GitHub Actions, the backend is automatically deployed to an AWS EC2 instance when a new tag is pushed with the format `v*`, for example:
+``` bash
+git tag v1.0.6
+git push --tags
+```
+
+## Prerequisites to install:
 
 1. Python
 
 2. postgres+psql (sql shell) -set password to postgres as "TH"!!!
 
-# Installation:
+## Installation:
 1. Clone repo from this github
 
 2. Create virtual environment:

@@ -1,0 +1,46 @@
+name: Deploy Flask
+
+on:
+  push:
+    tags:
+      - v*
+    
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip the repository codebase
+        run: |
+          repository_path=${{ github.repository }}
+          repository_name=${repository_path##*/}
+          zip -r ezyzip.zip * -x ".git/*" ".github/*"
+
+      - name: Push code to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "ezyzip.zip"
+          target: "~"
+
+      - name: Restart remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            tar cvf flaskapp.tar flaskapp/
+            sudo rm -rf flaskapp/*
+            mv ezyzip.zip flaskapp/
+            cd flaskapp
+            unzip ezyzip
+            sed -i 's/postgresql:\/\/postgres:TH@localhost\/t_h/postgresql:\/\/${{ secrets.POSTGRES_URL }}:5432\/thDB/' config.py
+            chmod 777 /home/ubuntu/flaskapp/data/to_csv.csv
+            chmod 777 /home/ubuntu/flaskapp/system_export
+            sudo service apache2 restart

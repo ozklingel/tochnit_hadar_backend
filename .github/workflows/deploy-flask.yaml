@@ -36,7 +36,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             tar cvf flaskapp.tar flaskapp/
-            rm -rf flaskapp/*
+            sudo rm -rf flaskapp/*
             mv ezyzip.zip flaskapp/
             cd flaskapp
             unzip ezyzip

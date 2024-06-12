@@ -276,7 +276,8 @@ def myPersonas():
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
-                {"Horim_status": Horim_status,
+                {"role":[],
+                    "Horim_status": Horim_status,
                  "personalMeet_status": personalMeet_status,
                  "call_status": call_status,
                  "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
@@ -355,7 +356,8 @@ def myPersonas():
             reportList = db.session.query(Visit.id).filter(Visit.user_id == noti.id).all()
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             my_dict.append(
-                {"Horim_status": "",
+                {"role":[int(r) for r in noti.role_ids.split(",")],
+                    "Horim_status": "",
                  "personalMeet_status": "",
                  "call_status": "",
                  "highSchoolRavMelamed_phone": ""

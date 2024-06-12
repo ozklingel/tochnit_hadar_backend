@@ -10,6 +10,7 @@ from sqlalchemy import func, or_
 
 import config
 from src.models.madadim_setting import madadim_setting
+from src.routes.homepage import get_melave_score, get_mosad_Coordinators_score, get_Eshcol_corrdintors_score
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
 
@@ -22,7 +23,7 @@ from src.routes.user_Profile import toISO, correct_auth
 madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 
 
-@madadim_form_blueprint.route("/lowScoreApprentice", methods=['GET'])
+@madadim_form_blueprint.route("/Apprentice_status", methods=['GET'])
 def lowScoreApprentice(external=True):
     try:
         if correct_auth(external)==False:
@@ -38,10 +39,77 @@ def lowScoreApprentice(external=True):
             if ent[1] not in forgotenApprenticeList:
                 forgotenApprenticeList[ent[1]] = 0
             forgotenApprenticeList[ent[1]] += 1
+###########################################
+        if correct_auth(external) == False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+            Apprentice.institution_id == Institution.id).all()
+        # update apprentices meet
+
+        visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title.in_(config.reports_as_call)).group_by(
+            Visit.ent_reported,
+            Institution.name).all()
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0], ent[1]])
+        counts = dict()
+        missingCallApprentice_total = 0
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            if gap > 21:
+                missingCallApprentice_total += 1
+                counts[i[2]] = counts.get(i[2], 0) + 1
+        for i in ids_no_visit:
+            missingCallApprentice_total += 1
+            counts[i[1]] = counts.get(i[1], 0) + 1
+######################################
+        if correct_auth(external) == False:
+            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        all_Apprentices = db.session.query(Apprentice.id, Institution.name).filter(
+            Apprentice.institution_id == Institution.id).all()
+        # update apprentices meet
+
+        visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date"),
+                                      Institution.name).filter(Apprentice.id == Visit.ent_reported,
+                                                               Institution.id == Apprentice.institution_id,
+                                                               Visit.title.in_(config.report_as_meet)).group_by(
+            Visit.ent_reported,
+            Institution.name).all()
+        ids_have_visit = [r[0] for r in visitcalls]
+        ids_no_visit = []
+        # handle no record
+        for ent in all_Apprentices:
+            if ent.id not in ids_have_visit:
+                ids_no_visit.append([ent[0], ent[1]])
+        counts2 = dict()
+        missingmeetApprentice_total = 0
+        for i in visitcalls:
+            vIsDate = i.visit_date
+            now = date.today()
+            gap = (now - vIsDate).days if vIsDate is not None else 0
+            if gap > 21:
+                missingmeetApprentice_total += 1
+                counts2[i[2]] = counts2.get(i[2], 0) + 1
+        for i in ids_no_visit:
+            missingmeetApprentice_total += 1
+            counts2[i[1]] = counts2.get(i[1], 0) + 1
 
         return jsonify({
             'lowScoreApprentice_Count': forgotenApprenticCount,
             'lowScoreApprentice_List': [{"name": key, "value": value} for key, value in forgotenApprenticeList.items()],
+            'missingCallApprentice_total': missingCallApprentice_total,
+            'missingCalleApprentice_count': [{"name": key, "value": value} for key, value in counts.items()],
+            'missingmeetApprentice_total': missingmeetApprentice_total,
+            'missingmeetApprentice_count': [{"name": key, "value": value} for key, value in counts2.items()],
+
         }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -249,7 +317,7 @@ def forgotenApprentice_Mosad(institution_id='empty',external=True):
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@madadim_form_blueprint.route("/missingCallsApprentice_Mosad", methods=['GET'])
+@madadim_form_blueprint.route("/Apprentice_status_Mosad", methods=['GET'])
 def missingCallsApprentice_Mosad():
     try:
         if correct_auth()==False:
@@ -276,10 +344,42 @@ def missingCallsApprentice_Mosad():
             elif (date.today() - visitEvent.visit_date).days > 21 and Visit.ent_reported not in no_visit_dict:
                 daysFromNow = (date.today() - Visit.visit_date).days if Visit.visit_date is not None else 100
                 no_visit_dict[Apprentice1.id] = daysFromNow
+#########################################
+        ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
+                                          Apprentice.association_date,
+                                          Apprentice.name, Apprentice.last_name, Apprentice.birthday).filter(
+            Apprentice.institution_id == institution).all()
+        no_visit_dict2 = dict()
+        for Apprentice1 in ApprenticeList:
 
+            # personal meet
+            visitEvent = db.session.query(Visit).filter(
+                Visit.ent_reported == str(Apprentice1.id),
+                Visit.title.in_(config.report_as_meet)).order_by(
+                Visit.visit_date.desc()).first()
+            if visitEvent is None:
+                daysFromNow = (
+                        date.today() - Apprentice1.association_date).days if Apprentice1.association_date is not None else 100
+                no_visit_dict2[Apprentice1.id] = daysFromNow
+            elif (date.today() - visitEvent.visit_date).days > 90 and Visit.ent_reported not in no_visit_dict2:
+                daysFromNow = (date.today() - Visit.visit_date).days if Visit.visit_date is not None else 100
+                no_visit_dict2[Apprentice1.id] = daysFromNow
+###############################
+
+        Oldvisitcalls = db.session.query(Visit.ent_reported, Institution.name).filter(
+            Visit.ent_reported == Apprentice.id, Institution.id ==
+            Apprentice.institution_id, Institution.id == institution, Visit.title == config.failCall_report).all()
+        forgotenApprenticCount = 0
+        forgotenApprenticeList = {}
+        for ent in Oldvisitcalls:
+            if ent[1] not in forgotenApprenticeList:
+                forgotenApprenticeList[ent[0]] = 0
         print(no_visit_dict)
-        return jsonify([{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
-                       ), HTTPStatus.OK
+        return jsonify({"call":[{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
+                        "meet":[{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
+                        "low_score":[str(key) for key, value in forgotenApprenticeList.items()],
+                        'lowScoreApprentice_Count': forgotenApprenticCount,
+                        }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -1047,6 +1147,13 @@ def mosadot_scores():
         mosadlist_score.append({"institution": institution_[0], "mosad__score": mosad__score1})
     return jsonify(mosadlist_score), HTTPStatus.OK
 
+@madadim_form_blueprint.route("/personas_scores", methods=['GET'])
+def personas_scores():
+    counts_melave_score, score_melaveProfile_list = get_melave_score()
+    mosad_Cooordinator_score, score_MosadCoordProfile_list = get_mosad_Coordinators_score()
+    eshcol_Cooordinator_score, score_EshcolCoordProfile_list = get_Eshcol_corrdintors_score()
+    return jsonify({'score_melaveProfile_list': score_melaveProfile_list,
+    'score_MosadCoordProfile_list': score_MosadCoordProfile_list ,"score_EshcolCoordProfile_list":score_EshcolCoordProfile_list})
 
 def mosad_score(institution_id):
     melaveScore_wight = 72

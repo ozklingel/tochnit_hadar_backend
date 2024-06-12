@@ -9,8 +9,8 @@ from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.user_model import user1
 from src.models.visit_model import Visit
-from src.routes.madadim import melave_score, mosad_Coordinators_score, eshcol_Coordinators_score
-from src.routes.notification_form_routes import getAll_notification_form, convert_hebrewDate_to_Lozai
+import src.routes.madadim  as md
+import src.routes.notification_form_routes as nt
 
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
@@ -34,7 +34,7 @@ def get_melave_score(eshcol="0", mosad="0"):
             user1.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
-        melave_score1, call_gap_avg, meet_gap_avg, group_meeting_gap_avg = melave_score(melaveId)
+        melave_score1, call_gap_avg, meet_gap_avg, group_meeting_gap_avg = md.melave_score(melaveId)
         score_melaveProfile.append({"melave_score1": melave_score1, "melaveId": melaveId})
         counts[melave_score1] = counts.get(melave_score1, 0) + 1
 
@@ -57,7 +57,7 @@ def get_mosad_Coordinators_score(eshcol="0"):
     for mosad_coord in all_Mosad_coord:
         Mosad_coord_score = 0
         mosadCoordinator = mosad_coord[0]
-        mosad_Coordinators_score1, visitprofessionalMeet_melave_avg, avg_matzbarMeeting_gap, total_avg_call, total_avg_meet, groupNeeting_gap_avg = mosad_Coordinators_score(
+        mosad_Coordinators_score1, visitprofessionalMeet_melave_avg, avg_matzbarMeeting_gap, total_avg_call, total_avg_meet, groupNeeting_gap_avg = md.mosad_Coordinators_score(
             mosadCoordinator)
         mosad_Cooordinator_score_dict[mosad_Coordinators_score1] = mosad_Cooordinator_score_dict.get(
             mosad_Coordinators_score1, 0) + 1
@@ -76,7 +76,7 @@ def get_Eshcol_corrdintors_score():
     score_EshcolCoordProfile = []
     for Eshcol_coord in all_Eshcol_coord:
         Eshcol_coord_id = Eshcol_coord[0]
-        eshcolCoordinator_score1, avg__mosad_racaz_meeting_monthly = eshcol_Coordinators_score(Eshcol_coord_id)
+        eshcolCoordinator_score1, avg__mosad_racaz_meeting_monthly = md.eshcol_Coordinators_score(Eshcol_coord_id)
         print("eshcolCoordinator_score1", eshcolCoordinator_score1)
         eshcol_Cooordinator_score[eshcolCoordinator_score1] = eshcol_Cooordinator_score.get(eshcolCoordinator_score1,
                                                                                             0) + 1
@@ -175,8 +175,6 @@ def homepageMaster():
         all_Apprentices)
 
     return jsonify({
-        'score_melaveProfile_list': score_melaveProfile_list,
-        'score_Mosad_Eshcol_CoordProfile_list': score_MosadCoordProfile_list + score_EshcolCoordProfile_list,
 
         'eshcol_Cooordinator_score': eshcol_Cooordinator_score,
         'Mosad_Cooordinator_score': mosad_Cooordinator_score,
@@ -312,7 +310,7 @@ def get_closest_Events():
             gap_loazi = 1000
             gap = 1000
             if Apprentice1.birthday_ivry:
-                thisYearBirthday = convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
+                thisYearBirthday = nt.convert_hebrewDate_to_Lozai(Apprentice1.birthday_ivry)
                 gap = (date.today() - thisYearBirthday).days
             if Apprentice1.birthday:
                 gap_loazi = (datetime.today() - datetime(date.today().year, Apprentice1.birthday.month,

@@ -35,7 +35,6 @@ jobs:
           username: ${{ vars.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd tmp
             tar cvf flaskapp.tar flaskapp/
             rm -rf flaskapp/*
             mv ezyzip.zip flaskapp/

@@ -5,6 +5,7 @@ from http import HTTPStatus
 
 from openpyxl.reader.excel import load_workbook
 import arrow as arrow
+from sqlalchemy import or_
 
 import config
 from .search_ent import filter_by_request
@@ -102,8 +103,7 @@ def getById():
 @reports_form_blueprint.route('/getAll', methods=['GET'])
 def getAll_reports_form():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+
         user = request.args.get('userId')
         reportList = db.session.query(Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date, Visit.id,
                                       Visit.title, Visit.description, Visit.attachments, Visit.allreadyread,
@@ -115,7 +115,6 @@ def getAll_reports_form():
         used_report = dict()
         for noti in reportList:
             used_report[str(noti.id)] = used_report.get(str(noti.id), []) + [noti]
-        print(used_report.keys())
         for k, notiList in used_report.items():
             reportedList = []
             reported_name_str = ""
@@ -132,7 +131,46 @@ def getAll_reports_form():
                  "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
                  "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.description),
                  "attachments": noti.attachments})
-
+        #add my personas reports:
+        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol,user1.id).filter(
+            user1.id == user).first()
+        if "0" in user1ent.role_ids:
+            userList = []
+        if "1" in user1ent.role_ids:
+            userList = db.session.query(user1.id).filter(user1.institution_id == user1ent.institution_id,user1.role_ids.contains("0")).all()
+        if "2" in user1ent.role_ids:
+            userList = db.session.query(user1.id).filter(user1.eshcol == user1ent.eshcol,or_(user1.role_ids.contains("0"),user1.role_ids.contains("1"))).all()
+        if "3" in user1ent.role_ids:
+            userList = db.session.query(user1.id).all()
+        for ent in userList:
+            print(ent)
+            reportList = db.session.query(Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date, Visit.id,
+                                          Visit.title, Visit.description, Visit.attachments, Visit.allreadyread,
+                                          Visit.created_at).filter(Visit.user_id == ent.id).all()
+            user_name = db.session.query(user1.name, user1.last_name).filter(
+                ent.id == user1.id).first()
+            user_name = user_name.name + " " + user_name.last_name
+            used_report = dict()
+            for noti in reportList:
+                used_report[str(noti.id)] = used_report.get(str(noti.id), []) + [noti]
+            for k, notiList in used_report.items():
+                reportedList = []
+                reported_name_str = ""
+                for noti in notiList:
+                    print(noti)
+                    reportedList.append(str(noti.ent_reported))
+                    reported_name = db.session.query(Apprentice.name, Apprentice.last_name).filter(
+                        Apprentice.id == noti.ent_reported).first()
+                    if reported_name is None:
+                        reported_name = db.session.query(user1.name, user1.last_name).filter(
+                            user1.id == user).first()
+                    reported_name_str += reported_name.name + " " + reported_name.last_name + ","
+                my_dict.append(
+                    {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
+                     "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
+                     "title": str(noti.title), "allreadyread": str(noti.allreadyread),
+                     "description": str(noti.description),
+                     "attachments": noti.attachments})
         return jsonify(my_dict), HTTPStatus.OK
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:

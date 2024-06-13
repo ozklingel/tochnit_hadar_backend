@@ -246,7 +246,6 @@ def myPersonas():
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
             print(apprenticeList)
             userList = []
-
         if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(
                 Apprentice.institution_id == user1ent.institution_id).all()

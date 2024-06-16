@@ -716,15 +716,21 @@ def setSetting_notification_form():
     notifyMorningval = data['notifyMorning']
     notifyDayBeforeval = data['notifyDayBefore']
     notifyStartWeekval = data['notifyStartWeek']
+    notifyMorning_weekly_report = data['notifyMorning_weekly_report']
+    notifyMorning_sevev = data['notifyMorning_sevev']
+    notifyDayBefore_sevev = data['notifyDayBefore_sevev']
+    notifyStartWeek_sevev = data['notifyStartWeek_sevev']
+
     user = data['userId']
-    print("user:", user)
-    print("notifyMorningval:", notifyMorningval)
-    print("notifyDayBeforeval:", notifyDayBeforeval)
-    print("notifyStartWeekval:", notifyStartWeekval)
     user = user1.query.get(user)
     user.notifyStartWeek = notifyStartWeekval == 'true' or notifyStartWeekval == 'True'
     user.notifyDayBefore = notifyDayBeforeval == 'true' or notifyDayBeforeval == 'True'
     user.notifyMorning = notifyMorningval == 'true' or notifyMorningval == 'True'
+    user.notifyMorning_weekly_report = notifyMorning_weekly_report == 'true' or notifyMorning_weekly_report == 'True'
+    user.notifyMorning_sevev = notifyMorning_sevev == 'true' or notifyMorning_sevev == 'True'
+    user.notifyDayBefore_sevev = notifyDayBefore_sevev == 'true' or notifyDayBefore_sevev == 'True'
+    user.notifyStartWeek_sevev = notifyStartWeek_sevev == 'true' or notifyStartWeek_sevev == 'True'
+
     try:
         db.session.commit()
     except:
@@ -742,7 +748,9 @@ def getNotificationSetting_form():
         if correct_auth()==False:
             return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get('userId')
-        notiSettingList = db.session.query(user1.notifyMorning, user1.notifyDayBefore, user1.notifyStartWeek).filter(
+        notiSettingList = db.session.query(user1.notifyMorning, user1.notifyDayBefore, user1.notifyStartWeek,
+                                           user1.notifyMorning_weekly_report, user1.notifyMorning_sevev, user1.notifyDayBefore_sevev,
+                                           user1.notifyStartWeek_sevev,).filter(
             user1.id == user).first()
         print("notiSettingList", notiSettingList)
         if not notiSettingList:
@@ -753,7 +761,12 @@ def getNotificationSetting_form():
             # TODO: get Noti form to DB
             return jsonify({"notifyMorning": notiSettingList.notifyMorning,
                             "notifyDayBefore": notiSettingList.notifyDayBefore
-                               , "notifyStartWeek": notiSettingList.notifyStartWeek}), HTTPStatus.OK
+                               , "notifyStartWeek": notiSettingList.notifyStartWeek,
+                            "notifyStartWeek_sevev": notiSettingList.notifyStartWeek_sevev,
+                            "notifyDayBefore_sevev":notiSettingList.notifyDayBefore_sevev,
+                            "notifyMorning_sevev": notiSettingList.notifyMorning_sevev
+                               , "notifyMorning_weekly_report": notiSettingList.notifyMorning_weekly_report
+                            }), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 

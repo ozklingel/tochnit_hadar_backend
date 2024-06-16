@@ -272,6 +272,7 @@ def myPersonas():
                                          notifications.date).filter(
                 notifications.subject == str(noti.id),
                 notifications.numoflinesdisplay == 3).all()
+            print(eventlist)
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -324,13 +325,18 @@ def myPersonas():
                  "reports":
                      [str(i[0]) for i in [tuple(row) for row in reportList]]
                     ,
-                 "events":
-
-                     [{"id": str(row[0]), "title": row[1], "description": row[2], "date": toISO(row[3])} for row in
+                 "events": [{"id": row[0], "subject": row[0],
+                      "date": toISO(row[3]),
+                      "created_at": toISO(row[3]),
+                      "daysfromnow": 0, "event": row[1], "allreadyread": False, "description":row[2],
+                      "frequency": "never",
+                      "numOfLinesDisplay": 2}for row in
                       eventlist]
 
+
+
                     , "id": str(noti.id), "thMentor_name": accompany.name + " " + accompany.last_name,
-                 "thMentor_id": str(Apprentice.accompany_id),
+                 "thMentor_id": str(noti.accompany_id),
                  "militaryPositionNew": str(noti.militaryPositionNew)
                     , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
                  "name": str(noti.name), "last_name": str(noti.last_name),
@@ -402,11 +408,11 @@ def myPersonas():
                  "activity_score": len(reportList),
 
                  "reports":
-                     ""
+                     []
                     ,
                  "events":
 
-                     ""
+                     []
 
                     , "id": str(noti.id),
                  "thMentor": "",

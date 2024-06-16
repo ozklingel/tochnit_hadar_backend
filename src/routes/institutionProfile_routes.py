@@ -300,7 +300,7 @@ def getAll():
         owner_details = db.session.query(user1.name,user1.last_name).filter(user1.id == r.owner_id).first()
 
         my_list.append(
-            {"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
+            {"eshcol": str(r.eshcol_id),"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
              "admin_name": r.admin_name, "admin_phone": r.admin_phone,
              "name": r.name, "racaz_firstName": owner_details.name if owner_details else "no owner","racaz_lastName": owner_details.last_name if owner_details else "no owner", "logo_path": r.logo_path or "",
              "contact_phone": r.contact_phone, "address": {

@@ -39,31 +39,28 @@ def send_per_persona():
         except Exception as e:
             print(str(e))
         created_by_id = str(data['created_by_id'])
-
         personas = user1.query.filter(user1.role_id.in_(roles)).all()
         created_for_ids = [str(a.id) for a in personas]
         if type == "draft":
             created_for_ids = [str(created_by_id)]  # do not send any one
         mess_id = str(uuid.uuid1().int)[:5]
         print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
-        if icon == "INTERNAL":
-            for key in created_for_ids:
-                contact_form_1 = ContactForm(
-                    id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
-                    created_for_id=key,
-                    created_by_id=created_by_id,
-                    content=content,
-                    subject=subject,
-                    created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
-                    allreadyread=False,
-                    attachments=attachments,
-                    type=type,
-                    ent_group="",
-                    icon=icon
-                )
-                db.session.add(contact_form_1)
-            db.session.commit()
-            return jsonify({'result': 'success'}), HTTPStatus.OK
+        for key in created_for_ids:
+            contact_form_1 = ContactForm(
+                id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
+                created_for_id=key,
+                created_by_id=created_by_id,
+                content=content,
+                subject=subject,
+                created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
+                allreadyread=False,
+                attachments=attachments,
+                type=type,
+                ent_group="",
+                icon=icon
+            )
+            db.session.add(contact_form_1)
+        db.session.commit()
         if icon == "WHATSAPP":
             created_for_ids_whatapp = ["0" + a for a in created_for_ids]
             returned: List[int] = send_green_whatsapp(content, created_for_ids_whatapp)
@@ -74,7 +71,7 @@ def send_per_persona():
             created_for_ids_sms = ["0" + a for a in created_for_ids]
             sources: str = "559482844"
             return send_one_sms_019(sources=sources, recipients=created_for_ids_sms, message=content)
-        return jsonify({'result': "general error"}), HTTPStatus.BAD_REQUEST
+        return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -238,7 +235,6 @@ def get_all_messages_form():
         if correct_auth()==False:
             return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
         user = request.args.get('userId')
-        print(user)
         user_role = db.session.query(user1.role_id).filter(
             user == user1.id).first()[0]
         messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
@@ -249,10 +245,13 @@ def get_all_messages_form():
         my_dict = []
         groped_mess = []
         group_report_dict = dict()
-        print(messages_list)
         for mess in messages_list:
-            if mess.type == "יוצאות" and user_role == "0":
+            if user_role == "0" and  str(mess.created_for_id) != str(user) and  mess.icon!="INTERNAL" :
                 continue
+            if str(mess.created_by_id) != str(user):
+                mess_type="נכנסות"
+            else:
+                mess_type=mess.type
             if mess.ent_group != "":
                 if mess.ent_group + str(mess.id) in group_report_dict:
                     group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
@@ -265,7 +264,7 @@ def get_all_messages_form():
                 created_by_id = db.session.query(user1.name, user1.last_name).filter(
                     user1.id == mess.created_by_id).first()
                 my_dict.append(
-                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
+                    {"type": mess_type, "attachments": mess.attachments, "id": str(mess.id),
                      "to": [created_for_id.name + " " + created_for_id.last_name], "ent_group": "",
                      "from": created_by_id.name + " " + created_by_id.last_name,
                      "date": str(mess.created_at).replace(" ", "T"),
@@ -280,9 +279,12 @@ def get_all_messages_form():
                 created_for_id_str = created_for_id_str[:-1]
                 created_by_id = db.session.query(user1.name, user1.last_name).filter(
                     user1.id == mess.created_by_id).first()
-
+                if str(mess.created_by_id) != str(user):
+                    mess_type = "נכנסות"
+                else:
+                    mess_type = mess.type
                 my_dict.append(
-                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
+                    {"type": mess_type, "attachments": mess.attachments, "id": str(mess.id),
                      "from": created_by_id.name + " " + created_by_id.last_name,
                      "date": str(mess.created_at).replace(" ", "T"),
                      "to": [created_for_id_str],
@@ -373,52 +375,6 @@ def filter_messages():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@messegaes_form_blueprint.route('/getById', methods=['GET'])
-def get_by_id():
-    try:
-        if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
-        message_id = request.args.get('message_id')
-        print(message_id)
-        messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
-                                         ContactForm.attachments, ContactForm.type, ContactForm.icon,
-                                         ContactForm.allreadyread, ContactForm.subject, ContactForm.content,
-                                         ContactForm.ent_group, ContactForm.created_by_id) \
-            .filter(or_(ContactForm.id == message_id)).all()
-
-        my_dict = []
-        groped_mess = []
-        group_report_dict = dict()
-        print(messages_list)
-        for mess in messages_list:
-            days_from_now = (date.today() - mess.created_at).days if mess.created_at is not None else None
-            if mess.ent_group != "":
-                if mess.ent_group + str(mess.id) in group_report_dict:
-                    group_report_dict[mess.ent_group + str(mess.id)].append(str(mess.created_for_id))
-                else:
-                    group_report_dict[mess.ent_group + str(mess.id)] = [str(mess.created_for_id)]
-                groped_mess.append(mess)
-            else:
-                my_dict.append(
-                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "to": [str(mess.created_for_id)], "ent_group": "", "from": str(mess.created_by_id),
-                     "date": str(mess.created_at).replace(" ", "T"),
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
-                     "icon": mess.icon})
-
-        for mess in groped_mess:
-            if group_report_dict[mess.ent_group + str(mess.id)] != None:
-                my_dict.append(
-                    {"type": mess.type, "attachments": mess.attachments, "id": str(mess.id),
-                     "from": str(mess.created_by_id), "date": toISO(mess.created_at),
-                     "to": group_report_dict[mess.ent_group + str(mess.id)],
-                     "content": mess.content, "title": str(mess.subject), "allreadyread": str(mess.allreadyread),
-                     "ent_group": mess.ent_group,
-                     "icon": mess.icon})
-                group_report_dict[mess.ent_group + str(mess.id)] = None
-        return jsonify(my_dict[0]), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @messegaes_form_blueprint.route("/add_message_excel", methods=['put'])

@@ -217,12 +217,16 @@ def getProfileAtributes_form():
         city = db.session.query(City).filter(str(City.id) == institution_Ent.city_id).first()
         list = {"id": str(institution_Ent.id), "name": institution_Ent.name, "owner_id": institution_Ent.owner_id,
                 "contact_phone": institution_Ent.contact_phone,
-                "city": city.name if city is not None else "", "contact_name": str(institution_Ent.contact_name),
-                "phone": str(institution_Ent.phone), "address": institution_Ent.address,
+                "city": city.name if city is not None else "",
+                "contact_name": str(institution_Ent.contact_name),
+                "phone": str(institution_Ent.phone),
+                "address": institution_Ent.address,
                 "avatar": institution_Ent.logo_path if institution_Ent.logo_path is not None else 'https://www.gravatar.com/avatar',
-                "eshcol": str(institution_Ent.eshcol_id), "roshYeshiva_phone": institution_Ent.roshYeshiva_phone,
+                "eshcol": str(institution_Ent.eshcol_id),
+                "roshYeshiva_phone": institution_Ent.roshYeshiva_phone,
                 "roshYeshiva_name": institution_Ent.roshYeshiva_name,
-                "admin_phone": str(institution_Ent.admin_phone), "admin_name": institution_Ent.admin_name}
+                "admin_phone": str(institution_Ent.admin_phone),
+                "admin_name": institution_Ent.admin_name}
         return jsonify(list), HTTPStatus.OK
     else:
         return jsonify(results="no such id"), HTTPStatus.OK

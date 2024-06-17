@@ -2,6 +2,7 @@ import datetime
 from sqlalchemy import ForeignKey
 
 from src.models.models_defines import *
+from src.models.models_utils import to_iso
 from src.services import db
 
 from .city_model import City
@@ -36,21 +37,23 @@ class User(db.Model):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
 
+    def to_attributes(self, city: str, region: str, apprentice_list):
+        return {
+                "id": str(self.id),
+                "name": self.name,
+                "last_name": self.last_name,
+                "birthday": to_iso(self.birthday),
+                "email": self.email,
+                "city": city,
+                "cluster_id": region,
+                "role_ids": [int(r) for r in self.role_ids.split(",")],
+                "institution": str(self.institution_id),
+                "eshcol": str(self.eshcol),
+                "apprentices": apprentice_list,
+                "phone": str(self.id),
+                "teudatZehut": str(self.teudatZehut),
+                "photo_path": self.photo_path if self.photo_path is not None else 'https://www.gravatar.com/avatar'
+                }
 
-front_end_dict = {
-    "cluster": "eshcol"
-    , "avatar": "photo_path",
-    "region": "cluster_id",
-    "institution": "institution_id",
-    "address": "address",
-    "city_id": "city_id",
-    "date_of_birth": "birthday",
-    "email": "email",
-    "teudatZehut": "teudatZehut",
-    "role": "role_ids",
-    "last_name": "last_name",
-    "firstName": "name",
-    "city": "city",
-
-}

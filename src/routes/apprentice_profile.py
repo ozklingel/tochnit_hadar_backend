@@ -2,11 +2,12 @@ import boto3
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from openpyxl.reader.excel import load_workbook
-from datetime import datetime, date
+from datetime import date
 import config
 
 from src.services import db
 from config import AWS_secret_access_key, AWS_access_key_id
+from src.models.models_utils import to_iso
 from src.models.apprentice_model import Apprentice, front_end_dict
 from src.models.base_model import Base
 from src.models.city_model import City
@@ -286,13 +287,6 @@ def add_apprentice_excel():
     return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
 
 
-def toISO(d):
-    if d:
-        return datetime(d.year, d.month, d.day).isoformat()
-    else:
-        return None
-
-
 @apprentice_profile_form_blueprint.route('/maps_apprentices', methods=['GET'])
 def maps_apprentices():
     try:
@@ -373,7 +367,7 @@ def maps_apprentices():
                     "activity_score": len(reportList),
                     "reports": [str(i[0]) for i in [tuple(row) for row in reportList]],
                     "events":
-                        [{"id": str(row[0]), "title": row[1], "description": row[2], "date": toISO(row[3])} for row in
+                        [{"id": str(row[0]), "title": row[1], "description": row[2], "date": to_iso(row[3])} for row in
                          eventlist],
                     "id": str(noti.id), "thMentor": str(noti.accompany_id),
                     "militaryPositionNew": str(noti.militaryPositionNew),
@@ -383,13 +377,13 @@ def maps_apprentices():
                     "serve_type": noti.serve_type,
                     "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
                     "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
-                    "birthday": toISO(noti.birthday), "marriage_date": toISO(noti.marriage_date),
+                    "birthday": to_iso(noti.birthday), "marriage_date": to_iso(noti.marriage_date),
                     "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
                     "unit_name": noti.unit_name,
                     "matsber": str(noti.spirit_status),
-                    "militaryDateOfDischarge": toISO(noti.release_date),
-                    "militaryDateOfEnlistment": toISO(noti.recruitment_date)
-                    , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
+                    "militaryDateOfDischarge": to_iso(noti.release_date),
+                    "militaryDateOfEnlistment": to_iso(noti.recruitment_date)
+                    , "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
                     "militaryPositionOld": noti.militaryPositionOld,
                     "educationalInstitution": noti.educationalinstitution,
                     "educationFaculty": noti.educationfaculty,

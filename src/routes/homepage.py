@@ -327,12 +327,3 @@ def get_closest_Events():
         return jsonify(my_dict), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
-def toISO(d):
-    if d:
-        Date = d.split(".")
-        print(d)
-        return datetime(int(Date[2]), int(Date[0]), int(Date[1])).isoformat()
-    else:
-        return None

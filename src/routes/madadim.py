@@ -10,6 +10,7 @@ from sqlalchemy import func, or_
 
 import config
 from src.models.madadim_setting_model import MadadimSetting
+from src.models.models_utils import to_iso
 from src.routes.homepage import get_melave_score, get_mosad_Coordinators_score, get_Eshcol_corrdintors_score
 from src.services import db
 from src.models.apprentice_model import Apprentice
@@ -18,7 +19,7 @@ from src.models.institution_model import Institution
 from src.models.system_report_model import SystemReport
 from src.models.user_model import User
 from src.models.report_model import Report
-from src.routes.user_profile import toISO, correct_auth
+from src.routes.user_profile import correct_auth
 
 madadim_form_blueprint = Blueprint('madadim', __name__, url_prefix='/madadim')
 
@@ -776,7 +777,7 @@ def mosadCoordinator(mosadCoordinator="empty",external=True):
             'avg_apprenticeCall_gap': total_avg_call,
             'avg_apprenticeMeeting_gap': total_avg_meet,
             'avg_groupMeeting_gap': total_avg_groupmeet,
-            "visitDoForBogrim_list": [{"visit_date": toISO(row[0]), "title": row[1], "description": row[2],
+            "visitDoForBogrim_list": [{"visit_date": to_iso(row[0]), "title": row[1], "description": row[2],
                                        "daysFromNow": (date.today() - row[0]).days} for row in visitDoForBogrim],
             'forgotenApprentice_full_details': forgotenApprentice_full_details,
             'MelavimMeeting_todo': numOfQuarter_passed * 3,

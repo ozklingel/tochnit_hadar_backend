@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
+from src.models.models_utils import to_iso
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
@@ -13,7 +14,7 @@ from src.models.cluster_model import Cluster
 from src.models.contact_form_model import ContactForm
 from src.models.institution_model import Institution
 from src.models.notification_model import Notification
-from src.models.user_model import User, front_end_dict
+from src.models.user_model import User
 from src.models.report_model import Report
 
 from src.routes.apprentice_profile import visit_gap_color
@@ -52,7 +53,6 @@ def delete():
 
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
-    # get tasksAndEvents
     try:
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
@@ -78,7 +78,7 @@ def update():
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
-                setattr(updatedEnt, front_end_dict[key], data[key])
+                setattr(updatedEnt, key, data[key])
 
         db.session.commit()
         if updatedEnt:
@@ -103,14 +103,7 @@ def getProfileAtributes_form():
             regionName = db.session.query(Cluster.name).filter(Cluster.id == city.cluster_id).first()
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            list = {"id": str(userEnt.id), "firstName": userEnt.name, "lastName": userEnt.last_name,
-                    "date_of_birth": toISO(userEnt.birthday), "email": userEnt.email,
-                    "city": city.name, "region": str(regionName[0]),
-                    "role": [int(r) for r in userEnt.role_ids.split(",")], "institution": str(userEnt.institution_id),
-                    "cluster": str(userEnt.eshcol),
-                    "apprentices": myApprenticesNamesList, "phone": str(userEnt.id),
-                    "teudatZehut": str(userEnt.teudatZehut),
-                    "avatar": userEnt.photo_path if userEnt.photo_path is not None else 'https://www.gravatar.com/avatar'}
+            list = userEnt.to_attributes(city.name, str(regionName[0]), myApprenticesNamesList)
             return jsonify(list), HTTPStatus.OK
         else:
             return jsonify(results="no such id"), HTTPStatus.OK
@@ -218,13 +211,6 @@ def add_user_manual():
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
-def toISO(d):
-    if d:
-        return datetime(d.year, d.month, d.day).isoformat()
-    else:
-        return None
-
-
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
 def myPersonas():
     try:
@@ -319,8 +305,8 @@ def myPersonas():
                      [str(i[0]) for i in [tuple(row) for row in reportList]]
                     ,
                  "events": [{"id": row[0], "subject": row[0],
-                      "date": toISO(row[3]),
-                      "created_at": toISO(row[3]),
+                      "date": to_iso(row[3]),
+                      "created_at": to_iso(row[3]),
                       "daysfromnow": 0, "event": row[1], "allreadyread": False, "description":row[2],
                       "frequency": "never",
                       "numOfLinesDisplay": 2}for row in
@@ -337,13 +323,13 @@ def myPersonas():
                  "serve_type": noti.serve_type,
                  "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
                  "phone": str(noti.id), "email": noti.email, "teudatZehut": noti.teudatZehut,
-                 "birthday": toISO(noti.birthday) if noti.birthday else "", "marriage_date": toISO(noti.marriage_date),
+                 "birthday": to_iso(noti.birthday) if noti.birthday else "", "marriage_date": to_iso(noti.marriage_date),
                  "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
                  "unit_name": noti.unit_name,
                  "matsber": str(noti.spirit_status),
-                 "militaryDateOfDischarge": toISO(noti.release_date),
-                 "militaryDateOfEnlistment": toISO(noti.recruitment_date)
-                    , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
+                 "militaryDateOfDischarge": to_iso(noti.release_date),
+                 "militaryDateOfEnlistment": to_iso(noti.recruitment_date)
+                    , "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
                  "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
                     , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
                  "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,

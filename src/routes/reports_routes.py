@@ -8,6 +8,7 @@ import arrow as arrow
 from sqlalchemy import or_
 
 import config
+from src.models.models_utils import to_iso
 from .search_ent import filter_by_request
 from .user_profile import correct_auth
 from ..models.apprentice_model import Apprentice
@@ -99,7 +100,7 @@ def getAll_reports_form():
                 reported_name_str += reported_name.name + " " + reported_name.last_name + ","
             my_dict.append(
                 {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
-                 "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
+                 "date": to_iso(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
                  "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.description),
                  "attachments": noti.attachments})
         #add my personas reports:
@@ -138,7 +139,7 @@ def getAll_reports_form():
                     reported_name_str += reported_name.name + " " + reported_name.last_name + ","
                 my_dict.append(
                     {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
-                     "date": toISO(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
+                     "date": to_iso(noti.visit_date), "creation_date": str(noti.created_at), "ent_group": noti.ent_group,
                      "title": str(noti.title), "allreadyread": str(noti.allreadyread),
                      "description": str(noti.description),
                      "attachments": noti.attachments})
@@ -146,13 +147,6 @@ def getAll_reports_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
-def toISO(d):
-    if d:
-        return datetime(d.year, d.month, d.day).isoformat()
-    else:
-        return None
 
 
 @reports_form_blueprint.route('/delete', methods=['POST'])

@@ -13,7 +13,8 @@ from .utils.notification_details import GROUP_MEET_DETAILS, PERSONAL_MEET_DETAIL
     PERSONAL_CALL_DETAILS, BIRTHDAY_DETAILS, MELAVIM_LOW_SCORE_DETAILS, MATZBAR_DETAILS, DO_FOR_BOGRIM_DETAILS, \
     YESHIVAT_MELAVIM_DETAILS, FORGOTTEN_APPRENTICE_DETAILS, LOW_SCORE_MOSDOT_DETAILS, MOSAD_ESCHOL_MEETING_DETAILS
 from .madadim import melave_score, mosad_score
-from .user_profile import toISO, correct_auth
+from .user_profile import correct_auth
+from src.models.models_utils import to_iso
 from ..models.apprentice_model import Apprentice
 from ..models.institution_model import Institution
 from ..models.user_model import User
@@ -534,7 +535,7 @@ def getAll_notification_form(isExternal=True):
         if noti.numoflinesdisplay == 2:
             my_dict.append(
                 {"id": str(noti.id), "subject": apprenticeids,
-                 "date": toISO(noti.date), "created_at": str(noti.created_at),
+                 "date": to_iso(noti.date), "created_at": str(noti.created_at),
                  "daysfromnow": daysFromNow, "event": noti.event.strip(), "allreadyread": noti.allreadyread,
                  "description": noti.details, "frequency": noti.frequency if noti.frequency is not None else "never",
                  "numOfLinesDisplay": noti.numoflinesdisplay})
@@ -544,7 +545,7 @@ def getAll_notification_form(isExternal=True):
             if gap <= 7:
                 my_dict.append(
                     {"id": str(noti.id), "subject": str(noti.subject),
-                     "date": toISO(noti.date), "created_at": str(noti.created_at),
+                     "date": to_iso(noti.date), "created_at": str(noti.created_at),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
                      "allreadyread": noti.allreadyread,
                      "frequency": noti.frequency if noti.frequency is not None else "never",
@@ -555,7 +556,7 @@ def getAll_notification_form(isExternal=True):
             if (is_shabat and daysFromNow == -2) or daysFromNow == -1:
                 my_dict.append(
                     {"id": str(noti.id), "subject": str(noti.subject),
-                     "date": toISO(noti.date), "created_at": str(noti.created_at),
+                     "date": to_iso(noti.date), "created_at": str(noti.created_at),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
                      "allreadyread": noti.allreadyread, "frequency": noti.frequency,
                      "numOfLinesDisplay": noti.numoflinesdisplay, })
@@ -566,7 +567,7 @@ def getAll_notification_form(isExternal=True):
                 noti.details = noti.event.strip() if noti.details is None else noti.details.strip()
                 my_dict.append(
                     {"id": str(noti.id), "subject": str(noti.subject),
-                     "date": toISO(noti.date), "created_at": str(noti.created_at),
+                     "date": to_iso(noti.date), "created_at": str(noti.created_at),
                      "daysfromnow": daysFromNow, "event": noti.event.strip(), "description": noti.details,
                      "allreadyread": noti.allreadyread,
                      "frequency": noti.frequency if noti.frequency is not None else "never",

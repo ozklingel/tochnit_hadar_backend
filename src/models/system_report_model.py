@@ -3,7 +3,7 @@ from src.services import db
 
 
 class SystemReport(db.Model):
-    __tablename__ = "system_report"
+    __tablename__ = "system_report_old"
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     creation_date = db.Column("creation_date", db.DateTime, nullable=False)

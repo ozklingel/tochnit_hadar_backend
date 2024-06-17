@@ -6,7 +6,7 @@ from src.models.models_defines import CITIES_TBL, CLUSTER_ID_COL, CLUSTERS_TBL, 
 
 
 class City(db.Model):
-    __tablename__ = CITIES_TBL
+    __tablename__ = CITIES_TBL + "_old"
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     name = db.Column(NAME_COL, db.String(50), nullable=False)

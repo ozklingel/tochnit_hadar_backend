@@ -7,7 +7,7 @@ from src.services import db
 
 
 class Institution(db.Model):
-    __tablename__ = INSTITUTIONS_TBL
+    __tablename__ = INSTITUTIONS_TBL + "_old"
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False, default="")

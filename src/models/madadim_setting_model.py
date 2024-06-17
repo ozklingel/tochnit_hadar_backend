@@ -3,7 +3,7 @@ from src.services import db
 
 # דיוחחים על משתמש או חניך
 class MadadimSetting(db.Model):
-    __tablename__ = "madadim_setting"
+    __tablename__ = "madadim_setting_old"
 
     professionalMeet_madad_date = db.Column("professionalmeet_madad_date", db.DateTime, nullable=False)
     matzbarmeet_madad_date = db.Column("matzbarmeet_madad_date", db.DateTime, nullable=False)

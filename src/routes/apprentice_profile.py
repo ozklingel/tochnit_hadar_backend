@@ -286,129 +286,6 @@ def add_apprentice_excel():
     return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
 
 
-@apprentice_profile_form_blueprint.route('/myApprentices', methods=['GET'])
-def ZNOTINUSE_getmyApprentices_form():
-    try:
-        created_by_id = request.args.get('userId')
-        print(created_by_id)
-        apprenticeList = []
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
-            User.id == created_by_id).first()
-        if "0" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
-        if "1" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(
-                Apprentice.institution_id == user1ent.institution_id).all()
-        if "2" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
-
-        my_dict = []
-
-        for noti in apprenticeList:
-            call_status = visit_gap_color(config.call_report, noti, 30, 15)
-            personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
-            Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
-            print(noti.city_id)
-            city = db.session.query(City).filter(City.id == noti.city_id).first()
-            print(city)
-            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
-            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
-                                         Notification.date).filter(
-                Notification.subject == str(noti.id),
-                Notification.numoflinesdisplay == 3).all()
-            base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
-            base_id = base_id[0] if base_id else 0
-            my_dict.append(
-                {"Horim_status": Horim_status,
-                 "personalMeet_status": personalMeet_status,
-                 "call_status": call_status,
-                 "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
-                    , "highSchoolRavMelamed_name": noti.high_school_teacher,
-                 "highSchoolRavMelamed_email": noti.high_school_teacher_email,
-
-                 "thRavMelamedYearA_name": noti.teacher_grade_a,
-                 "thRavMelamedYearA_phone": noti.teacher_grade_a_phone,
-                 "thRavMelamedYearA_email": noti.teacher_grade_a_email,
-
-                 "thRavMelamedYearB_name": noti.teacher_grade_b,
-                 "thRavMelamedYearB_phone": noti.teacher_grade_b_phone,
-                 "thRavMelamedYearB_email": noti.teacher_grade_b_email,
-                 "address": {
-                     "country": "IL",
-                     "city": city.name if city else "",
-                     "cityId": str(noti.city_id),
-                     "street": noti.address,
-                     "houseNumber": "1",
-                     "apartment": "1",
-                     "region": str(city.cluster_id) if city else "",
-                     "entrance": "a",
-                     "floor": "1",
-                     "postalCode": "12131",
-                     "lat": 32.04282620026557,  # no need city cord
-                     "lng": 34.75186193813887
-                 },
-                 "contact1_first_name": noti.contact1_first_name,
-                 "contact1_last_name": noti.contact1_last_name,
-                 "contact1_phone": noti.contact1_phone,
-                 "contact1_email": noti.contact1_email,
-                 "contact1_relation": noti.contact1_relation,
-                 "contact2_first_name": noti.contact2_first_name,
-                 "contact2_last_name": noti.contact2_last_name,
-                 "contact2_phone": noti.contact2_phone,
-                 "contact2_email": noti.contact2_email,
-                 "contact2_relation": noti.contact2_relation,
-                 "contact3_first_name": noti.contact3_first_name,
-                 "contact3_last_name": noti.contact3_last_name,
-                 "contact3_phone": noti.contact3_phone,
-                 "contact3_email": noti.contact3_email,
-                 "contact3_relation": noti.contact3_relation,
-                 "activity_score": len(reportList),
-
-                 "reports":
-                     [str(i[0]) for i in [tuple(row) for row in reportList]]
-                    ,
-                 "events":
-
-                     [{"id": str(row[0]), "title": row[1], "description": row[2], "date": toISO(row[3])} for row in
-                      eventlist]
-
-                    , "id": str(noti.id), "thMentor": str(noti.accompany_id),
-                 "militaryPositionNew": str(noti.militaryPositionNew)
-                    , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                 "name": str(noti.name), "last_name": str(noti.last_name),
-                 "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
-                 "serve_type": noti.serve_type,
-                 "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
-                 "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
-                 "birthday": toISO(noti.birthday), "marriage_date": toISO(noti.marriage_date),
-                 "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
-                 "unit_name": noti.unit_name,
-                 "matsber": str(noti.spirit_status),
-                 "militaryDateOfDischarge": toISO(noti.release_date),
-                 "militaryDateOfEnlistment": toISO(noti.recruitment_date)
-                    , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
-                 "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
-                    , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,
-                 "paying": noti.paying
-
-                 })
-
-        if apprenticeList is None:
-            # acount not found
-            return jsonify({"result": "Wrong id"})
-        if apprenticeList == []:
-            # acount not found
-            return jsonify([])
-        else:
-            # print(f' notifications: {my_dict}]')
-            # TODO: get Noti form to DB
-            return jsonify(my_dict), HTTPStatus.OK
-            # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
-
-
 def toISO(d):
     if d:
         return datetime(d.year, d.month, d.day).isoformat()
@@ -451,11 +328,12 @@ def maps_apprentices():
             base_id = base_id[0] if base_id else 0
             my_dict.append(
                 {
-                    "accompany_id": str(noti.accompany_id), "Horim_status": Horim_status,
+                    "accompany_id": str(noti.accompany_id),
+                    "Horim_status": Horim_status,
                     "personalMeet_status": personalMeet_status,
                     "call_status": call_status,
-                    "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
-                    , "highSchoolRavMelamed_name": noti.high_school_teacher,
+                    "highSchoolRavMelamed_phone": noti.high_school_teacher_phone,
+                    "highSchoolRavMelamed_name": noti.high_school_teacher,
                     "highSchoolRavMelamed_email": noti.high_school_teacher_email,
                     "thRavMelamedYearA_name": noti.teacher_grade_a,
                     "thRavMelamedYearA_phone": noti.teacher_grade_a_phone,
@@ -493,18 +371,13 @@ def maps_apprentices():
                     "contact3_email": noti.contact3_email,
                     "contact3_relation": noti.contact3_relation,
                     "activity_score": len(reportList),
-
-                    "reports":
-                        [str(i[0]) for i in [tuple(row) for row in reportList]]
-                    ,
+                    "reports": [str(i[0]) for i in [tuple(row) for row in reportList]],
                     "events":
-
                         [{"id": str(row[0]), "title": row[1], "description": row[2], "date": toISO(row[3])} for row in
-                         eventlist]
-
-                    , "id": str(noti.id), "thMentor": str(noti.accompany_id),
-                    "militaryPositionNew": str(noti.militaryPositionNew)
-                    , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
+                         eventlist],
+                    "id": str(noti.id), "thMentor": str(noti.accompany_id),
+                    "militaryPositionNew": str(noti.militaryPositionNew),
+                    "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
                     "name": str(noti.name), "last_name": str(noti.last_name),
                     "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
                     "serve_type": noti.serve_type,
@@ -518,8 +391,9 @@ def maps_apprentices():
                     "militaryDateOfEnlistment": toISO(noti.recruitment_date)
                     , "militaryUpdatedDateTime": toISO(noti.militaryupdateddatetime),
                     "militaryPositionOld": noti.militaryPositionOld,
-                    "educationalInstitution": noti.educationalinstitution
-                    , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
+                    "educationalInstitution": noti.educationalinstitution,
+                    "educationFaculty": noti.educationfaculty,
+                    "workOccupation": noti.workoccupation,
                     "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,
                     "paying": noti.paying
 

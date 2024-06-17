@@ -82,8 +82,8 @@ class Apprentice(db.Model):
 front_end_dict = {
     "address": "address",
 
-    "highSchoolRavMelamed_phone": "high_school_teacher_phone"
-    , "highSchoolRavMelamed_name": "high_school_teacher",
+    "highSchoolRavMelamed_phone": "high_school_teacher_phone",
+    "highSchoolRavMelamed_name": "high_school_teacher",
     "highSchoolRavMelamed_email": "high_school_teacher_email",
 
     "thRavMelamedYearA_name": "teacher_grade_a",
@@ -111,8 +111,8 @@ front_end_dict = {
     "contact3_relation": "contact3_relation",
     "activity_score": "reportList",
     "id": "id",
-    "militaryPositionNew": "militaryPositionNew"
-    , "avatar": "photo_path",
+    "militaryPositionNew": "militaryPositionNew",
+    "avatar": "photo_path",
     "name": "name",
     "last_name": "last_name",
     "institution_id": "institution_id",
@@ -130,11 +130,11 @@ front_end_dict = {
     "militaryUnit": "unit_name",
     "matsber": "spirit_status",
     "militaryDateOfDischarge": "release_date",
-    "militaryDateOfEnlistment": "recruitment_date"
-    , "militaryUpdatedDateTime": "militaryupdateddatetime",
+    "militaryDateOfEnlistment": "recruitment_date",
+    "militaryUpdatedDateTime": "militaryupdateddatetime",
     "militaryPositionOld": "militaryPositionOld",
-    "educationalInstitution": "educationalinstitution"
-    , "educationFaculty": "educationfaculty",
+    "educationalInstitution": "educationalinstitution", 
+    "educationFaculty": "educationfaculty",
     "workOccupation": "workoccupation",
     "workType": "worktype",
     "workPlace": "workplace",

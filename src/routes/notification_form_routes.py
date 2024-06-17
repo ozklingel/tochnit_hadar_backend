@@ -1,7 +1,7 @@
 from datetime import datetime as dt, date, timedelta
 
 import arrow as arrow
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
 from hebrew import Hebrew
@@ -13,7 +13,7 @@ import config
 from .utils.notification_details import GROUP_MEET_DETAILS, PERSONAL_MEET_DETAILS, BASIS_VISIT_DETAILS, EVENT_DETAILS, \
     PERSONAL_CALL_DETAILS, BIRTHDAY_DETAILS, MELAVIM_LOW_SCORE_DETAILS, MATZBAR_DETAILS, DO_FOR_BOGRIM_DETAILS, \
     YESHIVAT_MELAVIM_DETAILS, FORGOTTEN_APPRENTICE_DETAILS, LOW_SCORE_MOSDOT_DETAILS, MOSAD_ESCHOL_MEETING_DETAILS
-from .madadim import mosad_Coordinators_score, melave_score, mosad_score
+from .madadim import melave_score, mosad_score
 from .user_profile import toISO, correct_auth
 from ..models.apprentice_model import Apprentice
 from ..models.institution_model import Institution
@@ -806,91 +806,3 @@ def updateTask():
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
-
-# @notification_form_blueprint.route('/add_frequenced_notification', methods=['POST'])
-# def add_frequenced_notification():
-#     if correct_auth() == False:
-#         return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-#     notiList = db.session.query(notifications).filter(notifications.frequency != "never").all()
-#     my_dict = []
-#     for noti in notiList:
-#         daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
-#         if noti.frequency == "daily" and daysFromNow == 1:
-#             notification1 = notifications(
-#                 userid=noti.userid,
-#                 subject=str(noti.apprenticeid),
-#                 event=noti.event,
-#                 date=toISO(noti.date + datetime.timedelta(days=1)),
-#                 allreadyread=False,
-#                 numoflinesdisplay=2,
-#                 id=int(str(uuid.uuid4().int)[:5])
-#
-#             )
-#         if noti.frequency == "weekly" and daysFromNow == 7:
-#             notification1 = notifications(
-#                 userid=noti.userid,
-#                 apprenticeid=noti.apprenticeid,
-#                 event=noti.event,
-#                 date=toISO(noti.date + datetime.timedelta(days=7)),
-#                 allreadyread=False,
-#                 numoflinesdisplay=2,
-#                 id=int(str(uuid.uuid4().int)[:5])
-#
-#             )
-#             if noti.frequency == "monthly" and daysFromNow == 30:
-#                 notification1 = notifications(
-#                     userid=noti.userid,
-#                     apprenticeid=noti.apprenticeid,
-#                     event=noti.event,
-#                     date=toISO(noti.date + 30),
-#                     allreadyread=False,
-#                     numoflinesdisplay=2,
-#                     id=int(str(uuid.uuid4().int)[:5])
-#
-#                 )
-#                 if noti.frequency == "yearly" and daysFromNow == 365:
-#                     notification1 = notifications(
-#                         userid=noti.userid,
-#                         apprenticeid=noti.apprenticeid,
-#                         event=noti.event,
-#                         date=toISO(noti.date + 365),
-#                         allreadyread=False,
-#                         numoflinesdisplay=2,
-#                         id=int(str(uuid.uuid4().int)[:5])
-#
-#                     )
-#             db.session.add(notification1)
-#     try:
-#         db.session.commit()
-#         return jsonify({'result': 'success'}), HTTPStatus.OK
-#     except Exception:
-#         return jsonify({'result': str(Exception)}), HTTPStatus.BAD_REQUEST
-
-
-import datetime
-import sqlalchemy as sa
-
-
-def age_years_at(sa_col, next_days: int = 0):
-    """
-    Generates a postgresql specific statement to return 'age' (in years)'
-    from an provided field either today (next_days == 0) or with the `next_days` offset.
-    """
-    stmt = func.age(
-        (sa_col - sa.func.cast(datetime.timedelta(next_days), sa.Interval))
-        if next_days != 0
-        else sa_col
-    )
-    stmt = func.date_part("year", stmt)
-    return stmt
-
-
-def has_birthday_next_days(sa_col, next_days: int = 0):
-    """
-    sqlalchemy expression to indicate that an sa_col (such as`User.birthday`)
-    has anniversary within next `next_days` days.
-
-    It is implemented by simply checking if the 'age' of the person (in years)
-    has changed between today and the `next_days` date.
-    """
-    return age_years_at(sa_col, next_days) > age_years_at(sa_col)

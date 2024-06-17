@@ -333,49 +333,6 @@ def delete_ent():
         return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
 
 
-@messages_form_blueprint.route("/filter_to", methods=['GET'])
-def filter_to():
-    try:
-        if correct_auth()==False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-        users, apprentice, ent_group_dict = filter_by_request(request)
-        ent_group_concat = ""
-        if apprentice != [] or users != []:
-            ent_group_concat = ", ".join(ent_group_dict.values())
-        result = set(users + apprentice)
-
-        return jsonify({"filtered": [str(row) for row in result],
-                        "ent_group": ent_group_concat
-                        }
-                       ), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
-@messages_form_blueprint.route("/filter_meesages", methods=['GET'])
-def filter_messages():
-    try:
-        if correct_auth()==False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-        users, apprentice, ent_group_dict = filter_by_request(request)
-        mess_user = db.session.query(ContactForm.id).filter(
-            or_(ContactForm.created_by_id.in_(users), ContactForm.created_for_id.in_(users))).all()
-        # reports_apprentice=db.session.query(ContactForm.id).filter(ContactForm.created_for_id.in_(apprentice)).all()
-        # ent_group_concat=", ".join(ent_group_dict.values())
-        # mess_ent_group=db.session.query(ContactForm.id).filter(ContactForm.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
-        users_mess = [str(i[0]) for i in [tuple(row) for row in mess_user]]
-        # apprentice_mess=[str(i[0]) for i in [tuple(row) for row in reports_apprentice]]
-        # ent_group_mess=[str(i[0]) for i in [tuple(row) for row in mess_ent_group]]
-        result = users_mess  # set(ent_group_mess+users_mess)
-        print(result)
-        return jsonify([str(row) for row in result]
-                       ), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
-
-
 @messages_form_blueprint.route("/add_message_excel", methods=['put'])
 def add_message_excel():
     if correct_auth() == False:

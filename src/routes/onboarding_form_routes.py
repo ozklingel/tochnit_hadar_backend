@@ -127,32 +127,6 @@ def upload_CitiesDB():
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
-
-@onboarding_form_blueprint.route('/getOTP_whatsapp_twillo', methods=['GET'])
-def getOTP_whatsapp_twillo():
-    try:
-        created_by_phone = request.args.get('created_by_phone')
-
-        print(created_by_phone)
-        # Find your Account SID and Auth Token at twilio.com/console
-        # and set the environment variables. See http://twil.io/secure
-        account_sid = "AC7e7b44337bff9de0cb3702ad5e23e1e8"
-        auth_token = "61caa0e3ab00c4d8928e97fdad1a8d52"
-        verify_sid = "VA280c3b665cf155bb76e5bc77bb5c750a"
-
-        client = Client(account_sid, auth_token)
-        created_by_phone = "+972" + created_by_phone
-        verification = client.verify.v2.services(verify_sid) \
-            .verifications \
-            .create(to=created_by_phone, channel="whatsapp")
-        if verification.sid is None:
-            return jsonify({"result": "error"}), HTTPStatus.OK
-        print(verification.sid)
-        return jsonify({"result": "success"}), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
 @onboarding_form_blueprint.route('/verifyOTP_whatsapp', methods=['GET'])
 def verifyOTP_twilo():
     account_sid = "AC7e7b44337bff9de0cb3702ad5e23e1e8"

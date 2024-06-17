@@ -1,5 +1,5 @@
 import datetime
-from datetime import datetime, date
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
@@ -69,32 +69,6 @@ def add_reports_form():
     except Exception as e:
         return jsonify({'result': 'error' + str(e)}), HTTPStatus.BAD_REQUEST
     return jsonify({'result': "success"}), HTTPStatus.OK
-
-
-@reports_form_blueprint.route('/getById', methods=['GET'])
-def getById():
-    try:
-        if correct_auth()==False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-        report_id = request.args.get('report_id')
-        user = request.args.get('userId')
-        print(report_id)
-        reportList = db.session.query(Report.id, Report.ent_reported, Report.ent_group, Report.note, Report.visit_date,
-                                      Report.title, Report.description, Report.attachments, Report.allreadyread).filter(
-            Report.id == report_id, Report.user_id == user).all()
-        print(reportList)
-        if reportList:
-            reportIDs = [str(r[0]) for r in reportList]
-            noti = reportList[0]
-            return jsonify(
-                {"id": str(noti.id), "reported_on": [str(noti.ent_reported)], "date": toISO(noti.visit_date),
-                 "ent_group": "",
-                 "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.note),
-                 "attachments": noti.attachments}), HTTPStatus.OK
-            # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
-        return jsonify([])
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
 @reports_form_blueprint.route('/getAll', methods=['GET'])
@@ -172,25 +146,6 @@ def getAll_reports_form():
         # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
-
-
-@reports_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_report_form():
-    if correct_auth() == False:
-        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-    data = request.json
-    report_id = data['report_id']
-    print(report_id)
-    try:
-        num_rows_updated = Report.query.filter_by(id=report_id).update(dict(allreadyread=True))
-        db.session.commit()
-
-        if report_id:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
-            # TODO: add contact form to DB
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-    except:
-        return jsonify({'result': 'wrong id'}), HTTPStatus.OK
 
 
 def toISO(d):

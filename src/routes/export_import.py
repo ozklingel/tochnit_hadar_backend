@@ -442,8 +442,8 @@ def monthly():
         # export_lowScoreApprentice_mosad
         export_lowScoreApprentice_mosad_csv = import_lowScoreApprentice_mosad("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="lowScoreApprentice_mosad",
             value=export_lowScoreApprentice_mosad_csv,
             creation_date=date.today(),
@@ -453,8 +453,8 @@ def monthly():
         # export_Eshcol_corrdintors_score
         export_Eshcol_corrdintors_score_csv = import_Eshcol_corrdintors_score("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="Eshcol_corrdintors_score",
             value=export_Eshcol_corrdintors_score_csv,
             creation_date=date.today(),
@@ -464,8 +464,8 @@ def monthly():
         # export_forgoten_mosad
         export_forgoten_mosad_csv = import_forgoten_mosad("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="forgoten_mosad",
             value=export_forgoten_mosad_csv,
             creation_date=date.today(),
@@ -475,8 +475,8 @@ def monthly():
         # export_forgoten_Tohnit
         export_forgoten_Tohnit_csv = import_forgoten_Tohnit("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="forgoten_Tohnit",
             value=export_forgoten_Tohnit_csv,
             creation_date=date.today(),
@@ -485,8 +485,8 @@ def monthly():
         # export_melave_corrdintors_score
         export_melave_corrdintors_score_csv = import_melave_corrdintors_score("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="melave_corrdintors_score",
             value=export_melave_corrdintors_score_csv,
             creation_date=date.today(),
@@ -496,8 +496,8 @@ def monthly():
         # export_lowScoreApprentice_tohnit_csv
         export_mosad_melavim_cnt_csv = import_mosad_melavim_cnt("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="mosad_melavim_cnt",
             value=export_mosad_melavim_cnt_csv,
             creation_date=date.today(),
@@ -507,8 +507,8 @@ def monthly():
         # export_mosad_corrdintors_score
         export_mosad_corrdintors_score_csv = import_mosad_corrdintors_score("local")
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
-            related_id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
+            related_id=0,
             type="mosad_corrdintors_score",
             value=export_mosad_corrdintors_score_csv,
             creation_date=date.today(),
@@ -524,7 +524,7 @@ def monthly():
             print("asd",md.melave_score(melaveId))
             melave_score1, call_gap_avg, meet_gap_avg,group_meeting_gap_avg = md.melave_score(melaveId)
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type=melave_Score,
                 value=melave_score1,
@@ -532,7 +532,7 @@ def monthly():
             )
             db.session.add(system_report1)
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type=visitcalls_melave_avg,
                 value=call_gap_avg,
@@ -540,7 +540,7 @@ def monthly():
             )
             db.session.add(system_report1)
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type=visitmeets_melave_avg,
                 value=meet_gap_avg,
@@ -555,7 +555,7 @@ def monthly():
                 res = md.mosadCoordinator(mosadCoord_id,False)[0].json
 
                 system_report1 = SystemReport(
-                    id=uuid.uuid4(),
+                    id=int(str(uuid.uuid4().int)[:5]),
                     related_id=mosadCoord_id,
                     type=visitcalls_melave_avg,
                     value=res['avg_apprenticeCall_gap'],
@@ -563,7 +563,7 @@ def monthly():
                 )
                 db.session.add(system_report1)
                 system_report1 = SystemReport(
-                    id=uuid.uuid4(),
+                    id=int(str(uuid.uuid4().int)[:5]),
                     related_id=mosadCoord_id,
                     type=visitmeets_melave_avg,
                     value=res['avg_apprenticeMeeting_gap'],
@@ -599,7 +599,7 @@ def rivony():
                                                                        Report.title == professional_report,
                                                                        Report.visit_date > start_Of_Rivon).all()
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
             type=proffesionalMeet_presence,
             value=len(newvisit_professional),
@@ -617,7 +617,7 @@ def rivony():
                 Apprentice_ids_forgoten.remove(i[0])
 
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
             related_id=melaveId,
             type=forgotenApprentice_cnt,
             value=len(Apprentice_ids_forgoten),
@@ -644,7 +644,7 @@ def rivony():
                 Apprentice_ids_forgoten.remove(i[0])
 
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
             related_id=mosadCoord_id,
             type=forgotenApprentice_cnt,
             value=len(Apprentice_ids_forgoten),
@@ -670,7 +670,7 @@ def rivony():
                 Apprentice_ids_forgoten.remove(i[0])
 
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
             related_id=eshcolCoord_id,
             type=forgotenApprentice_cnt,
             value=len(Apprentice_ids_forgoten),
@@ -693,7 +693,7 @@ def yearly():
     all_Apprentices = db.session.query(Apprentice.spirit_status, Apprentice.id).all()
     for apprentice1 in all_Apprentices:
         system_report1 = SystemReport(
-            id=uuid.uuid4(),
+            id=int(str(uuid.uuid4().int)[:5]),
             related_id=apprentice1.id,
             type="spirit_status",
             value=apprentice1.spirit_status,
@@ -713,7 +713,7 @@ def yearly():
                                   Report.visit_date > start_Of_year).first()
         if cenes_yearly:
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type=cenes_presence,
                 value=100,
@@ -725,7 +725,7 @@ def yearly():
                                        Report.visit_date > start_Of_year).all()
         if Horim_meeting:
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type=horim_meeting,
                 value=Horim_meeting,
@@ -743,7 +743,7 @@ def yearly():
         if base_meeting > 2:
             base_meeting_score += 10
             system_report1 = SystemReport(
-                id=uuid.uuid4(),
+                id=int(str(uuid.uuid4().int)[:5]),
                 related_id=melaveId,
                 type="base_meeting",
                 value=2,

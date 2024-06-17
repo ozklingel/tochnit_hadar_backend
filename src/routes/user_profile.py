@@ -11,7 +11,7 @@ from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
-from src.models.message_model import Message
+from src.models.contact_form_model import ContactForm
 from src.models.institution_model import Institution
 from src.models.notification_model import Notification
 from src.models.user_model import User
@@ -32,8 +32,8 @@ def delete():
         userId = data['userId']
         updatedEnt = User.query.get(userId)
         if updatedEnt:
-            db.session.query(Message).filter(Message.created_for_id == userId, ).delete()
-            db.session.query(Message).filter(Message.created_by_id == userId, ).delete()
+            db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
+            db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
             db.session.query(Notification).filter(Notification.userid == userId, ).delete()
             db.session.query(User).filter(User.id == userId).delete()
         else:

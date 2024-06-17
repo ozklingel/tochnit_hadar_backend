@@ -4,11 +4,11 @@ from http import HTTPStatus
 from datetime import datetime, date
 from sqlalchemy import func, or_
 import config
-from src.routes.user_Profile import correct_auth
-from src.services import db, red
+from src.routes.user_profile import correct_auth
+from src.services import db
 from src.models.apprentice_model import Apprentice
-from src.models.user_model import user1
-from src.models.visit_model import Visit
+from src.models.user_model import User
+from src.models.report_model import Report
 import src.routes.madadim  as md
 import src.routes.notification_form_routes as nt
 
@@ -20,18 +20,18 @@ def get_melave_score(eshcol="0", mosad="0"):
     counts = dict()
     score_melaveProfile = []
     if eshcol != "0" and mosad != "0":
-        all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0"),
-                                                                                         user1.eshcol == eshcol,
-                                                                                         user1.institution_id == mosad).all()
+        all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
+                                                                                         User.eshcol == eshcol,
+                                                                                         User.institution_id == mosad).all()
     elif eshcol != "0":
-        all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0"),
-                                                                                         user1.eshcol == eshcol).all()
+        all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
+                                                                                         User.eshcol == eshcol).all()
     elif mosad != "0":
-        all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(user1.role_ids.contains("0"),
-                                                                                         user1.institution_id == mosad).all()
+        all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
+                                                                                         User.institution_id == mosad).all()
     else:
-        all_melave = db.session.query(user1.id, user1.name, user1.institution_id).filter(
-            user1.role_ids.contains("0")).all()
+        all_melave = db.session.query(User.id, User.name, User.institution_id).filter(
+            User.role_ids.contains("0")).all()
     for melave in all_melave:
         melaveId = melave[0]
         melave_score1, call_gap_avg, meet_gap_avg, group_meeting_gap_avg = md.melave_score(melaveId)
@@ -47,11 +47,11 @@ def get_melave_score(eshcol="0", mosad="0"):
 
 def get_mosad_Coordinators_score(eshcol="0"):
     if eshcol != "0":
-        all_Mosad_coord = db.session.query(user1.id, user1.institution_id, user1.name).filter(
-            user1.role_ids.contains("1"), user1.eshcol == eshcol).all()
+        all_Mosad_coord = db.session.query(User.id, User.institution_id, User.name).filter(
+            User.role_ids.contains("1"), User.eshcol == eshcol).all()
     else:
-        all_Mosad_coord = db.session.query(user1.id, user1.institution_id, user1.name).filter(
-            user1.role_ids.contains("1")).all()
+        all_Mosad_coord = db.session.query(User.id, User.institution_id, User.name).filter(
+            User.role_ids.contains("1")).all()
     mosad_Cooordinator_score_dict = dict()
     score_MosadCoordProfile = []
     for mosad_coord in all_Mosad_coord:
@@ -70,8 +70,8 @@ def get_mosad_Coordinators_score(eshcol="0"):
 
 
 def get_Eshcol_corrdintors_score():
-    all_Eshcol_coord = db.session.query(user1.id, user1.cluster_id, user1.name, user1.institution_id).filter(
-        user1.role_ids.contains("2")).all()
+    all_Eshcol_coord = db.session.query(User.id, User.cluster_id, User.name, User.institution_id).filter(
+        User.role_ids.contains("2")).all()
     eshcol_Cooordinator_score = dict()
     score_EshcolCoordProfile = []
     for Eshcol_coord in all_Eshcol_coord:
@@ -95,8 +95,8 @@ def red_green_orange_status(all_Apprentices):
     forgotenApprenticCount = 0
     forgotenApprenticeList = []
     # update apprentices call
-    visitcalls = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.ent_reported).filter(Visit.title == config.call_report).all()
+    visitcalls = db.session.query(Report.ent_reported, func.max(Report.visit_date).label("visit_date")).group_by(
+        Report.ent_reported).filter(Report.title == config.call_report).all()
     ids = [r[0] for r in visitcalls]
     # handle no record
     for ent in all_Apprentices:
@@ -115,9 +115,9 @@ def red_green_orange_status(all_Apprentices):
         if 21 >= gap:
             greenvisitcalls += 1
     # update apprentices meetings
-    visitmeetings = db.session.query(Visit.ent_reported, func.max(Visit.visit_date).label("visit_date")).group_by(
-        Visit.ent_reported).filter(
-        or_(Visit.title == config.personalMeet_report, Visit.title == config.groupMeet_report)).all()
+    visitmeetings = db.session.query(Report.ent_reported, func.max(Report.visit_date).label("visit_date")).group_by(
+        Report.ent_reported).filter(
+        or_(Report.title == config.personalMeet_report, Report.title == config.groupMeet_report)).all()
     redvisitmeetings = 0
     orangevisitmeetings = 0
     greenvisitmeetings = 0
@@ -146,7 +146,7 @@ def red_green_orange_status(all_Apprentices):
 @homepage_form_blueprint.route("/initMaster", methods=['GET'])
 def homepageMaster():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     accessToken = request.headers.get('Authorization')
     print("accessToken:", accessToken)
     userId = request.args.get("userId")
@@ -157,7 +157,7 @@ def homepageMaster():
     if not redisaccessToken==accessToken:
         return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
         '''
-    record = user1.query.filter_by(id=userId).first()
+    record = User.query.filter_by(id=userId).first()
     '''
     red.hset(userId, "id", record.id)
     red.hset(userId, "name", record.name)
@@ -196,7 +196,7 @@ def homepageMaster():
 def init_eshcolCoord():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         # accessToken = request.headers.get('Authorization')
         # print("accessToken:", accessToken)
         userId = request.args.get("userId")
@@ -208,7 +208,7 @@ def init_eshcolCoord():
         # if not redisaccessToken == accessToken:
         #     return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
 
-        record = user1.query.filter_by(id=userId).first()
+        record = User.query.filter_by(id=userId).first()
         '''
         red.hset(userId, "id", record.id)
         red.hset(userId, "name", record.name)
@@ -247,7 +247,7 @@ def init_eshcolCoord():
 def init_mosadCoord():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
 
         userId = request.args.get("userId")
 
@@ -257,7 +257,7 @@ def init_mosadCoord():
         if not redisaccessToken==accessToken:
             return jsonify({'result': f"wrong access token r {userId}"}), HTTPStatus.OK
             '''
-        record = user1.query.filter_by(id=userId).first()
+        record = User.query.filter_by(id=userId).first()
         '''
         red.hset(userId, "id", record.id)
         red.hset(userId, "name", record.name)
@@ -299,7 +299,7 @@ class Apprentice1:
 def get_closest_Events():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         user = request.args.get("userId")
         ApprenticeList = db.session.query(Apprentice.birthday_ivry, Apprentice.id, Apprentice.accompany_id,
                                           Apprentice.name, Apprentice.last_name, Apprentice.birthday).filter(

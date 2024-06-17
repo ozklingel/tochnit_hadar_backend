@@ -1,12 +1,18 @@
-from . import *
 from datetime import datetime
-from .user_model import user1
+from sqlalchemy import ForeignKey
+
+from src.models.models_defines import WAS_READ_COL
+from src.services import db
+
+from .user_model import User
 
 
 # התראןת
-class notifications(db.Model):
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    userid = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)  # converted from string
+    userid = db.Column(db.Integer, ForeignKey(User.id), nullable=False)  # converted from string
     subject = db.Column(db.String(20), nullable=False)
     event = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

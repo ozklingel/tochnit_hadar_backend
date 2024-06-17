@@ -3,20 +3,19 @@ import time
 from datetime import timedelta
 from typing import List
 
-from flask import Blueprint, request, jsonify, session
 from http import HTTPStatus
+from flask import Blueprint, request, jsonify
 import pyotp
 
 from openpyxl.reader.excel import load_workbook
 from timer_dict import TimerDict
 from twilio.rest import Client
 
-import config
 from src.services import red, db
 from src.models.city_model import City
-from src.models.user_model import user1
-from src.routes.Utils.Sms import send_sms_019
-from src.routes.messegaes_routes import send_green_whatsapp
+from src.models.user_model import User
+from src.routes.utils.sms import send_sms_019
+from src.routes.messages_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
 hotp = pyotp.HOTP(secret_key)
@@ -29,7 +28,7 @@ onboarding_form_blueprint = Blueprint('onboarding_form', __name__, url_prefix='/
 def getOTP_form():
     try:
         created_by_phone = request.args.get('created_by_phone')
-        userEnt = user1.query.get(created_by_phone)
+        userEnt = User.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system"}), 401
         if str(created_by_phone) in user_otp_dict:
@@ -51,7 +50,7 @@ def getOTP_whatsapp():
     try:
         created_by_phone = request.args.get('created_by_phone')
         created_by_phone_asList = ["0" + str(created_by_phone)]
-        userEnt = user1.query.get(created_by_phone)
+        userEnt = User.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system"}), 401
         print(created_by_phone)
@@ -80,7 +79,7 @@ def verifyOTP_form():
         print("created_by_phone", created_by_phone)
         if user_otp_dict[str(created_by_phone)] != user_otp:
             return jsonify({"result": "wrong otp", "firsOnboarding": True}), 401
-        userEnt = user1.query.get(created_by_phone)
+        userEnt = User.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system", "firsOnboarding": True}), 401
         if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
@@ -178,7 +177,7 @@ def verifyOTP_twilo():
     time.sleep(2.4)
     if verification_check.status != "approved":
         return jsonify({"result": "wrong otp"}), HTTPStatus.OK
-    userEnt = user1.query.get(created_by_phone)
+    userEnt = User.query.get(created_by_phone)
     if userEnt is None:
         return jsonify({"result": "not in system"}), HTTPStatus.OK
     print(userEnt.name)

@@ -2,20 +2,18 @@ import datetime
 import json
 import uuid
 
-from flask import Blueprint, request, jsonify, Response
+from datetime import datetime as dt
 from http import HTTPStatus
-from datetime import datetime as dt, date, timedelta
+from flask import Blueprint, request, jsonify, Response
 
 import config
-from src.routes.user_Profile import correct_auth
-from src.services import db, red
+from src.routes.user_profile import correct_auth
+from src.services import db
 from src.models.apprentice_model import Apprentice
-from src.models.notification_model import notifications
-from src.models.task_userMade import task_user_made
-from src.models.user_model import user1
+from src.models.task_model import Task
+from src.models.user_model import User
 
-from src.models.visit_model import Visit
-from src.routes.apprentice_Profile import toISO
+from src.models.report_model import Report
 from src.routes.notification_form_routes import getAll_notification_form
 
 tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form')
@@ -25,15 +23,15 @@ tasks_form_blueprint = Blueprint('tasks_form', __name__, url_prefix='/tasks_form
 @tasks_form_blueprint.route("/getTasks", methods=['GET'])
 def getTasks():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     # get tasksAndEvents
     userId = request.args.get("userId")
-    role = db.session.query(user1.role_ids).filter(
-        user1.id == userId).first()
+    role = db.session.query(User.role_ids).filter(
+        User.id == userId).first()
     myTask = []
 
-    tasks = db.session.query(task_user_made).filter(
-        task_user_made.userid == userId).all()
+    tasks = db.session.query(Task).filter(
+        Task.userid == userId).all()
 
     for task in tasks:
         daysFromNow = (dt.today() - task.date).days if task.date is not None else 100
@@ -103,8 +101,8 @@ def getTasks():
             Apprentice.accompany_id == userId).all()
         all_ApprenticeList_Horim = [r[0] for r in ApprenticeList]
 
-        visitHorim = db.session.query(Visit.ent_reported).filter(Visit.user_id == userId,
-                                                                 Visit.title == config.HorimCall_report).all()
+        visitHorim = db.session.query(Report.ent_reported).filter(Report.user_id == userId,
+                                                                 Report.title == config.HorimCall_report).all()
         for i in visitHorim:
             if i[0] in all_ApprenticeList_Horim:
                 all_ApprenticeList_Horim.remove(i[0])
@@ -115,10 +113,10 @@ def getTasks():
                               'event': 'מפגש_הורים', 'id': str(uuid.uuid4().int)[:5], 'title': 'הורים'})
 
         too_old = datetime.datetime.today() - datetime.timedelta(days=60)
-        done_visits = db.session.query(Visit.ent_reported, Visit.title, Visit.visit_date, Visit.id,
-                                       Visit.description).filter(Visit.user_id == userId,
-                                                                 Visit.id.not_in(todo_ids),
-                                                                 Visit.visit_date > too_old).distinct(Visit.id).all()
+        done_visits = db.session.query(Report.ent_reported, Report.title, Report.visit_date, Report.id,
+                                       Report.description).filter(Report.user_id == userId,
+                                                                 Report.id.not_in(todo_ids),
+                                                                 Report.visit_date > too_old).distinct(Report.id).all()
         done_visits_dict = [{"frequency": "never", "allreadyread": False, "event": str(row[1]),
                              "description": str(row[4]), 'status': 'done', "subject": [str(row[0])],
                              "title": str(row[1])
@@ -137,10 +135,10 @@ def updateTask():
     # get tasksAndEvents
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         taskId = request.args.get("taskId")
         data = request.json
-        updatedEnt = task_user_made.query.get(taskId)
+        updatedEnt = Task.query.get(taskId)
         for key in data:
             setattr(updatedEnt, key, data[key])
         db.session.commit()
@@ -157,7 +155,7 @@ def updateTask():
 def add_task():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         json_object = request.json
         user = json_object["userId"]
         event = json_object["event"]
@@ -182,7 +180,7 @@ def add_task():
         else:
             future_date_finish = datetime.datetime.today() - datetime.timedelta(days=1000 * (-1))
         print("future_date_finish", future_date_finish)
-        task_userMade1 = task_user_made(
+        task_userMade1 = Task(
             userid=user,
             event=event,
             details=details,
@@ -208,10 +206,10 @@ def add_task():
 def delete():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         taskId = data['taskId']
-        res = db.session.query(task_user_made).filter(task_user_made.id == taskId).delete()
+        res = db.session.query(Task).filter(Task.id == taskId).delete()
 
         # res = db.session.query(notifications).filter(notifications.id == taskId).delete()
         db.session.commit()

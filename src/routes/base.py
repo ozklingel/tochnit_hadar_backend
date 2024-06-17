@@ -1,10 +1,10 @@
 import uuid
 
-from flask import Blueprint, request, jsonify, send_file
 from http import HTTPStatus
+from flask import Blueprint, request, jsonify
 
-from src.routes.user_Profile import correct_auth
-from src.services import db, red
+from src.routes.user_profile import correct_auth
+from src.services import db
 from src.models.base_model import Base
 
 base_blueprint = Blueprint('base', __name__, url_prefix='/base')
@@ -14,7 +14,7 @@ base_blueprint = Blueprint('base', __name__, url_prefix='/base')
 def getLocation():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         base1 = request.args.get('base_id')
         print(base1)
 
@@ -34,7 +34,7 @@ def getLocation():
 def getAll():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         baseList = db.session.query(Base).all()
         print(baseList)
         if baseList:
@@ -50,7 +50,7 @@ def getAll():
 def add():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         name = data['name']
         cordinatot = data['cordinatot']

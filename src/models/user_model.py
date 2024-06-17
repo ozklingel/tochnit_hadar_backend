@@ -1,13 +1,15 @@
-from . import *
+import datetime
+from sqlalchemy import ForeignKey
+
+from src.models.models_defines import *
+from src.services import db
+
 from .city_model import City
 from .cluster_model import Cluster
 from .institution_model import Institution
 
-from src.services import db
-import datetime
 
-
-class user1(db.Model):
+class User(db.Model):
     __tablename__ = USERS_TBL
     role_ids = db.Column("role_ids", nullable=False)
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
@@ -22,9 +24,9 @@ class user1(db.Model):
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(Institution.id), nullable=False, default=0)
     cluster_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(Cluster.id), nullable=False, default=0)
     photo_path = db.Column(PHOTO_PATH_COL, db.String(50), nullable=False, default="https://www.gravatar.com/avatar")
-    notifyStartWeek = db.Column(notifyStartWeek_COL, db.Boolean, nullable=False, default=True)
-    notifyDayBefore = db.Column(notifyDayBefore_COL, db.Boolean, nullable=False, default=True)
-    notifyMorning = db.Column(notifyMorning_COL, db.Boolean, nullable=False, default=True)
+    notifyStartWeek = db.Column(NOTIFY_START_WEEK_COL, db.Boolean, nullable=False, default=True)
+    notifyDayBefore = db.Column(NOTIFY_DAY_BEFORE_COL, db.Boolean, nullable=False, default=True)
+    notifyMorning = db.Column(NOTIFY_MORNING_COL, db.Boolean, nullable=False, default=True)
     notifyStartWeek_sevev = db.Column("notifystartweek_sevev", db.Boolean, nullable=False, default=True)
     notifyDayBefore_sevev = db.Column("notifydaybefore_sevev", db.Boolean, nullable=False, default=True)
     notifyMorning_sevev = db.Column("notifymorning_sevev", db.Boolean, nullable=False, default=True)

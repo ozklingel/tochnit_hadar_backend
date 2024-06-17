@@ -2,14 +2,14 @@ from http import HTTPStatus
 from flask import Blueprint, request, jsonify
 from sqlalchemy import or_
 
-from src.routes.user_Profile import correct_auth
+from src.routes.user_profile import correct_auth
 from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution
-from src.models.user_model import user1
+from src.models.user_model import User
 
 search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/search_bar')
 
@@ -18,7 +18,7 @@ search_bar_form_blueprint = Blueprint('search_bar', __name__, url_prefix='/searc
 def search_entities():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
 
         result = set(users + apprentice)
@@ -64,22 +64,22 @@ def filter_by_request(request):
             ent_group_dict["achrai tochnit"] = "אחראי תוכנית"
             entityType.append("3")
         if len(entityType) > 0:
-            query = db.session.query(user1.id).distinct(user1.id)
-            filter_list = [user1.role_ids.contains(x) for x in entityType]
+            query = db.session.query(User.id).distinct(User.id)
+            filter_list = [User.role_ids.contains(x) for x in entityType]
 
             query = query.filter(or_(*filter_list))
             if institutions:
                 ent_group_dict["institutions"] = str(institutions).replace("[", "").replace("]", "")
-                query = query.filter(user1.institution_id == Institution.id, Institution.name.in_(institutions))
+                query = query.filter(User.institution_id == Institution.id, Institution.name.in_(institutions))
             if region:
                 ent_group_dict["region"] = region
-                query = query.filter(user1.cluster_id == Cluster.id, Cluster.name == region)
+                query = query.filter(User.cluster_id == Cluster.id, Cluster.name == region)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
-                query = query.filter(user1.eshcol.in_(eshcols))
+                query = query.filter(User.eshcol.in_(eshcols))
             if city:
                 ent_group_dict["city"] = city
-                query = query.filter(user1.city_id == City.id, city == City.name)
+                query = query.filter(User.city_id == City.id, city == City.name)
 
         res1 = []
         if query and not (hativa or bases or statuses or preiods or years):

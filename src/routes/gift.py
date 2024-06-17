@@ -1,16 +1,12 @@
-import csv
-import datetime
-import uuid
 
-import boto3
 from openpyxl.reader.excel import load_workbook
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
-from src.routes.user_Profile import correct_auth
-from src.services import db, red
-from src.models.gift import gift
-from src.models.notification_model import notifications
+from src.routes.user_profile import correct_auth
+from src.services import db
+from src.models.gift_model import Gift
+from src.models.notification_model import Notification
 
 gift_blueprint = Blueprint('gift', __name__, url_prefix='/gift')
 
@@ -19,7 +15,7 @@ gift_blueprint = Blueprint('gift', __name__, url_prefix='/gift')
 def add_giftCode_excel():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         file = request.files['file']
         wb = load_workbook(file)
         sheet = wb.active
@@ -27,7 +23,7 @@ def add_giftCode_excel():
         for row in sheet.iter_rows(min_row=2):
             code = row[0].value
             was_used = False
-            gift1 = gift(code=code, was_used=was_used)
+            gift1 = Gift(code=code, was_used=was_used)
             db.session.add(gift1)
             try:
                 db.session.commit()
@@ -42,10 +38,10 @@ def add_giftCode_excel():
 def getGift():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         teudat_zehut = request.args.get('teudat_zehut')
         base = request.args.get('base')
-        giftCode = db.session.query(gift).filter(gift.was_used == False).first()
+        giftCode = db.session.query(Gift).filter(Gift.was_used == False).first()
         print(giftCode)
         if not giftCode:
             # acount not found
@@ -60,17 +56,17 @@ def getGift():
 def delete():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         giftCode1 = request.args.get('giftCode')
         apprentice_id = request.args.get('')
 
-        giftCode = db.session.query(gift).filter(gift.code == giftCode1).first()
+        giftCode = db.session.query(Gift).filter(Gift.code == giftCode1).first()
         if giftCode is not None:
             giftCode.was_used = True
             # res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
-            res = db.session.query(notifications).filter(
-                notifications.subject == apprentice_id,
-                notifications.event == "יומהולדת",
+            res = db.session.query(Notification).filter(
+                Notification.subject == apprentice_id,
+                Notification.event == "יומהולדת",
             ).delete()
 
             db.session.commit()
@@ -84,8 +80,8 @@ def delete():
 def deleteAll():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
-        giftCode = db.session.query(gift).delete()
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        giftCode = db.session.query(Gift).delete()
         db.session.commit()
 
         return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -97,9 +93,9 @@ def deleteAll():
 def getGifts_cnt():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
-        giftCodes_all = db.session.query(gift).all()
-        giftCodes_used = db.session.query(gift).filter(gift.was_used == True).all()
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        giftCodes_all = db.session.query(Gift).all()
+        giftCodes_used = db.session.query(Gift).filter(Gift.was_used == True).all()
         giftCodes_all_cnt = len(giftCodes_all) or 0
         giftCodes_used_cnt = len(giftCodes_used) or 0
 

@@ -1,9 +1,8 @@
-from . import *
-
+from src.models.models_defines import ID_COL
 from src.services import db
 
 
-class system_report(db.Model):
+class SystemReport(db.Model):
     __tablename__ = "system_report"
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)

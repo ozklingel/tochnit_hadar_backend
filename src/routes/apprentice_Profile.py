@@ -5,30 +5,30 @@ from openpyxl.reader.excel import load_workbook
 from datetime import datetime, date
 import config
 
-from src.services import db, red
+from src.services import db
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice, front_end_dict
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.institution_model import Institution
-from src.models.notification_model import notifications
-from src.models.user_model import user1
-from src.models.visit_model import Visit
-from src.routes.setEntityDetails_form_routes import validate_email, validate_date
+from src.models.notification_model import Notification
+from src.models.user_model import User
+from src.models.report_model import Report
+from src.routes.set_entity_details_form_routes import validate_email, validate_date
 
-apprentice_Profile_form_blueprint = Blueprint('apprentice_Profile_form', __name__,
+apprentice_profile_form_blueprint = Blueprint('apprentice_Profile_form', __name__,
                                               url_prefix='/apprentice_Profile_form')
 
 
-@apprentice_Profile_form_blueprint.route('/delete', methods=['POST'])
+@apprentice_profile_form_blueprint.route('/delete', methods=['POST'])
 def delete():
     try:
 
         data = request.json
         apprenticetId = data['apprenticetId']
         print(apprenticetId)
-        res = db.session.query(notifications).filter(notifications.subject == apprenticetId, ).delete()
-        res = db.session.query(Visit).filter(Visit.ent_reported == apprenticetId, ).delete()
+        res = db.session.query(Notification).filter(Notification.subject == apprenticetId, ).delete()
+        res = db.session.query(Report).filter(Report.ent_reported == apprenticetId, ).delete()
         res = db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
         db.session.commit()
     except Exception as e:
@@ -37,7 +37,7 @@ def delete():
     # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@apprentice_Profile_form_blueprint.route("/update", methods=['put'])
+@apprentice_profile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
 
@@ -76,7 +76,7 @@ def update():
         return jsonify({'result': str(e)}), 401
 
 
-@apprentice_Profile_form_blueprint.route("/add_apprentice_manual", methods=['post'])
+@apprentice_profile_form_blueprint.route("/add_apprentice_manual", methods=['post'])
 def add_apprentice_manual():
     try:
 
@@ -143,7 +143,7 @@ def add_apprentice_manual():
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
 
-@apprentice_Profile_form_blueprint.route("/add_apprentice_excel", methods=['put'])
+@apprentice_profile_form_blueprint.route("/add_apprentice_excel", methods=['put'])
 def add_apprentice_excel():
 
     # /home/ubuntu/flaskapp/
@@ -286,14 +286,14 @@ def add_apprentice_excel():
     return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
 
 
-@apprentice_Profile_form_blueprint.route('/myApprentices', methods=['GET'])
+@apprentice_profile_form_blueprint.route('/myApprentices', methods=['GET'])
 def ZNOTINUSE_getmyApprentices_form():
     try:
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList = []
-        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol).filter(
-            user1.id == created_by_id).first()
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
+            User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
         if "1" in user1ent.role_ids:
@@ -311,11 +311,11 @@ def ZNOTINUSE_getmyApprentices_form():
             print(noti.city_id)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             print(city)
-            reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
-            eventlist = db.session.query(notifications.id, notifications.event, notifications.details,
-                                         notifications.date).filter(
-                notifications.subject == str(noti.id),
-                notifications.numoflinesdisplay == 3).all()
+            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
+            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
+                                         Notification.date).filter(
+                Notification.subject == str(noti.id),
+                Notification.numoflinesdisplay == 3).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -416,15 +416,15 @@ def toISO(d):
         return None
 
 
-@apprentice_Profile_form_blueprint.route('/maps_apprentices', methods=['GET'])
+@apprentice_profile_form_blueprint.route('/maps_apprentices', methods=['GET'])
 def maps_apprentices():
     try:
 
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList = []
-        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol).filter(
-            user1.id == created_by_id).first()
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
+            User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(
                 Apprentice.institution_id == user1ent.institution_id).all()
@@ -442,11 +442,11 @@ def maps_apprentices():
             print(noti.city_id)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             print(city)
-            reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
-            eventlist = db.session.query(notifications.id, notifications.event, notifications.details,
-                                         notifications.date).filter(
-                notifications.subject == str(noti.id),
-                notifications.numoflinesdisplay == 3).all()
+            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
+            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
+                                         Notification.date).filter(
+                Notification.subject == str(noti.id),
+                Notification.numoflinesdisplay == 3).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -542,8 +542,8 @@ def maps_apprentices():
 
 def visit_gap_color(type, apprentice, redLine, greenLine):
     # Apprentice_call_status
-    visitEvent = db.session.query(Visit).filter(Visit.ent_reported == apprentice.id,
-                                                Visit.title == type).order_by(Visit.visit_date.desc()).first()
+    visitEvent = db.session.query(Report).filter(Report.ent_reported == apprentice.id,
+                                                Report.title == type).order_by(Report.visit_date.desc()).first()
     # handle no row so insert need a call
     if visitEvent is None:
         return "red"

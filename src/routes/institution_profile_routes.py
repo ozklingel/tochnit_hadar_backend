@@ -8,38 +8,32 @@ from http import HTTPStatus
 from openpyxl.reader.excel import load_workbook
 import src.routes.madadim as md
 
-from src.routes.user_Profile import correct_auth
+from src.routes.user_profile import correct_auth
 from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.institution_model import Institution, front_end_dict
-from src.models.user_model import user1
-from src.routes.setEntityDetails_form_routes import validate_email
-#import base64
-#from io import BytesIO
-
-#from matplotlib.figure import Figure
+from src.models.user_model import User
+from src.routes.set_entity_details_form_routes import validate_email
 
 
 institutionProfile_form_blueprint = Blueprint('institutionProfile_form', __name__,
                                               url_prefix='/institutionProfile_form')
 
 
-
-
 @institutionProfile_form_blueprint.route('/mosad_generalInfo', methods=['GET'])
 def mosad_generalInfo():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     institution_id = request.args.get('institution_id')
     all_Apprentices = db.session.query(Apprentice.paying, Apprentice.militaryPositionNew, Apprentice.spirit_status,
                                        Apprentice.army_role, Apprentice.institution_mahzor).filter(
         Apprentice.institution_id == institution_id).all()
-    all_melaves = db.session.query(user1.id).filter(user1.institution_id == institution_id).all()
-    coordinator = db.session.query(user1.id).filter(user1.institution_id == institution_id,
-                                                    user1.role_ids.contains("1")).first()
+    all_melaves = db.session.query(User.id).filter(User.institution_id == institution_id).all()
+    coordinator = db.session.query(User.id).filter(User.institution_id == institution_id,
+                                                    User.role_ids.contains("1")).first()
     if coordinator is None:
         return jsonify({'result': "error-no coordinator or such institution"}), HTTPStatus.BAD_REQUEST
 
@@ -97,7 +91,7 @@ def mosad_generalInfo():
 @institutionProfile_form_blueprint.route('/uploadPhoto', methods=['post'])
 def uploadPhoto_form():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     if request.method == "POST":
         institution_id = request.args.get('institution_id')
         print(institution_id)
@@ -130,11 +124,11 @@ def uploadPhoto_form():
 @institutionProfile_form_blueprint.route('/apprentice_and_melave', methods=['GET'])
 def getmyApprentices_form():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     institution_id = int(request.args.get('institution_id'))
     print(institution_id)
-    melave_List = db.session.query(user1).filter(user1.institution_id == institution_id,
-                                                 user1.role_ids.contains("0")).all()
+    melave_List = db.session.query(User).filter(User.institution_id == institution_id,
+                                                 User.role_ids.contains("0")).all()
     apprenticeList = db.session.query(Apprentice).filter(Apprentice.institution_id == institution_id).all()
     print(melave_List)
     my_dict = []
@@ -215,7 +209,7 @@ def getmyApprentices_form():
 @institutionProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     institution_id = request.args.get('institution_id')
     institution_Ent=db.session.query(Institution).filter(Institution.id == institution_id).first()
     print(institution_Ent)
@@ -237,7 +231,7 @@ def getProfileAtributes_form():
 @institutionProfile_form_blueprint.route("/add_mosad", methods=['post'])
 def add_mosad():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     print(data)
     name = data['name']
@@ -283,7 +277,7 @@ def add_mosad():
 @institutionProfile_form_blueprint.route('/getAll', methods=['GET'])
 def getAll():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     inst_List = db.session.query(Institution).all()
     if inst_List == []:
         return jsonify([]), HTTPStatus.OK
@@ -295,9 +289,9 @@ def getAll():
         if r.city_id != "":
             city = db.session.query(City).filter(City.id == r.city_id).first()
             region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
-        melave_List = db.session.query(user1).filter(user1.institution_id == r.id, user1.role_ids.contains("0")).all()
+        melave_List = db.session.query(User).filter(User.institution_id == r.id, User.role_ids.contains("0")).all()
         apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
-        owner_details = db.session.query(user1.name,user1.last_name).filter(user1.id == r.owner_id).first()
+        owner_details = db.session.query(User.name,User.last_name).filter(User.id == r.owner_id).first()
 
         my_list.append(
             {"eshcol": str(r.eshcol_id),"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
@@ -331,7 +325,7 @@ def getAll():
 def getMahzors():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         eshcols_appren = db.session.query(Apprentice.institution_mahzor).distinct(Apprentice.institution_mahzor).all()
         eshcols_appren_ids = [str(row[0]) for row in eshcols_appren]
         return eshcols_appren_ids
@@ -343,7 +337,7 @@ def getMahzors():
 def update():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         # get tasksAndEvents
         mosad_Id = request.args.get("mosad_Id")
         data = request.json
@@ -375,7 +369,7 @@ def update():
 @institutionProfile_form_blueprint.route("/add_mosad_excel", methods=['put'])
 def add_mosad_excel():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     file = request.files['file']
     print(file)
     wb = load_workbook(file)
@@ -429,7 +423,7 @@ def add_mosad_excel():
 @institutionProfile_form_blueprint.route('/delete', methods=['DELETE', 'post'])
 def deleteEnt():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     try:
         entityId = str(data['entityId'])

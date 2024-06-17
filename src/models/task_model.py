@@ -1,12 +1,16 @@
-from . import *
 from datetime import datetime
-from .user_model import user1
+from sqlalchemy import ForeignKey
+
+from src.services import db
+from .user_model import User
 
 
 # user made task.will be use by naster only
-class task_user_made(db.Model):
+class Task(db.Model):
+    __tablename__ = "task_user_made"
+    
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    userid = db.Column(db.Integer, ForeignKey(user1.id), nullable=False)  # converted from string
+    userid = db.Column(db.Integer, ForeignKey(User.id), nullable=False)  # converted from string
     event = db.Column(db.String(100), nullable=False, default="")
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     frequency_weekday = db.Column("frequency_weekday", db.String(20), nullable=True, default="")  # 1,3

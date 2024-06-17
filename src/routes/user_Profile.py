@@ -1,30 +1,23 @@
-import json
-import uuid
-from enum import Enum
-
-import boto3
-
-from flask import Blueprint, request, jsonify, Response
+from datetime import datetime
 from http import HTTPStatus
+from flask import Blueprint, request, jsonify
 
 from openpyxl.reader.excel import load_workbook
 
 import config
 from src.services import db, red
-from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.contact_form_model import ContactForm
 from src.models.institution_model import Institution
-from src.models.notification_model import notifications
-from src.models.user_model import user1, front_end_dict
-from src.models.visit_model import Visit
-from datetime import datetime, date
+from src.models.notification_model import Notification
+from src.models.user_model import User, front_end_dict
+from src.models.report_model import Report
 
-from src.routes.apprentice_Profile import visit_gap_color
-from src.routes.setEntityDetails_form_routes import validate_email
+from src.routes.apprentice_profile import visit_gap_color
+from src.routes.set_entity_details_form_routes import validate_email
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
@@ -33,20 +26,20 @@ userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix=
 def delete():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         userId = data['userId']
-        updatedEnt = user1.query.get(userId)
+        updatedEnt = User.query.get(userId)
         if updatedEnt:
             db.session.query(ContactForm).filter(ContactForm.created_for_id == userId, ).delete()
             db.session.query(ContactForm).filter(ContactForm.created_by_id == userId, ).delete()
-            db.session.query(notifications).filter(notifications.userid == userId, ).delete()
-            db.session.query(user1).filter(user1.id == userId).delete()
+            db.session.query(Notification).filter(Notification.userid == userId, ).delete()
+            db.session.query(User).filter(User.id == userId).delete()
         else:
             updatedEnt = Apprentice.query.get(userId)
             if updatedEnt:
-                res = db.session.query(notifications).filter(notifications.subject == userId, ).delete()
-                res = db.session.query(Visit).filter(Visit.ent_reported == userId, ).delete()
+                res = db.session.query(Notification).filter(Notification.subject == userId, ).delete()
+                res = db.session.query(Report).filter(Report.ent_reported == userId, ).delete()
                 res = db.session.query(Apprentice).filter(Apprentice.id == userId).delete()
             else:
                 return jsonify({"result": str("no such id")}), HTTPStatus.BAD_REQUEST
@@ -62,11 +55,11 @@ def update():
     # get tasksAndEvents
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')
         print(userId)
         data = request.json
-        updatedEnt = user1.query.get(userId)
+        updatedEnt = User.query.get(userId)
         print("data:", data)
         for key in data:
             if key == "city":
@@ -101,9 +94,9 @@ def update():
 def getProfileAtributes_form():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
-        userEnt = user1.query.get(created_by_id)
+        userEnt = User.query.get(created_by_id)
         print(userEnt)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
@@ -137,7 +130,7 @@ def getmyApprenticesNames(created_by_id):
 @userProfile_form_blueprint.route("/add_user_excel", methods=['put'])
 def add_user_excel():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     file = request.files['file']
     wb = load_workbook(file)
     sheet = wb.active
@@ -166,7 +159,7 @@ def add_user_excel():
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
 
-            user = user1(
+            user = User(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
@@ -187,7 +180,7 @@ def add_user_excel():
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
 def add_user_manual():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     print(data)
     try:
@@ -205,7 +198,7 @@ def add_user_manual():
         # institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
         institution_id = institution_id[0] if institution_id else 0
         print(institution_id)
-        useEnt = user1(
+        useEnt = User(
             id=int(phone[1:]),
             name=first_name,
             last_name=last_name,
@@ -236,12 +229,12 @@ def toISO(d):
 def myPersonas():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         print(created_by_id)
         apprenticeList = []
-        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol).filter(
-            user1.id == created_by_id).first()
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
+            User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
             print(apprenticeList)
@@ -249,29 +242,29 @@ def myPersonas():
         if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(
                 Apprentice.institution_id == user1ent.institution_id).all()
-            userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()
+            userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
         if "2" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
-            userList = db.session.query(user1).filter(user1.institution_id == user1ent.institution_id).all()
+            userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
         if "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
-            userList = db.session.query(user1).all()
+            userList = db.session.query(User).all()
 
         my_dict = []
 
         for noti in apprenticeList:
             print(noti.id)
-            accompany = db.session.query(user1.name, user1.last_name).filter(
-                user1.id == Apprentice.accompany_id).first()
+            accompany = db.session.query(User.name, User.last_name).filter(
+                User.id == Apprentice.accompany_id).first()
             call_status = visit_gap_color(config.call_report, noti, 30, 15)
             personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
             Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
-            reportList = db.session.query(Visit.id).filter(Visit.ent_reported == noti.id).all()
-            eventlist = db.session.query(notifications.id, notifications.event, notifications.details,
-                                         notifications.date).filter(
-                notifications.subject == str(noti.id),
-                notifications.numoflinesdisplay == 3).all()
+            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
+            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
+                                         Notification.date).filter(
+                Notification.subject == str(noti.id),
+                Notification.numoflinesdisplay == 3).all()
             print(eventlist)
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
@@ -358,7 +351,7 @@ def myPersonas():
 
                  })
         for noti in userList:
-            reportList = db.session.query(Visit.id).filter(Visit.user_id == noti.id).all()
+            reportList = db.session.query(Report.id).filter(Report.user_id == noti.id).all()
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             my_dict.append(
                 {"role":[int(r) for r in noti.role_ids.split(",")],

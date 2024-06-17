@@ -11,7 +11,7 @@ from ..models.institution_model import Institution
 
 from src.services import db
 
-from ..models.user_model import user1
+from ..models.user_model import User
 
 setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, url_prefix='/setEntityDetails_form')
 
@@ -19,7 +19,7 @@ setEntityDetails_form_blueprint = Blueprint('setEntityDetails_form', __name__, u
 @setEntityDetails_form_blueprint.route('/setByType', methods=['PUT'])
 def setEntityDetailsByType():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     try:
         typeOfSet = data['typeOfSet']
@@ -29,7 +29,7 @@ def setEntityDetailsByType():
             entityId = str(data['entityId'])
             print(entityId)
             atrrToBeSet = data['atrrToBeSet']
-            updatedEnt = user1.query.get(entityId)
+            updatedEnt = User.query.get(entityId)
             for key in atrrToBeSet:
                 if key == "city":
                     CityId = db.session.query(City).filter(
@@ -59,7 +59,7 @@ def setEntityDetailsByType():
             print(entityId)
             atrrToBeSet = data['atrrToBeSet']
             print(atrrToBeSet)
-            updatedEnt = user1.query.get(entityId)
+            updatedEnt = User.query.get(entityId)
             for key in atrrToBeSet:
                 setattr(updatedEnt, key, str(atrrToBeSet[key]))
             db.session.commit()

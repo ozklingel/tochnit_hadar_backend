@@ -1,10 +1,10 @@
 import uuid
 
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 
-from src.routes.user_Profile import correct_auth
-from src.services import db, red
+from src.routes.user_profile import correct_auth
+from src.services import db
 from src.models.base_model import Base
 from src.models.city_model import City
 
@@ -15,7 +15,7 @@ city_blueprint = Blueprint('city', __name__, url_prefix='/city')
 def getLocation():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         base1 = request.args.get('base_id')
         print(base1)
 
@@ -35,7 +35,7 @@ def getLocation():
 def getAll():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         CityList = db.session.query(City).all()
         print(CityList)
         if CityList:
@@ -49,7 +49,7 @@ def getAll():
 def add():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         name = data['name']
         cluster_id = data['cluster']

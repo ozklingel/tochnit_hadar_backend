@@ -1,6 +1,5 @@
-from . import *
-
 from src.services import db
+from src.models.models_defines import ID_COL, NAME_COL
 
 
 # לא בשימוש###########

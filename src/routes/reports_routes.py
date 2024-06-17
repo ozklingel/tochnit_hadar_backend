@@ -9,15 +9,12 @@ from sqlalchemy import or_
 
 import config
 from .search_ent import filter_by_request
-from .user_Profile import correct_auth
+from .user_profile import correct_auth
 from ..models.apprentice_model import Apprentice
-from ..models.city_model import City
-from ..models.cluster_model import Cluster
-from ..models.institution_model import Institution
-from ..models.user_model import user1
+from ..models.user_model import User
 from src.services import db
 import uuid
-from ..models.visit_model import Visit
+from ..models.report_model import Report
 
 reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/reports_form')
 
@@ -25,7 +22,7 @@ reports_form_blueprint = Blueprint('reports_form', __name__, url_prefix='/report
 @reports_form_blueprint.route('/add', methods=['post'])
 def add_reports_form():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     user = str(data['userId'])
     ent_group_name = ""
@@ -50,7 +47,7 @@ def add_reports_form():
         if event_type == config.zoom_report or event_type == config.fiveMess_report:
             event_type = config.call_report
         for key in List_of_repored:
-            Visit1 = Visit(
+            Visit1 = Report(
                 created_at=arrow.now().format('YYYY-MM-DDThh:mm:ss'),
 
                 user_id=user,
@@ -78,13 +75,13 @@ def add_reports_form():
 def getById():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         report_id = request.args.get('report_id')
         user = request.args.get('userId')
         print(report_id)
-        reportList = db.session.query(Visit.id, Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date,
-                                      Visit.title, Visit.description, Visit.attachments, Visit.allreadyread).filter(
-            Visit.id == report_id, Visit.user_id == user).all()
+        reportList = db.session.query(Report.id, Report.ent_reported, Report.ent_group, Report.note, Report.visit_date,
+                                      Report.title, Report.description, Report.attachments, Report.allreadyread).filter(
+            Report.id == report_id, Report.user_id == user).all()
         print(reportList)
         if reportList:
             reportIDs = [str(r[0]) for r in reportList]
@@ -105,11 +102,11 @@ def getAll_reports_form():
     try:
 
         user = request.args.get('userId')
-        reportList = db.session.query(Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date, Visit.id,
-                                      Visit.title, Visit.description, Visit.attachments, Visit.allreadyread,
-                                      Visit.created_at).filter(Visit.user_id == user).all()
-        user_name = db.session.query(user1.name, user1.last_name).filter(
-            user == user1.id).first()
+        reportList = db.session.query(Report.ent_reported, Report.ent_group, Report.note, Report.visit_date, Report.id,
+                                      Report.title, Report.description, Report.attachments, Report.allreadyread,
+                                      Report.created_at).filter(Report.user_id == user).all()
+        user_name = db.session.query(User.name, User.last_name).filter(
+            user == User.id).first()
         user_name = user_name.name + " " + user_name.last_name
         my_dict = []
         used_report = dict()
@@ -123,8 +120,8 @@ def getAll_reports_form():
                 reported_name = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                     Apprentice.id == noti.ent_reported).first()
                 if reported_name is None:
-                    reported_name = db.session.query(user1.name, user1.last_name).filter(
-                        user1.id == user).first()
+                    reported_name = db.session.query(User.name, User.last_name).filter(
+                        User.id == user).first()
                 reported_name_str += reported_name.name + " " + reported_name.last_name + ","
             my_dict.append(
                 {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
@@ -132,23 +129,23 @@ def getAll_reports_form():
                  "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.description),
                  "attachments": noti.attachments})
         #add my personas reports:
-        user1ent = db.session.query(user1.role_ids, user1.institution_id, user1.eshcol,user1.id).filter(
-            user1.id == user).first()
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol,User.id).filter(
+            User.id == user).first()
         if "0" in user1ent.role_ids:
             userList = []
         if "1" in user1ent.role_ids:
-            userList = db.session.query(user1.id).filter(user1.institution_id == user1ent.institution_id,user1.role_ids.contains("0")).all()
+            userList = db.session.query(User.id).filter(User.institution_id == user1ent.institution_id,User.role_ids.contains("0")).all()
         if "2" in user1ent.role_ids:
-            userList = db.session.query(user1.id).filter(user1.eshcol == user1ent.eshcol,or_(user1.role_ids.contains("0"),user1.role_ids.contains("1"))).all()
+            userList = db.session.query(User.id).filter(User.eshcol == user1ent.eshcol,or_(User.role_ids.contains("0"),User.role_ids.contains("1"))).all()
         if "3" in user1ent.role_ids:
-            userList = db.session.query(user1.id).all()
+            userList = db.session.query(User.id).all()
         for ent in userList:
             print(ent)
-            reportList = db.session.query(Visit.ent_reported, Visit.ent_group, Visit.note, Visit.visit_date, Visit.id,
-                                          Visit.title, Visit.description, Visit.attachments, Visit.allreadyread,
-                                          Visit.created_at).filter(Visit.user_id == ent.id).all()
-            user_name = db.session.query(user1.name, user1.last_name).filter(
-                ent.id == user1.id).first()
+            reportList = db.session.query(Report.ent_reported, Report.ent_group, Report.note, Report.visit_date, Report.id,
+                                          Report.title, Report.description, Report.attachments, Report.allreadyread,
+                                          Report.created_at).filter(Report.user_id == ent.id).all()
+            user_name = db.session.query(User.name, User.last_name).filter(
+                ent.id == User.id).first()
             user_name = user_name.name + " " + user_name.last_name
             used_report = dict()
             for noti in reportList:
@@ -162,8 +159,8 @@ def getAll_reports_form():
                     reported_name = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                         Apprentice.id == noti.ent_reported).first()
                     if reported_name is None:
-                        reported_name = db.session.query(user1.name, user1.last_name).filter(
-                            user1.id == user).first()
+                        reported_name = db.session.query(User.name, User.last_name).filter(
+                            User.id == user).first()
                     reported_name_str += reported_name.name + " " + reported_name.last_name + ","
                 my_dict.append(
                     {"search": reported_name_str + "," + user_name, "id": str(k), "reported_on": reportedList,
@@ -180,12 +177,12 @@ def getAll_reports_form():
 @reports_form_blueprint.route('/setWasRead', methods=['post'])
 def setWasRead_report_form():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     report_id = data['report_id']
     print(report_id)
     try:
-        num_rows_updated = Visit.query.filter_by(id=report_id).update(dict(allreadyread=True))
+        num_rows_updated = Report.query.filter_by(id=report_id).update(dict(allreadyread=True))
         db.session.commit()
 
         if report_id:
@@ -207,11 +204,11 @@ def toISO(d):
 def delete():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         reportIds = data['reportId']
         for id in reportIds:
-            res = db.session.query(Visit).filter(Visit.id == id).delete()
+            res = db.session.query(Report).filter(Report.id == id).delete()
         db.session.commit()
     except Exception as e:
         return jsonify({"result": str(e)}), HTTPStatus.BAD_REQUEST
@@ -223,11 +220,11 @@ def delete():
 def update():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         # get tasksAndEvents
         reportId = request.args.get("reportId")
         data = request.json
-        updatedEnt = Visit.query.get(reportId)
+        updatedEnt = Report.query.get(reportId)
         for key in data:
             setattr(updatedEnt, key, data[key])
         db.session.commit()
@@ -244,18 +241,18 @@ def update():
 def filter_report():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
         types = request.args.get("type").split(",") if request.args.get("type") is not None else None
         if types:
-            reports_user = db.session.query(Visit.id).filter(Visit.user_id.in_(users)).filter(
-                Visit.title.in_(types)).all()
-            reports_apprentice = db.session.query(Visit.id).filter(Visit.ent_reported.in_(apprentice)).filter(
-                Visit.title.in_(types)).all()
+            reports_user = db.session.query(Report.id).filter(Report.user_id.in_(users)).filter(
+                Report.title.in_(types)).all()
+            reports_apprentice = db.session.query(Report.id).filter(Report.ent_reported.in_(apprentice)).filter(
+                Report.title.in_(types)).all()
         else:
 
-            reports_user = db.session.query(Visit.id).filter(Visit.user_id.in_(users)).all()
-            reports_apprentice = db.session.query(Visit.id).filter(Visit.ent_reported.in_(apprentice)).all()
+            reports_user = db.session.query(Report.id).filter(Report.user_id.in_(users)).all()
+            reports_apprentice = db.session.query(Report.id).filter(Report.ent_reported.in_(apprentice)).all()
         ent_group_concat = ", ".join(ent_group_dict.values())
         print(ent_group_concat)
         # reports_ent_group=db.session.query(Visit.id).filter(Visit.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
@@ -274,7 +271,7 @@ def filter_report():
 def filter_to():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         users, apprentice, ent_group_dict = filter_by_request(request)
 
         ent_group_concat = ""
@@ -296,7 +293,7 @@ def filter_to():
 def add_report_excel():
     # /home/ubuntu/flaskapp/
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     file = request.files['file']
 
     wb = load_workbook(file)
@@ -313,7 +310,7 @@ def add_report_excel():
         if attachments == ["None"]:
             attachments = []
         print(row)
-        rep = Visit(
+        rep = Report(
 
             id=int(str(uuid.uuid4().int)[:5]),
             user_id=user_id,

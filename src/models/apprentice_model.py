@@ -1,13 +1,16 @@
 import datetime
+from sqlalchemy import ForeignKey
 
-from . import *
+from src.models.models_utils import get_foreign_key_source
+from src.services import db
+from src.models.models_defines import *
 
 
 class Apprentice(db.Model):
     __tablename__ = APPRENTICES_TBL
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    accompany_id = db.Column(ACCOMPANY_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(USERS_TBL, ID_COL)),
+    accompany_id = db.Column(ACCOMPANY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(USERS_TBL, ID_COL)),
                              nullable=False)
     name = db.Column("first_name", db.String(50), nullable=False, default="")
     last_name = db.Column(LAST_NAME_COL, db.String(50), nullable=False, default="")
@@ -32,7 +35,7 @@ class Apprentice(db.Model):
     contact3_last_name = db.Column("contact3_last_name", db.String(50), nullable=False, default="")
     contact3_email = db.Column("contact3_email", db.String(50), nullable=False, default="")
     contact3_relation = db.Column("contact3_relation", db.String(50), nullable=False, default="")
-    city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_forgein_key_source(CITIES_TBL, ID_COL)), nullable=False,
+    city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(CITIES_TBL, ID_COL)), nullable=False,
                         default=313)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False, default="")
     high_school_name = db.Column(HIGH_SCHOOL_NAME_COL, db.String(50), nullable=False, default="")
@@ -44,7 +47,7 @@ class Apprentice(db.Model):
     teacher_grade_b = db.Column(TEACHER_GRADE_B_COL, db.String(50), nullable=False, default="")
     teacher_grade_b_phone = db.Column(TEACHER_GRADE_B_PHONE_COL, db.String(50), nullable=False, default="")
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer,
-                               ForeignKey(get_forgein_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False, default=0)
+                               ForeignKey(get_foreign_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False, default=0)
     hadar_plan_session = db.Column("thperiod", db.String(10), nullable=False, default=0)  # mahzor
     base_address = db.Column("militarycompoundid", db.Integer, nullable=False, default=14509)
     recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=True)
@@ -52,17 +55,17 @@ class Apprentice(db.Model):
     paying = db.Column(PAYING_COL, db.String(50), nullable=False, default="")
     spirit_status = db.Column("matsber", db.String(50), nullable=False, default="")
     accompany_connect_status = db.Column("onlinestatus", db.Integer, nullable=False, default=0)
-    workstatus = db.Column(workStatus_COL, db.String(50), nullable=False, default="")
-    workplace = db.Column(workPlace_COL, db.String(50), nullable=False, default="")
-    worktype = db.Column(workType_COL, db.String(50), nullable=False, default="")
-    workoccupation = db.Column(workOccupation_COL, db.String(50), nullable=False, default="")
-    educationfaculty = db.Column(educationFaculty_COL, db.String(50), nullable=False, default="")
-    educationalinstitution = db.Column(educationalInstitution_COL, db.String(50), nullable=False, default="")
-    militaryPositionOld = db.Column(militaryPositionOld_COL, db.String(50), nullable=False, default="")
-    militaryupdateddatetime = db.Column(militaryUpdatedDateTime_COL, db.DateTime, nullable=False, default="2022-01-01")
-    high_school_teacher_email = db.Column(high_school_teacher_email_col, db.String(50), nullable=False, default="")
-    teacher_grade_a_email = db.Column(teacher_grade_a_email_col, db.String(50), nullable=False, default="")
-    teacher_grade_b_email = db.Column(teacher_grade_b_email_col, db.String(50), nullable=False, default="")
+    workstatus = db.Column(WORK_STATUS_COL, db.String(50), nullable=False, default="")
+    workplace = db.Column(WORK_PLACE_COL, db.String(50), nullable=False, default="")
+    worktype = db.Column(WORK_TYPE_COL, db.String(50), nullable=False, default="")
+    workoccupation = db.Column(WORK_OCCUPATION_COL, db.String(50), nullable=False, default="")
+    educationfaculty = db.Column(EDUCATION_FACULTY_COL, db.String(50), nullable=False, default="")
+    educationalinstitution = db.Column(EDUCATIONAL_INSTITUTION_COL, db.String(50), nullable=False, default="")
+    militaryPositionOld = db.Column(MILITARY_POSITION_OLD_COL, db.String(50), nullable=False, default="")
+    militaryupdateddatetime = db.Column(MILITARY_UPDATED_DATETIME_COL, db.DateTime, nullable=False, default="2022-01-01")
+    high_school_teacher_email = db.Column(HIGH_SCHOOL_TEACHER_EMAIL_COL, db.String(50), nullable=False, default="")
+    teacher_grade_a_email = db.Column(TEACHER_GRADE_A_EMAIL_COL, db.String(50), nullable=False, default="")
+    teacher_grade_b_email = db.Column(TEACHER_GRADE_B_EMAIL_COL, db.String(50), nullable=False, default="")
     teudatZehut = db.Column("teudatzehut", db.String(50), nullable=False, default="")
     institution_mahzor = db.Column("institution_mahzor", db.String(10), nullable=False, default="")
     photo_path = db.Column("photo_path", db.String(50), nullable=False, default="https://www.gravatar.com/avatar")
@@ -108,7 +111,6 @@ front_end_dict = {
     "contact3_relation": "contact3_relation",
     "activity_score": "reportList",
     "id": "id",
-    "thMentor_id": "thMentor_id",
     "militaryPositionNew": "militaryPositionNew"
     , "avatar": "photo_path",
     "name": "name",

@@ -1,24 +1,22 @@
 import uuid
 from http import HTTPStatus
 
-import requests
 from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
-from src.models.madadim_setting import madadim_setting
-from src.routes.user_Profile import correct_auth
+from src.models.madadim_setting_model import MadadimSetting
+from src.routes.user_profile import correct_auth
 from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
-from src.models.cluster_model import Cluster
 from src.models.contact_form_model import ContactForm
-from src.models.gift import gift
+from src.models.gift_model import Gift
 from src.models.institution_model import Institution
-from src.models.notification_model import notifications
-from src.models.user_model import user1
-from src.models.visit_model import Visit
+from src.models.notification_model import Notification
+from src.models.user_model import User
+from src.models.report_model import Report
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
 homeDir = "/home/ubuntu/flaskapp/"
@@ -27,11 +25,11 @@ homeDir = "/home/ubuntu/flaskapp/"
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
     if correct_auth() == False:
-        return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
-    madadim_setting1 = db.session.query(madadim_setting).first()
+    madadim_setting1 = db.session.query(MadadimSetting).first()
     if madadim_setting1 is None:
-        rep = madadim_setting(
+        rep = MadadimSetting(
             call_madad_date='1995-09-09'
             , cenes_madad_date='1995-09-09'
             , tochnitMeet_madad_date='1995-09-09'
@@ -110,8 +108,8 @@ def setSetting_madadim():
 def getNotificationSetting_form():
     try:
         if correct_auth()==False:
-            return jsonify({'result': f"wrong access token "}), HTTPStatus.OK
-        madadim_setting1 = db.session.query(madadim_setting).first()
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        madadim_setting1 = db.session.query(MadadimSetting).first()
 
         return jsonify({"call_madad_date": str(madadim_setting1.call_madad_date),
                         "meet_madad_date": str(madadim_setting1.meet_madad_date)
@@ -297,7 +295,7 @@ def addUsers(wb):
             print("institution_name", institution_name)
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
-            user = user1(
+            user = User(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
@@ -321,11 +319,11 @@ def initDB():
     try:
         type = request.args.get('type')
 
-        giftCode = db.session.query(gift).delete()
-        giftCode = db.session.query(Visit).delete()
+        giftCode = db.session.query(Gift).delete()
+        giftCode = db.session.query(Report).delete()
         giftCode = db.session.query(ContactForm).delete()
-        giftCode = db.session.query(notifications).delete()
-        giftCode = db.session.query(user1).delete()
+        giftCode = db.session.query(Notification).delete()
+        giftCode = db.session.query(User).delete()
         giftCode = db.session.query(Apprentice).delete()
         db.session.commit()
         uncommited_ids = []
@@ -422,7 +420,7 @@ def add_report(wb):
         ent_group = row[7].value
         if attachments == ["None"]:
             attachments = []
-        rep = Visit(
+        rep = Report(
 
             id=int(str(uuid.uuid4().int)[:5]),
             user_id=user_id,

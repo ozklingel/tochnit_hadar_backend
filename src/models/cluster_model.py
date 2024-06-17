@@ -1,6 +1,5 @@
-from . import *
-
 from src.services import db
+from src.models.models_defines import CLUSTERS_TBL, ID_COL, NAME_COL
 
 
 # region where the entity is in Israel

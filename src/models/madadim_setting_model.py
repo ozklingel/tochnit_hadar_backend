@@ -1,11 +1,8 @@
-from . import *
-from .user_model import user1
-
-from datetime import datetime
+from src.services import db
 
 
 # דיוחחים על משתמש או חניך
-class madadim_setting(db.Model):
+class MadadimSetting(db.Model):
     __tablename__ = "madadim_setting"
 
     professionalMeet_madad_date = db.Column("professionalmeet_madad_date", db.DateTime, nullable=False)

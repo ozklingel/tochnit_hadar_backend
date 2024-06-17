@@ -14,7 +14,7 @@ from src.services import db
 from .utils.sms import send_sms_019
 from .search_ent import filter_by_request
 from .user_profile import correct_auth
-from ..models.contact_form_model import ContactForm
+from ..models.message_model import Message
 from ..models.user_model import User
 
 messages_form_blueprint = Blueprint('messegaes_form', __name__, url_prefix='/messegaes_form')
@@ -45,7 +45,7 @@ def send_per_persona():
         mess_id = str(uuid.uuid1().int)[:5]
         print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
-            contact_form_1 = ContactForm(
+            contact_form_1 = Message(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                 created_for_id=key,
                 created_by_id=created_by_id,
@@ -207,7 +207,7 @@ def add_contact_form():
         mess_id = str(uuid.uuid1().int)[:5]
         print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
-            contact_form1 = ContactForm(
+            contact_form1 = Message(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
                 created_for_id=key,
                 created_by_id=created_by_id,
@@ -236,11 +236,11 @@ def get_all_messages_form():
         user = request.args.get('userId')
         user_role = db.session.query(User.role_id).filter(
             user == User.id).first()[0]
-        messages_list = db.session.query(ContactForm.created_for_id, ContactForm.created_at, ContactForm.id,
-                                         ContactForm.attachments, ContactForm.type, ContactForm.icon,
-                                         ContactForm.allreadyread, ContactForm.subject, ContactForm.content,
-                                         ContactForm.ent_group, ContactForm.created_by_id) \
-            .filter(or_(ContactForm.created_for_id == user, ContactForm.created_by_id == user)).all()
+        messages_list = db.session.query(Message.created_for_id, Message.created_at, Message.id,
+                                         Message.attachments, Message.type, Message.icon,
+                                         Message.allreadyread, Message.subject, Message.content,
+                                         Message.ent_group, Message.created_by_id) \
+            .filter(or_(Message.created_for_id == user, Message.created_by_id == user)).all()
         my_dict = []
         groped_mess = []
         group_report_dict = dict()
@@ -307,8 +307,8 @@ def set_was_read_message_form():
     message_id = data['message_id']
     print(message_id)
     try:
-        # notis =ContactForm.query.filter_by(id=message_id)#db.session.query(ContactForm.id,ContactForm.allreadyread).filter(ContactForm.id==message_id).all()
-        num_rows_updated = ContactForm.query.filter_by(id=message_id).update(dict(allreadyread=True))
+        # notis =Message.query.filter_by(id=message_id)#db.session.query(Message.id,Message.allreadyread).filter(Message.id==message_id).all()
+        num_rows_updated = Message.query.filter_by(id=message_id).update(dict(allreadyread=True))
         db.session.commit()
 
         if message_id:
@@ -326,7 +326,7 @@ def delete_ent():
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         entity_id = str(data['entityId'])
-        res = db.session.query(ContactForm).filter(ContactForm.id == entity_id).delete()
+        res = db.session.query(Message).filter(Message.id == entity_id).delete()
         db.session.commit()
         return jsonify({'result': 'sucess'}), HTTPStatus.OK
     except Exception as e:
@@ -356,7 +356,7 @@ def add_message_excel():
         if attachments == ["None"]:
             attachments = []
         print(row)
-        rep = ContactForm(
+        rep = Message(
             icon=icon,
             id=int(str(uuid.uuid4().int)[:5]),
             type=type,

@@ -8,7 +8,7 @@ from .user_model import User
 
 
 # message class internal (not SMS or WHATAPP
-class ContactForm(db.Model):
+class Message(db.Model):
     __tablename__ = CONTACT_FORMS_TBL
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -11,7 +11,7 @@ from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
-from src.models.contact_form_model import ContactForm
+from src.models.message_model import Message
 from src.models.gift_model import Gift
 from src.models.institution_model import Institution
 from src.models.notification_model import Notification
@@ -321,7 +321,7 @@ def initDB():
 
         giftCode = db.session.query(Gift).delete()
         giftCode = db.session.query(Report).delete()
-        giftCode = db.session.query(ContactForm).delete()
+        giftCode = db.session.query(Message).delete()
         giftCode = db.session.query(Notification).delete()
         giftCode = db.session.query(User).delete()
         giftCode = db.session.query(Apprentice).delete()
@@ -384,7 +384,7 @@ def add_message(wb):
 
         if attachments == ["None"]:
             attachments = []
-        rep = ContactForm(
+        rep = Message(
             icon=icon,
             id=int(str(uuid.uuid4().int)[:5]),
             type=type,

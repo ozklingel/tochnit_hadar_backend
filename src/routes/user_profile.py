@@ -310,14 +310,12 @@ def myPersonas():
                       "daysfromnow": 0, "event": row[1], "allreadyread": False, "description":row[2],
                       "frequency": "never",
                       "numOfLinesDisplay": 2}for row in
-                      eventlist]
-
-
-
-                    , "id": str(noti.id), "thMentor_name": accompany.name + " " + accompany.last_name,
+                      eventlist],
+                "id": str(noti.id),
+                "thMentor_name": accompany.name + " " + accompany.last_name,
                  "thMentor_id": str(noti.accompany_id),
-                 "militaryPositionNew": str(noti.militaryPositionNew)
-                    , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
+                 "militaryPositionNew": str(noti.militaryPositionNew),
+                "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
                  "name": str(noti.name), "last_name": str(noti.last_name),
                  "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
                  "serve_type": noti.serve_type,
@@ -328,11 +326,15 @@ def myPersonas():
                  "unit_name": noti.unit_name,
                  "matsber": str(noti.spirit_status),
                  "militaryDateOfDischarge": to_iso(noti.release_date),
-                 "militaryDateOfEnlistment": to_iso(noti.recruitment_date)
-                    , "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
-                 "militaryPositionOld": noti.militaryPositionOld, "educationalInstitution": noti.educationalinstitution
-                    , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,
+                 "militaryDateOfEnlistment": to_iso(noti.recruitment_date),
+                 "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
+                 "militaryPositionOld": noti.militaryPositionOld,
+                 "educationalInstitution": noti.educationalinstitution,
+                 "educationFaculty": noti.educationfaculty,
+                 "workOccupation": noti.workoccupation,
+                 "workType": noti.worktype,
+                 "workPlace": noti.workplace,
+                 "workStatus": noti.workstatus,
                  "paying": noti.paying
 
                  })
@@ -385,23 +387,17 @@ def myPersonas():
                  "contact3_email": "",
                  "contact3_relation": "",
                  "activity_score": len(reportList),
-
-                 "reports":
-                     []
-                    ,
-                 "events":
-
-                     []
-
-                    , "id": str(noti.id),
+                 "reports": [],
+                 "events": [],
+                 "id": str(noti.id),
                  "thMentor": "",
-                 "militaryPositionNew": ""
-                    ,
+                 "militaryPositionNew": "",
                  "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
                  "name": str(noti.name), "last_name": str(noti.last_name),
                  "institution_id": str(noti.institution_id), "thPeriod": "",
                  "serve_type": "",
-                 "marriage_status": "", "militaryCompoundId": "",
+                 "marriage_status": "",
+                 "militaryCompoundId": "",
                  "phone": str(noti.id),
                  "email": noti.email,
                  "teudatZehut": noti.teudatZehut,
@@ -412,10 +408,10 @@ def myPersonas():
                  "unit_name": "",
                  "matsber": "",
                  "militaryDateOfDischarge": "",
-                 "militaryDateOfEnlistment": ""
-                    , "militaryUpdatedDateTime": "",
-                 "militaryPositionOld": "", "educationalInstitution": ""
-                    , "educationFaculty": "", "workOccupation": "",
+                 "militaryDateOfEnlistment": "",
+                 "militaryUpdatedDateTime": "",
+                 "militaryPositionOld": "", "educationalInstitution": "",
+                 "educationFaculty": "", "workOccupation": "",
                  "workType": "", "workPlace": "", "workStatus": "",
                  "paying": ""
 

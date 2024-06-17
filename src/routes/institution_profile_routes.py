@@ -175,22 +175,31 @@ def getmyApprentices_form():
                     "lat": 32.04282620026557,
                     "lng": 34.75186193813887
                 },
-                "id": str(noti.id), "thMentor": str(noti.accompany_id),
-                "militaryPositionNew": str(noti.militaryPositionNew)
-                , "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                "name": str(noti.name), "last_name": str(noti.last_name),
-                "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
+                "id": str(noti.id),
+                "thMentor": str(noti.accompany_id),
+                "militaryPositionNew": str(noti.militaryPositionNew),
+                "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
+                "name": str(noti.name),
+                "last_name": str(noti.last_name),
+                "institution_id": str(noti.institution_id),
+                "thPeriod": str(noti.hadar_plan_session),
                 "serve_type": noti.serve_type,
-                "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(noti.base_address),
-                "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
-                "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
+                "marriage_status": str(noti.marriage_status),
+                "militaryCompoundId": str(noti.base_address),
+                "phone": noti.phone, "email": noti.email,
+                "teudatZehut": noti.teudatZehut,
+                "highSchoolInstitution": noti.highSchoolInstitution,
+                "army_role": noti.army_role,
                 "unit_name": noti.unit_name,
-                "onlineStatus": noti.accompany_connect_status, "matsber": str(noti.spirit_status),
-
-                "militaryPositionOld": noti.militarypositionold, "educationalInstitution": noti.educationalinstitution
-                , "educationFaculty": noti.educationfaculty, "workOccupation": noti.workoccupation,
-                "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus
-
+                "onlineStatus": noti.accompany_connect_status,
+                "matsber": str(noti.spirit_status),
+                "militaryPositionOld": noti.militarypositionold,
+                "educationalInstitution": noti.educationalinstitution,
+                "educationFaculty": noti.educationfaculty,
+                "workOccupation": noti.workoccupation,
+                "workType": noti.worktype,
+                "workPlace": noti.workplace,
+                "workStatus": noti.workstatus
             })
 
     if apprenticeList is None:

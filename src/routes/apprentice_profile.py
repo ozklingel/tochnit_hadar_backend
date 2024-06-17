@@ -310,9 +310,9 @@ def maps_apprentices():
             call_status = visit_gap_color(config.call_report, noti, 30, 15)
             personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
             Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
-            print(noti.city_id)
+            mentor_id = noti.accompany_id
+            mentor_name = db.session.query(User.name, User.last_name).filter(User.id == mentor_id).first()
             city = db.session.query(City).filter(City.id == noti.city_id).first()
-            print(city)
             reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
             eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
                                          Notification.date).filter(
@@ -369,28 +369,36 @@ def maps_apprentices():
                     "events":
                         [{"id": str(row[0]), "title": row[1], "description": row[2], "date": to_iso(row[3])} for row in
                          eventlist],
-                    "id": str(noti.id), "thMentor": str(noti.accompany_id),
+                    "id": str(noti.id),
+                    "thMentor": str(noti.accompany_id),
+                    "thMentor_name": mentor_name[0] + " " + mentor_name[1] if mentor_name else "",
                     "militaryPositionNew": str(noti.militaryPositionNew),
                     "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
                     "name": str(noti.name), "last_name": str(noti.last_name),
-                    "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
+                    "institution_id": str(noti.institution_id),
+                    "thPeriod": str(noti.hadar_plan_session),
                     "serve_type": noti.serve_type,
-                    "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
-                    "phone": noti.phone, "email": noti.email, "teudatZehut": noti.teudatZehut,
-                    "birthday": to_iso(noti.birthday), "marriage_date": to_iso(noti.marriage_date),
-                    "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
+                    "marriage_status": str(noti.marriage_status),
+                    "militaryCompoundId": str(base_id),
+                    "phone": noti.phone, "email": noti.email,
+                    "teudatZehut": noti.teudatZehut,
+                    "birthday": to_iso(noti.birthday),
+                    "marriage_date": to_iso(noti.marriage_date),
+                    "highSchoolInstitution": noti.highSchoolInstitution,
+                    "army_role": noti.army_role,
                     "unit_name": noti.unit_name,
                     "matsber": str(noti.spirit_status),
                     "militaryDateOfDischarge": to_iso(noti.release_date),
-                    "militaryDateOfEnlistment": to_iso(noti.recruitment_date)
-                    , "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
+                    "militaryDateOfEnlistment": to_iso(noti.recruitment_date),
+                    "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
                     "militaryPositionOld": noti.militaryPositionOld,
                     "educationalInstitution": noti.educationalinstitution,
                     "educationFaculty": noti.educationfaculty,
                     "workOccupation": noti.workoccupation,
-                    "workType": noti.worktype, "workPlace": noti.workplace, "workStatus": noti.workstatus,
+                    "workType": noti.worktype,
+                    "workPlace": noti.workplace,
+                    "workStatus": noti.workstatus,
                     "paying": noti.paying
-
                 })
 
         if apprenticeList is None:

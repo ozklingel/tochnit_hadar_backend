@@ -44,18 +44,14 @@ def import_lowScoreApprentice_mosad(type="extenal"):
                 return jsonify({'result': "no such export was done"}), HTTPStatus.BAD_REQUEST
             return data.value
         lowScoreApprentice_dict = md.lowScoreApprentice(False)[0].json
-        # print(lowScoreApprentice_dict)
         missingCalleApprentice_dict = md.missingCalleApprentice(False)[0].json
-        # print(missingCalleApprentice_dict)
         missingMeetingApprentice_dict = md.missingMeetingApprentice(False)[0].json
-        # print(missingMeetingApprentice_dict)
         res = []
         lowScoreApprentice_List = lowScoreApprentice_dict["lowScoreApprentice_List"]
         callApprentice_List = missingCalleApprentice_dict["missingCalleApprentice_count"]
         meetingApprentice_List = missingMeetingApprentice_dict["missingmeetApprentice_count"]
 
         for i in range(0, len(lowScoreApprentice_List)):
-            print(lowScoreApprentice_List)
             score_ent = lowScoreApprentice_List[i]
             call_ent = callApprentice_List[i]
             meet_ent = meetingApprentice_List[i]
@@ -68,7 +64,6 @@ def import_lowScoreApprentice_mosad(type="extenal"):
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(res)
-        print("exported")
         if type == "local":
             with open(base_dir + 'system_export', 'r', encoding="utf-8") as file:
                 return file.read()
@@ -91,18 +86,14 @@ def import_lowScoreApprentice_tohnit(type="extenal"):
 
             return data.value
         lowScoreApprentice_dict = md.lowScoreApprentice()[0].json
-        # print(lowScoreApprentice_dict)
         missingCalleApprentice_dict = md.missingCalleApprentice()[0].json
-        # print(missingCalleApprentice_dict)
         missingMeetingApprentice_dict = md.missingMeetingApprentice()[0].json
-        # print(missingMeetingApprentice_dict)
         res = []
         lowScoreApprentice_List = lowScoreApprentice_dict["lowScoreApprentice_List"]
         callApprentice_List = missingCalleApprentice_dict["missingCalleApprentice_count"]
         meetingApprentice_List = missingMeetingApprentice_dict["missingmeetApprentice_count"]
 
         for i in range(0, len(lowScoreApprentice_List)):
-            print(lowScoreApprentice_List)
             score_ent = lowScoreApprentice_List[i]
             call_ent = callApprentice_List[i]
             meet_ent = meetingApprentice_List[i]
@@ -120,7 +111,6 @@ def import_lowScoreApprentice_tohnit(type="extenal"):
                 return file.read()
         return send_file(base_dir + "system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
-        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
@@ -138,14 +128,10 @@ def import_melave_corrdintors_score(type="extenal"):
             return data.value
         score_dict, score_melaveProfile = get_melave_score()
         rows = score_melaveProfile
-        print("rows", rows)
         for dict in rows:
             user_mosad = db.session.query(User.name, Institution.name).filter(
                 User.id == dict["melaveId"], Institution.id == User.institution_id).first()
             if user_mosad is None:
-                userEnt = User.query.get(dict["melaveId"])
-                print(userEnt.institution_id)
-                print("missing", dict["melaveId"])
                 continue
             dict["name"] = user_mosad[0]
             dict["mosad"] = user_mosad[1]
@@ -159,7 +145,6 @@ def import_melave_corrdintors_score(type="extenal"):
                 return file.read()
         return send_file(base_dir + "system_export", as_attachment=True, download_name="dict2.csv")
     except Exception as e:
-        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
 
@@ -210,7 +195,6 @@ def import_mosad_corrdintors_score(type="extenal"):
         for dict in rows:
             user_name = db.session.query(User.name).filter(
                 User.id == dict["id"]).first()
-            print(user_name)
             dict["name"] = user_name[0]
         with open(base_dir + 'system_export', 'w', encoding="utf-8") as f:
             title = "score,id,name".split(",")  # quick hack
@@ -400,7 +384,6 @@ def upload_baseDB():
 def ZNOTINUSE_export_dict():
     try:
         data = request.json
-        print("exporting:", list(data.keys())[0])
         to_csv = data[list(data.keys())[0]]
         keys = to_csv[0].keys()
         with open('to_csv.csv', 'w', newline='', encoding="utf-8") as output_file:
@@ -521,7 +504,6 @@ def monthly():
             melaveId = melave[0]
             all_melave_Apprentices = db.session.query(Apprentice.id).filter(
                 Apprentice.accompany_id == melaveId).all()
-            print("asd",md.melave_score(melaveId))
             melave_score1, call_gap_avg, meet_gap_avg,group_meeting_gap_avg = md.melave_score(melaveId)
             system_report1 = SystemReport(
                 id=int(str(uuid.uuid4().int)[:5]),
@@ -760,9 +742,6 @@ def yearly():
 
 @export_import_blueprint.route('/uploadfile', methods=['post'])
 def uploadfile():
-    # reportId = request.args.get('reportId')
-    # print(reportId)
-    # updatedEnt = Visit.query.get(reportId)
     try:
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
@@ -777,7 +756,6 @@ def uploadfile():
             s3 = boto3.resource('s3',
                                 aws_access_key_id=AWS_access_key_id,
                                 aws_secret_access_key=AWS_secret_access_key)
-            print(new_filename)
             try:
                 s3_client.upload_fileobj(imagefile, bucket_name, new_filename)
             except:

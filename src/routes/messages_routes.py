@@ -43,7 +43,6 @@ def send_per_persona():
         if type == "draft":
             created_for_ids = [str(created_by_id)]  # do not send any one
         mess_id = str(uuid.uuid1().int)[:5]
-        print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
             contact_form_1 = Message(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
@@ -150,7 +149,6 @@ def send_green_whatsapp(message: str, numbers: List[str], delay_send_messages_mi
         responses.append(response.status_code)
 
     return responses
-    # print(response.text.encode('utf8')) # get message id, for future reference
 
 
 @messages_form_blueprint.route('/send_whatsapp', methods=['POST'])
@@ -205,7 +203,6 @@ def add_contact_form():
         if type == "draft":
             created_for_ids = [str(created_by_id)]
         mess_id = str(uuid.uuid1().int)[:5]
-        print("date ", arrow.now().format('YYYY-MM-DDThh:mm:ss'))
         for key in created_for_ids:
             contact_form1 = Message(
                 id=mess_id,  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
@@ -221,7 +218,6 @@ def add_contact_form():
                 icon=icon
             )
             db.session.add(contact_form1)
-            print(contact_form1.created_at)
         db.session.commit()
         return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:
@@ -291,10 +287,8 @@ def get_all_messages_form():
                      "ent_group": mess.ent_group,
                      "icon": mess.icon})
                 group_report_dict[mess.ent_group + str(mess.id)] = None
-        # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
         return jsonify(my_dict), HTTPStatus.OK
-        # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -312,7 +306,6 @@ def set_was_read_message_form():
         db.session.commit()
 
         if message_id:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
     except Exception as e:

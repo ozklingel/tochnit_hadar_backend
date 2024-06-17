@@ -281,9 +281,6 @@ def forgotenApprentices_mosad_outbound():
             for row in reader:
                 if inst_name.name in row:
                     prev_month_forgoten_precentage=(len(ids_no_visit)-int(row[1]))/len(ids_no_visit)
-        print("prev_month_forgoten_precentage",prev_month_forgoten_precentage)
-        print("ids_no_visit",ids_no_visit)
-
         return jsonify({"apprentice_list":
             [{"id": r[0], "gap": r[1]} for r in ids_no_visit],
             "percentage":prev_month_forgoten_precentage
@@ -334,12 +331,10 @@ def missingCallsApprentice_Mosad():
             visitEvent = db.session.query(Report).filter(Report.ent_reported == Apprentice1.id,
                                                         Report.title.in_(config.reports_as_call)).order_by(
                 Report.visit_date.desc()).first()
-            print("visitEvent", visitEvent)
             if visitEvent is None:
 
                 daysFromNow = (
                         date.today() - Apprentice1.association_date).days if Apprentice1.association_date is not None else 100
-                print(daysFromNow)
                 no_visit_dict[Apprentice1.id] = daysFromNow
 
             elif (date.today() - visitEvent.visit_date).days > 21 and Report.ent_reported not in no_visit_dict:
@@ -375,7 +370,6 @@ def missingCallsApprentice_Mosad():
         for ent in Oldvisitcalls:
             if ent[1] not in forgotenApprenticeList:
                 forgotenApprenticeList[ent[0]] = 0
-        print(no_visit_dict)
         return jsonify({"call":[{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
                         "meet":[{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
                         "low_score":[str(key) for key, value in forgotenApprenticeList.items()],
@@ -410,7 +404,6 @@ def missingMeetingsApprentice_Mosad():
             elif (date.today() - visitEvent.visit_date).days > 90 and Report.ent_reported not in no_visit_dict:
                 daysFromNow = (date.today() - Report.visit_date).days if Report.visit_date is not None else 100
                 no_visit_dict[Apprentice1.id] = daysFromNow
-        print(no_visit_dict)
         return jsonify([{"apprentice": str(k), "gap": v} for k, v in no_visit_dict.items()],
                        ), HTTPStatus.OK
     except Exception as e:
@@ -434,7 +427,6 @@ def lowScoreApprentice_mosad():
             if ent[1] not in forgotenApprenticeList:
                 forgotenApprenticeList[ent[0]] = 0
 
-        print(forgotenApprenticeList)
         return jsonify({
             'lowScoreApprentice_Count': forgotenApprenticCount,
             'lowScoreApprentice_List': [str(key) for key, value in forgotenApprenticeList.items()],
@@ -461,7 +453,6 @@ def melave_score_mosad():
     if correct_auth() == False:
         return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     institution = request.args.get("institutionId")
-    print(institution)
     from src.routes.homepage import get_melave_score
     counts_melave_score, score_melaveProfile_list = get_melave_score(mosad=institution)
     return jsonify(score_melaveProfile_list), HTTPStatus.OK
@@ -580,7 +571,6 @@ def Melave():
         too_old = datetime.today() - timedelta(days=100)
         Apprentice_melaveId_forgoten = db.session.query(Apprentice.id).filter(Apprentice.accompany_id == melaveId,
                                                                               Apprentice.association_date < too_old).all()
-        print(Apprentice_melaveId_forgoten)
         Apprentice_melaveId_forgoten = [r[0] for r in Apprentice_melaveId_forgoten]
         newvisitcalls = db.session.query(Report.ent_reported).filter(Report.user_id == melaveId,
                                                                     Apprentice.id == Report.ent_reported,
@@ -888,7 +878,6 @@ def melave_score(melaveId):
         all_melave_Apprentices = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == melaveId).all()
         if len(all_melave_Apprentices) == 0:
-            print(melaveId)
             return 100, 0, 0, 0
         # call_score
         visitcalls = db.session.query(Report.ent_reported, Report.visit_date).filter(
@@ -1212,7 +1201,6 @@ def compute_visit_score(all_children, visits, maxScore, expected_gap, user_id):
     # key is apprenticeId and value is list of  gaps visits date
     for index in range(0, len(visits)):
         visitcalls_melave_list[visits[index][0]].append(visits[index][1])
-    # print(visitcalls_melave_list)
     visitcalls_melave_avg = 0
     gap_melave_list = defaultdict(list)
 
@@ -1253,7 +1241,6 @@ def compute_visit_score_users(all_children, visits, maxScore, expected_gap, user
     # key is apprenticeId and value is list of  gaps visits date
     for index in range(0, len(visits)):
         visitcalls_melave_list[visits[index][0]].append(visits[index][1])
-    # print(visitcalls_melave_list)
     visitcalls_melave_avg = 0
     gap_melave_list = defaultdict(list)
 

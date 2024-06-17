@@ -39,8 +39,6 @@ def getOTP_form():
         send_sms_019(["559482844"], [created_by_phone],
                      "your verify service verification code from **tochnit hadar** is : " + str(otp_code))
         user_otp_dict[str(created_by_phone)] = otp_code
-        # session['otp_code'] = hotp
-        # print(user_otp_dict)
         return jsonify({"result": "success"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -83,16 +81,13 @@ def verifyOTP_form():
         if userEnt is None:
             return jsonify({"result": "not in system", "firsOnboarding": True}), 401
         if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
-            print("not null")
             accessToken = int(str(uuid.uuid4().int)[:5])
             red.hset(created_by_phone, "accessToken", accessToken)
             redisaccessToken = red.hget(created_by_phone, "accessToken").decode("utf-8")
-            print(redisaccessToken)
             return jsonify({"result": accessToken, "firsOnboarding": False}), HTTPStatus.OK
         red.hdel(created_by_phone, "accessToken")
         accessToken = int(str(uuid.uuid4().int)[:5])
         red.hset(created_by_phone, "accessToken", accessToken)
-        print(accessToken)
         # red.hset(int(str(created_by_phone)), "accessToken", accessToken)
         return jsonify({"result": accessToken, "firsOnboarding": True}), HTTPStatus.OK
     except Exception as e:
@@ -103,7 +98,6 @@ def verifyOTP_form():
 def get_CitiesDB():
     try:
         CityList = db.session.query(City.name).all()
-        print(CityList)
         return jsonify([i[0] for i in [tuple(row) for row in CityList]])
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -147,18 +141,12 @@ def verifyOTP_twilo():
     except:
         return jsonify({"result": "not in system"}), HTTPStatus.OK
 
-    print(verification_check.status)
     time.sleep(2.4)
     if verification_check.status != "approved":
         return jsonify({"result": "wrong otp"}), HTTPStatus.OK
     userEnt = User.query.get(created_by_phone)
     if userEnt is None:
         return jsonify({"result": "not in system"}), HTTPStatus.OK
-    print(userEnt.name)
-    print(userEnt.last_name)
-    print(userEnt.email)
-    print(userEnt.birthday)
-    print(userEnt.cluster_id)
 
     if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
         print("not null")

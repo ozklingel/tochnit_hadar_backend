@@ -29,18 +29,11 @@ def add_reports_form():
     ent_group_name = ""
     attachments = []
     description = ""
-    try:
-        ent_group_name = str(data['ent_group'])
-    except:
-        print("")
-    try:
-        attachments = data['attachments']
-    except:
-        print("")
-    try:
-        description = data['description']
-    except:
-        print("")
+
+    ent_group_name = str(data.get('ent_group'))
+    attachments = data.get('attachments')
+    description = data.get('description')
+
     if user:
         List_of_repored = data['List_of_repored']
         vis_id = int(str(uuid.uuid4().int)[:5])
@@ -115,7 +108,6 @@ def getAll_reports_form():
         if "3" in user1ent.role_ids:
             userList = db.session.query(User.id).all()
         for ent in userList:
-            print(ent)
             reportList = db.session.query(Report.ent_reported, Report.ent_group, Report.note, Report.visit_date, Report.id,
                                           Report.title, Report.description, Report.attachments, Report.allreadyread,
                                           Report.created_at).filter(Report.user_id == ent.id).all()
@@ -129,7 +121,6 @@ def getAll_reports_form():
                 reportedList = []
                 reported_name_str = ""
                 for noti in notiList:
-                    print(noti)
                     reportedList.append(str(noti.ent_reported))
                     reported_name = db.session.query(Apprentice.name, Apprentice.last_name).filter(
                         Apprentice.id == noti.ent_reported).first()
@@ -178,7 +169,6 @@ def update():
             setattr(updatedEnt, key, data[key])
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
@@ -203,13 +193,11 @@ def filter_report():
             reports_user = db.session.query(Report.id).filter(Report.user_id.in_(users)).all()
             reports_apprentice = db.session.query(Report.id).filter(Report.ent_reported.in_(apprentice)).all()
         ent_group_concat = ", ".join(ent_group_dict.values())
-        print(ent_group_concat)
         # reports_ent_group=db.session.query(Visit.id).filter(Visit.ent_group==ent_group.id,ent_group.group_name==ent_group_concat).all()
         users_mess = [str(i[0]) for i in [tuple(row) for row in reports_user]]
         apprentice_mess = [str(i[0]) for i in [tuple(row) for row in reports_apprentice]]
         # ent_group_mess=[str(i[0]) for i in [tuple(row) for row in reports_ent_group]]
         result = set(users_mess + apprentice_mess)
-        print(result)
         return jsonify([str(row) for row in result]
                        ), HTTPStatus.OK
     except Exception as e:
@@ -258,7 +246,6 @@ def add_report_excel():
         ent_group = row[7].value
         if attachments == ["None"]:
             attachments = []
-        print(row)
         rep = Report(
 
             id=int(str(uuid.uuid4().int)[:5]),

@@ -27,7 +27,6 @@ def delete():
 
         data = request.json
         apprenticetId = data['apprenticetId']
-        print(apprenticetId)
         res = db.session.query(Notification).filter(Notification.subject == apprenticetId, ).delete()
         res = db.session.query(Report).filter(Report.ent_reported == apprenticetId, ).delete()
         res = db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
@@ -64,12 +63,9 @@ def update():
                 else:
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
-                print("front_end_dict[key]", front_end_dict[key])
-                print("data[key]", data[key])
                 setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), 401
@@ -282,7 +278,6 @@ def add_apprentice_excel():
             db.session.add(Apprentice1)
         except Exception as e:
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
-    print("done")
     db.session.commit()
     return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
 
@@ -292,7 +287,6 @@ def maps_apprentices():
     try:
 
         created_by_id = request.args.get('userId')
-        print(created_by_id)
         apprenticeList = []
         user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
             User.id == created_by_id).first()
@@ -408,10 +402,8 @@ def maps_apprentices():
             # acount not found
             return jsonify([])
         else:
-            # print(f' notifications: {my_dict}]')
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
-            # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.OK
 

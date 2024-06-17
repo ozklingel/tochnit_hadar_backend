@@ -479,7 +479,6 @@ def add_notificaion_to_ahraiTohnit(user):
                                                                                         "") + Apprentice1.name + ","
                 inst_forgoten_dict[inst] = melave_appren_forgoten
             eshcol_forgoten_dict[eshcol[0]] = inst_forgoten_dict
-        print("eshcol_forgoten_dict", eshcol_forgoten_dict)
         forgoten_str = ""
         for eshcol, dict2 in eshcol_forgoten_dict.items():
             forgoten_str += str(eshcol) + ":"
@@ -489,7 +488,6 @@ def add_notificaion_to_ahraiTohnit(user):
                     forgoten_str += melave + ":" + appren + "\n"
                 forgoten_str += "\n"
             forgoten_str += "\n"
-        print("forgoten_str", forgoten_str)
 
         notification1 = Notification(userid=user.id, subject=str(inst), event=config.forgotenApprentice_list,
                                       details=FORGOTTEN_APPRENTICE_DETAILS.format(user.name) + str(forgoten_str),
@@ -504,13 +502,9 @@ def add_notificaion_to_ahraiTohnit(user):
 def getAll_notification_form(isExternal=True):
     if correct_auth(isExternal) == False:
         return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-    print("init_weekDay:", init_weekDay)
-    print("weekday ", date.today().weekday())
     user = request.args.get('userId')
-    print("user:", user)
     user_ent = db.session.query(User.role_ids, User.institution_id, User.eshcol, User.id, User.name,
                                 User.association_date).filter(User.id == user).first()
-    print("user role:", user_ent[0])
     if "0" in user_ent[0]:  # melave
         add_notificaion_to_melave(user_ent)
     if "1" in user_ent[0]:  # mosad
@@ -525,7 +519,6 @@ def getAll_notification_form(isExternal=True):
     notiList = db.session.query(Notification).filter(Notification.userid == user).order_by(
         Notification.date.desc()).all()
     my_dict = []
-    print()
     for noti in notiList:
         daysFromNow = (date.today() - noti.date).days if noti.date is not None else ""
         if noti.event == config.groupMeet_report:
@@ -577,7 +570,6 @@ def getAll_notification_form(isExternal=True):
         # acount not found
         return jsonify([])
     else:
-        # print(f' notifications: {my_dict}]')
         # TODO: get Noti form to DB
         return jsonify(my_dict), HTTPStatus.OK
 
@@ -600,7 +592,6 @@ def add_notification_form():
         else:
             subject_ent = subject_ent.name
         details = EVENT_DETAILS.format(user_ent.name, date, event, subject_ent) + json_object["details"]
-        print(details)
         frequency = json_object["frequency"] if json_object["frequency"] is not None else "never"
         notification1 = Notification(
             userid=user,
@@ -699,7 +690,6 @@ def setWasRead_notification_form():
         noti.allreadyread = True
         db.session.commit()
         if notiId:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
     except:
@@ -736,7 +726,6 @@ def setSetting_notification_form():
         return jsonify({'result': 'wrong id '}), HTTPStatus.OK
 
     if user:
-        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
 
@@ -751,12 +740,10 @@ def getNotificationSetting_form():
                                            User.notifyMorning_weekly_report, User.notifyMorning_sevev, User.notifyDayBefore_sevev,
                                            User.notifyStartWeek_sevev,).filter(
             User.id == user).first()
-        print("notiSettingList", notiSettingList)
         if not notiSettingList:
             # acount not found
             return jsonify(["Wrong id or emty list"])
         else:
-            # print(f' notifications: {my_dict}]')
             # TODO: get Noti form to DB
             return jsonify({"notifyMorning": notiSettingList.notifyMorning,
                             "notifyDayBefore": notiSettingList.notifyDayBefore
@@ -799,7 +786,6 @@ def updateTask():
             setattr(updatedEnt, key, data[key])
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK

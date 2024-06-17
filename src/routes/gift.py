@@ -39,10 +39,7 @@ def getGift():
     try:
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-        teudat_zehut = request.args.get('teudat_zehut')
-        base = request.args.get('base')
         giftCode = db.session.query(Gift).filter(Gift.was_used == False).first()
-        print(giftCode)
         if not giftCode:
             # acount not found
             return jsonify({'result': 'no code available'}), HTTPStatus.OK

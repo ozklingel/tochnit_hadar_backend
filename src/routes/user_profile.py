@@ -57,20 +57,16 @@ def update():
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')
-        print(userId)
         data = request.json
         updatedEnt = User.query.get(userId)
-        print("data:", data)
         for key in data:
             if key == "city":
                 CityId = db.session.query(City).filter(
                     City.name == str(data[key])).first()
-                print("CityId", CityId)
                 setattr(updatedEnt, "city_id", CityId.id)
             if key == "region":
                 ClusterId = db.session.query(Cluster.id).filter(
                     Cluster.name == str(data[key])).first()
-                print("ClusterId", ClusterId.id)
                 setattr(updatedEnt, "cluster_id", ClusterId.id)
             elif key == "email" or key == "birthday":
                 if validate_email(data[key]):
@@ -82,7 +78,6 @@ def update():
 
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'no updatedEnt'}), 401
@@ -97,7 +92,6 @@ def getProfileAtributes_form():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         userEnt = User.query.get(created_by_id)
-        print(userEnt)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             regionName = db.session.query(Cluster.name).filter(Cluster.id == city.cluster_id).first()
@@ -175,7 +169,6 @@ def add_user_manual():
     if correct_auth() == False:
         return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
-    print(data)
     try:
         first_name = data['first_name']
         last_name = data['last_name']
@@ -190,7 +183,6 @@ def add_user_manual():
         CityId = db.session.query(City).filter(City.name == city_name).first()
         # institution_id = db.session.query(Institution.id).filter(Institution.name==institution_name).first()
         institution_id = institution_id[0] if institution_id else 0
-        print(institution_id)
         useEnt = User(
             id=int(phone[1:]),
             name=first_name,
@@ -217,13 +209,11 @@ def myPersonas():
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
-        print(created_by_id)
         apprenticeList = []
         user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
             User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
-            print(apprenticeList)
             userList = []
         if "1" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(
@@ -239,7 +229,6 @@ def myPersonas():
         my_dict = []
 
         for noti in apprenticeList:
-            print(noti.id)
             accompany = db.session.query(User.name, User.last_name).filter(
                 User.id == Apprentice.accompany_id).first()
             call_status = visit_gap_color(config.call_report, noti, 30, 15)
@@ -251,7 +240,6 @@ def myPersonas():
                                          Notification.date).filter(
                 Notification.subject == str(noti.id),
                 Notification.numoflinesdisplay == 3).all()
-            print(eventlist)
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -420,13 +408,13 @@ def myPersonas():
     except Exception as e:
         return jsonify({'result': str(e)}), 401
 def correct_auth(external=True):
-    print("external1",external)
+    print("Is external: ",external)
     if config.Authorization_is_On and external:
         userId = request.args.get("userId")
         accessToken = request.headers.get('Authorization')
         redisaccessToken = red.hget(userId, "accessToken").decode("utf-8")
-        print("accessToken:", accessToken)
-        print("redisaccessToken:", redisaccessToken)
+        print("accessToken: ", accessToken)
+        print("redisaccessToken: ", redisaccessToken)
         if redisaccessToken != accessToken:
             return False
         return True

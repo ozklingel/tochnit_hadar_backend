@@ -47,58 +47,20 @@ def setSetting_madadim():
         )
         db.session.add(rep)
 
-    try:
-        madadim_setting1.call_madad_date = data['call_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.meet_madad_date = data['meet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.groupMeet_madad_date = data['groupMeet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.callHorim_madad_date = data['callHorim_madad_date']
-    except:
-        print()
-    try:
-        config.basis_madad_date = data['basis_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.doForBogrim_madad_date = data['doForBogrim_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.matzbarmeet_madad_date = data['matzbarmeet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.professionalmeet_madad_date = data['professionalMeet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.hazana_madad_date = data['hazana_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.mosadYeshiva_madad_date = data['mosadYeshiva_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.eshcolMosadMeet_madad_date = data['eshcolMosadMeet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.tochnitMeet_madad_date = data['tochnitMeet_madad_date']
-    except:
-        print()
-    try:
-        madadim_setting1.cenes_madad_date = data['cenes_madad_date']
-    except:
-        print()
+    madadim_setting1.call_madad_date.get('call_madad_date')
+    madadim_setting1.meet_madad_date.get('meet_madad_date')
+    madadim_setting1.groupMeet_madad_date.get('groupMeet_madad_date')
+    madadim_setting1.callHorim_madad_date.get('callHorim_madad_date')
+    madadim_setting1.basis_madad_date.get('basis_madad_date')
+    madadim_setting1.doForBogrim_madad_date.get('doForBogrim_madad_date')
+    madadim_setting1.matzbarmeet_madad_date.get('matzbarmeet_madad_date')
+    madadim_setting1.professionalmeet_madad_date.get('professionalMeet_madad_date')
+    madadim_setting1.hazana_madad_date.get('hazana_madad_date')
+    madadim_setting1.mosadYeshiva_madad_date.get('mosadYeshiva_madad_date')
+    madadim_setting1.eshcolMosadMeet_madad_date.get('eshcolMosadMeet_madad_date')
+    madadim_setting1.tochnitMeet_madad_date.get('tochnitMeet_madad_date')
+    madadim_setting1.cenes_madad_date.get('cenes_madad_date')
+
     db.session.commit()
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
@@ -292,7 +254,6 @@ def addUsers(wb):
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
-            print("institution_name", institution_name)
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
             user = User(

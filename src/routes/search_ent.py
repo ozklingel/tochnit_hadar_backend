@@ -102,12 +102,9 @@ def filter_by_request(request):
                 query = query.filter(Apprentice.institution_mahzor.in_(preiods))
             if statuses:
                 ent_group_dict["statuses"] = str(statuses).replace("[", "").replace("]", "")
-                print(statuses)
                 query = query.filter(Apprentice.marriage_status.in_(statuses))
             if bases:
                 ent_group_dict["bases"] = str(bases).replace("[", "").replace("]", "")
-                print("bases", bases)
-                print(db.session.query(Base).filter(Base.name.in_(bases)).first())
                 query = query.filter(Base.id == Apprentice.base_address, Base.name.in_(bases))
             if hativa:
                 ent_group_dict["hativa"] = str(hativa).replace("[", "").replace("]", "")
@@ -117,7 +114,6 @@ def filter_by_request(request):
                 ent_group_dict["region"] = region
                 query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id,
                                      Cluster.name == region)
-            print(eshcols)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
                 query = query.filter(Apprentice.eshcol.in_(eshcols))
@@ -130,8 +126,6 @@ def filter_by_request(request):
                 res2 = query.all()
             except Exception as e:
                 print(str(e))
-        print("app", res2)
-        print("user", res1)
         users = [str(i[0]) for i in [tuple(row) for row in res1]]
         apprentice = [str(i[0]) for i in [tuple(row) for row in res2]]
         return users, apprentice, ent_group_dict

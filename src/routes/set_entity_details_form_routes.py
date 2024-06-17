@@ -23,11 +23,9 @@ def setEntityDetailsByType():
     data = request.json
     try:
         typeOfSet = data['typeOfSet']
-        print(typeOfSet)
         updatedEnt = None
         if typeOfSet == "Onboarding":
             entityId = str(data['entityId'])
-            print(entityId)
             atrrToBeSet = data['atrrToBeSet']
             updatedEnt = User.query.get(entityId)
             for key in atrrToBeSet:
@@ -56,9 +54,7 @@ def setEntityDetailsByType():
 
         if typeOfSet == "userProfile":
             entityId = str(data['entityId'])
-            print(entityId)
             atrrToBeSet = data['atrrToBeSet']
-            print(atrrToBeSet)
             updatedEnt = User.query.get(entityId)
             for key in atrrToBeSet:
                 setattr(updatedEnt, key, str(atrrToBeSet[key]))
@@ -66,7 +62,6 @@ def setEntityDetailsByType():
 
         if typeOfSet == "apprenticeProflie":
             entityId = str(data['entityId'])
-            print(entityId)
             atrrToBeSet = data['atrrToBeSet']
             updatedEnt = Apprentice.query.get(entityId)
             for key in atrrToBeSet:
@@ -77,7 +72,6 @@ def setEntityDetailsByType():
             db.session.commit()
         if typeOfSet == "mosadProflie":
             entityId = str(data['entityId'])
-            print(entityId)
             atrrToBeSet = data['atrrToBeSet']
             updatedEnt = Institution.query.get(entityId)
             for key in atrrToBeSet:
@@ -87,7 +81,6 @@ def setEntityDetailsByType():
         return jsonify({'result': str(e)}), 401
 
     if updatedEnt:
-        # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
         # TODO: add contact form to DB
         return jsonify({'result': 'success'}), HTTPStatus.OK
     return jsonify({'result': 'error'}), HTTPStatus.OK

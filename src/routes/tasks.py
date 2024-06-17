@@ -35,8 +35,6 @@ def getTasks():
 
     for task in tasks:
         daysFromNow = (dt.today() - task.date).days if task.date is not None else 100
-        print("daysFromNow", daysFromNow)
-        print("task.frequency_end", task.frequency_end)
         date_format = '%Y-%m-%d'
         # time to new tsk
         if daysFromNow == 0 and dt.strptime(task.frequency_end[:-9],
@@ -67,7 +65,7 @@ def getTasks():
     todo_dict = []
     todo_ids = []
     try:
-        print(res[0])
+        res[0]
     except Exception as e:
         return jsonify([]), HTTPStatus.OK
 
@@ -143,7 +141,6 @@ def updateTask():
             setattr(updatedEnt, key, data[key])
         db.session.commit()
         if updatedEnt:
-            # print(f'setWasRead form: subject: [{subject}, notiId: {notiId}]')
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'error'}), HTTPStatus.OK
@@ -179,7 +176,6 @@ def add_task():
             future_date_finish = date
         else:
             future_date_finish = datetime.datetime.today() - datetime.timedelta(days=1000 * (-1))
-        print("future_date_finish", future_date_finish)
         task_userMade1 = Task(
             userid=user,
             event=event,

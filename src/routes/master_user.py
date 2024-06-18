@@ -19,7 +19,7 @@ from src.models.user_model import User
 from src.models.report_model import Report
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
-homeDir = "/home/ubuntu/flaskapp/"
+base_dir = "" #"/home/ubuntu/flaskapp/"
 
 
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
@@ -279,6 +279,7 @@ def addUsers(wb):
 def initDB():
     try:
         type = request.args.get('type')
+        total = request.args.get('total')
 
         giftCode = db.session.query(Gift).delete()
         giftCode = db.session.query(Report).delete()
@@ -288,6 +289,19 @@ def initDB():
         giftCode = db.session.query(Apprentice).delete()
         db.session.commit()
         uncommited_ids = []
+        if total:
+            path = base_dir + 'data/citiesToAdd.xlsx'
+            wb = load_workbook(filename=path)
+            res = db.session.query(City).delete()
+            upload_CitiesDB(wb)
+            path = base_dir + 'data/mosad.xlsx'
+            wb = load_workbook(filename=path)
+            res = db.session.query(Institution).delete()
+            add_mosad_excel(wb)
+            path = base_dir + 'data/mosad.xlsx'
+            wb = load_workbook(filename=path)
+            res = db.session.query(Base).delete()
+            upload_baseDB()
         if type == "lab":
             path = 'data/apprentice_enter_lab.xlsx'
             wb = load_workbook(filename=path)

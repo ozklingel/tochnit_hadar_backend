@@ -19,3 +19,5 @@ class Task(db.Model):
     details = db.Column(db.String(100), nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.String(20), nullable=False, default="todo")
+    subject = db.Column(db.String(20), nullable=False, default="")
+    allreadyread = db.Column("already_read", db.Boolean, nullable=True, default=False)

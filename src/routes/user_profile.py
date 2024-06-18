@@ -13,7 +13,7 @@ from src.models.city_model import City
 from src.models.cluster_model import Cluster
 from src.models.message_model import Message
 from src.models.institution_model import Institution
-from src.models.notification_model import Notification
+from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
 
@@ -34,12 +34,12 @@ def delete():
         if updatedEnt:
             db.session.query(Message).filter(Message.created_for_id == userId, ).delete()
             db.session.query(Message).filter(Message.created_by_id == userId, ).delete()
-            db.session.query(Notification).filter(Notification.userid == userId, ).delete()
+            db.session.query(Task).filter(Task.userid == userId).delete()
             db.session.query(User).filter(User.id == userId).delete()
         else:
             updatedEnt = Apprentice.query.get(userId)
             if updatedEnt:
-                res = db.session.query(Notification).filter(Notification.subject == userId, ).delete()
+                res = db.session.query(Task).filter(Task.subject == userId).delete()
                 res = db.session.query(Report).filter(Report.ent_reported == userId, ).delete()
                 res = db.session.query(Apprentice).filter(Apprentice.id == userId).delete()
             else:
@@ -236,10 +236,9 @@ def myPersonas():
             Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
-            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
-                                         Notification.date).filter(
-                Notification.subject == str(noti.id),
-                Notification.numoflinesdisplay == 3).all()
+            eventlist = db.session.query(Task.id, Task.event, Task.details,
+                                         Task.date).filter(
+                Task.subject == str(noti.id)).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -408,7 +407,6 @@ def myPersonas():
     except Exception as e:
         return jsonify({'result': str(e)}), 401
 def correct_auth(external=True):
-    print("Is external: ",external)
     if config.Authorization_is_On and external:
         userId = request.args.get("userId")
         accessToken = request.headers.get('Authorization')

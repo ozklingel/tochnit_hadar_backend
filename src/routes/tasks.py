@@ -75,25 +75,22 @@ def getTasks():
             if "דוח" in ent["event"] or "עידכון" in ent["event"]:
                 continue
             todo_ids.append(ent["id"])
-            if ent["numOfLinesDisplay"] == 2 or (ent[
-                                                     "numOfLinesDisplay"] == 3 and "," in role.role_ids):  # if task is birthday or user created -its should be presented only if not melave only
-                del ent["numOfLinesDisplay"]
-                if ("," not in role.role_ids and ent["event"] in config.eshcol_reports) or (
-                        "," not in role.role_ids and ent["event"] in config.mosad_reports):
-                    ent["status"] = "private"
-                else:
-                    ent["status"] = "general"
+            if ("," not in role.role_ids and ent["event"] in config.eshcol_reports) or (
+                    "," not in role.role_ids and ent["event"] in config.mosad_reports):
+                ent["status"] = "private"
+            else:
+                ent["status"] = "general"
 
-                ent["id"] = str(ent["id"])
-                ent["subject"] = [ent["subject"]]
-                if ent["event"] == config.groupMeet_report or ent["event"] == config.basis_report:
-                    ent["subject"] = []
+            ent["id"] = str(ent["id"])
+            ent["subject"] = [ent["subject"]]
+            if ent["event"] == config.groupMeet_report or ent["event"] == config.basis_report:
+                ent["subject"] = []
+            ent["title"] = "מפגשים"
+            if ent["event"] in config.report_as_meet:
                 ent["title"] = "מפגשים"
-                if ent["event"] in config.report_as_meet:
-                    ent["title"] = "מפגשים"
-                if ent["event"] in config.reports_as_call:
-                    ent["title"] = "שיחות"
-                todo_dict.append(ent)
+            if ent["event"] in config.reports_as_call:
+                ent["title"] = "שיחות"
+            todo_dict.append(ent)
 
         ApprenticeList = db.session.query(Apprentice.id).filter(
             Apprentice.accompany_id == userId).all()

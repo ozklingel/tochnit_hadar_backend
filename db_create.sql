@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS institutions CASCADE ;
 DROP TABLE IF EXISTS clusters CASCADE ;
 DROP TABLE IF EXISTS user1 CASCADE ;
 DROP TABLE IF EXISTS apprentice CASCADE ;
-DROP TABLE IF EXISTS notifications CASCADE ;
 DROP TABLE IF EXISTS contact_forms CASCADE ;
 DROP TABLE IF EXISTS visits CASCADE ;
 DROP TABLE IF EXISTS ent_group CASCADE ;
@@ -218,27 +217,6 @@ CONSTRAINT fk_1
 
 
 );
-CREATE TABLE  notifications(
-
-id int,
-subject text DEFAULT '' ,
-userid int ,
-event text DEFAULT '',
-date DATE ,
-created_at timestamp,
-allreadyread boolean DEFAULT False,
-numOfLinesDisplay int  ,
-details text DEFAULT '',
-frequency text DEFAULT '',
-institution_id boolean DEFAULT False,
-PRIMARY KEY(id),
-CONSTRAINT fk_1
-      FOREIGN KEY(userid)
-      REFERENCES user1(id)
-
-
-
-);
 
 
 
@@ -291,6 +269,8 @@ Frequency_weekday text DEFAULT '',
 Frequency_meta text DEFAULT ''  ,
 details text DEFAULT '',
 status text DEFAULT '',
+subject text DEFAULT '' ,
+allreadyread boolean DEFAULT False,
 
 institution_id boolean DEFAULT False,
 PRIMARY KEY(id),

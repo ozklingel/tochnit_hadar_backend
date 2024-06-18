@@ -12,7 +12,7 @@ from src.models.apprentice_model import Apprentice, front_end_dict
 from src.models.base_model import Base
 from src.models.city_model import City
 from src.models.institution_model import Institution
-from src.models.notification_model import Notification
+from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
@@ -27,7 +27,7 @@ def delete():
 
         data = request.json
         apprenticetId = data['apprenticetId']
-        res = db.session.query(Notification).filter(Notification.subject == apprenticetId, ).delete()
+        res = db.session.query(Task).filter(Task.subject == apprenticetId).delete()
         res = db.session.query(Report).filter(Report.ent_reported == apprenticetId, ).delete()
         res = db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
         db.session.commit()
@@ -308,10 +308,9 @@ def maps_apprentices():
             mentor_name = db.session.query(User.name, User.last_name).filter(User.id == mentor_id).first()
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
-            eventlist = db.session.query(Notification.id, Notification.event, Notification.details,
-                                         Notification.date).filter(
-                Notification.subject == str(noti.id),
-                Notification.numoflinesdisplay == 3).all()
+            eventlist = db.session.query(Task.id, Task.event, Task.details,
+                                         Task.date).filter(
+                Task.subject == str(noti.id)).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(

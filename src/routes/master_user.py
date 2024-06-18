@@ -260,6 +260,7 @@ def addUsers(wb):
             cluster_id = db.session.query(Cluster.id).filter(
                 Cluster.name == cluster_name).first()
 
+
             user = User(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
@@ -267,14 +268,13 @@ def addUsers(wb):
                 role_ids=role_ids,
                 # email=str(email),
                 cluster_id=cluster_id.id,
-                institution_id=institution_id.id,
+                institution_id=institution_id.id if institution_id else None,
             )
 
             db.session.add(user)
 
             db.session.commit()
         except Exception as e:
-            print("user")
             print(str(e))
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     return [x for x in uncommited_ids if x is not None]
@@ -468,7 +468,7 @@ def add_mosad_excel(wb):
                 db.session.add(Cluster1)
             Institution1 = Institution(
                 # email=email,
-                id=uuid.uuid4(),
+                id=str(uuid.uuid4().int)[:5],
                 cluster_id=cluster_id1,
                 roshYeshiva_phone=roshYeshiva_phone,
                 roshYeshiva_name=roshYeshiva_name,
@@ -499,9 +499,10 @@ def upload_baseDB():
         with open(base_dir + 'data/base_add.csv', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
-                ent = Base(uuid.uuid4(), row[0].strip(), row[1].strip())
+                ent = Base(str(uuid.uuid4().int)[:5], row[0].strip(), row[1].strip())
                 db.session.add(ent)
         db.session.commit()
         return jsonify({"result": "success"}), HTTPStatus.OK
     except Exception as e:
+        print(str(e))
         return jsonify({'result': str(e)}), HTTPStatus.OK

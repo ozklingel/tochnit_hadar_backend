@@ -237,7 +237,8 @@ def myPersonas():
             city = db.session.query(City).filter(City.id == noti.city_id).first()
             reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
             eventlist = db.session.query(Task.id, Task.event, Task.details,
-                                         Task.date).filter(Task.subject == str(noti.id)).all()
+                                         Task.date).filter(
+                Task.subject == str(noti.id)).all()
             base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
             base_id = base_id[0] if base_id else 0
             my_dict.append(
@@ -293,9 +294,9 @@ def myPersonas():
                  "events": [{"id": row[0], "subject": row[0],
                       "date": to_iso(row[3]),
                       "created_at": to_iso(row[3]),
-                      "event": row[1], "allreadyread": False, "description":row[2],
+                      "daysfromnow": 0, "event": row[1], "allreadyread": False, "description":row[2],
                       "frequency": "never",
-                      }for row in
+                      "numOfLinesDisplay": 2}for row in
                       eventlist],
                 "id": str(noti.id),
                 "thMentor_name": accompany.name + " " + accompany.last_name,

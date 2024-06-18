@@ -210,20 +210,3 @@ def delete():
         return jsonify({"result": str(e)}), HTTPStatus.BAD_REQUEST
     return jsonify({"result": "success"}), HTTPStatus.OK
     # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
-
-
-@tasks_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_task_form():
-    if correct_auth() == False:
-        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-    data = request.json
-    task_id = data['task_id']
-    try:
-        noti = Task.query.get(task_id)
-        noti.allreadyread = True
-        db.session.commit()
-        if task_id:
-            # TODO: add contact form to DB
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-    except:
-        return jsonify({'result': 'wrong id'}), HTTPStatus.OK

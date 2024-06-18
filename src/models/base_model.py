@@ -13,3 +13,14 @@ class Base(db.Model):
         self.id = id
         self.name = name
         self.cordinatot = cordinatot
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "cordinatot": self.last_name,
+           }
+

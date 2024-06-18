@@ -11,8 +11,7 @@ class Apprentice(db.Model):
     __tablename__ = APPRENTICES_TBL
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    accompany_id = db.Column(ACCOMPANY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(USERS_TBL, ID_COL)),
-                             nullable=False)
+    accompany_id = db.Column(ACCOMPANY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(USERS_TBL, ID_COL)),nullable=False)
     name = db.Column("first_name", db.String(50), nullable=False, default="")
     last_name = db.Column(LAST_NAME_COL, db.String(50), nullable=False, default="")
     phone = db.Column(PHONE_COL, db.String(50), nullable=False, default="")
@@ -36,8 +35,7 @@ class Apprentice(db.Model):
     contact3_last_name = db.Column("contact3_last_name", db.String(50), nullable=False, default="")
     contact3_email = db.Column("contact3_email", db.String(50), nullable=False, default="")
     contact3_relation = db.Column("contact3_relation", db.String(50), nullable=False, default="")
-    city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(CITIES_TBL, ID_COL)), nullable=False,
-                        default=313)
+    city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(CITIES_TBL, ID_COL)), nullable=True)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False, default="")
     high_school_name = db.Column(HIGH_SCHOOL_NAME_COL, db.String(50), nullable=False, default="")
     high_school_teacher = db.Column(HIGH_SCHOOL_TEACHER_COL, db.String(50), nullable=False, default="")
@@ -47,8 +45,7 @@ class Apprentice(db.Model):
     teacher_grade_a_phone = db.Column(TEACHER_GRADE_A_PHONE_COL, db.String(50), nullable=False, default="")
     teacher_grade_b = db.Column(TEACHER_GRADE_B_COL, db.String(50), nullable=False, default="")
     teacher_grade_b_phone = db.Column(TEACHER_GRADE_B_PHONE_COL, db.String(50), nullable=False, default="")
-    institution_id = db.Column(INSTITUTION_ID_COL, db.Integer,
-                               ForeignKey(get_foreign_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False, default=0)
+    institution_id = db.Column(INSTITUTION_ID_COL, db.Integer,ForeignKey(get_foreign_key_source(INSTITUTIONS_TBL, ID_COL)), nullable=False, default=0)
     hadar_plan_session = db.Column("thperiod", db.String(10), nullable=False, default=0)  # mahzor
     base_address = db.Column("militarycompoundid", db.Integer, nullable=False, default=14509)
     recruitment_date = db.Column(RECRUITMENT_DATE_COL, db.DateTime, nullable=True)
@@ -73,36 +70,81 @@ class Apprentice(db.Model):
     association_date = db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
     birthday_ivry = db.Column("birthday_ivry", db.String(50), nullable=False, default="ה' בטבת")
     marriage_date_ivry = db.Column("marriage_date_ivry", db.DateTime, nullable=True)
-
     militaryPositionNew = db.Column("militarypositionnew", db.String(50), nullable=False, default="")  # מפקד כיתה
     serve_type = db.Column(SERVE_TYPE_COL, db.String(50), nullable=False, default="")  # קבע
     army_role = db.Column(ARMY_ROLE_COL, db.String(50), nullable=False, default="")  # סיירות
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False, default="")  # צנחנים
 
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-def as_dict(self):
-    return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "contact1_email": self.contact1_email,
+            "marriage_date": self.marriage_date,
+            "marriage_status": self.marriage_status,
+            "cluster_id": self.cluster_id,
+            "birthday": self.birthday,
+            "email": self.email,
+            "phone": self.phone,
+            "last_name": self.last_name,
+            "name": self.name,
+            "accompany_id": self.accompany_id,
+            "contact3_phone": self.contact3_phone,
+            "contact2_relation": self.contact2_relation,
+            "contact2_last_name": self.contact2_last_name,
+            "contact2_first_name": self.contact2_first_name,
+            "contact2_phone": self.contact2_phone,
+            "contact2_email": self.contact2_email,
+            "contact1_relation": self.contact1_relation,
+            "contact1_phone": self.contact1_phone,
+            "contact1_last_name": self.contact1_last_name,
+            "contact1_first_name": self.contact1_first_name,
+            "highSchoolInstitution": self.highSchoolInstitution,
+            "high_school_teacher_phone": self.high_school_teacher_phone,
+            "high_school_teacher": self.high_school_teacher,
+            "high_school_name": self.high_school_name,
+            "address": self.address,
+            "city_id": self.city_id,
+            "contact3_relation": self.contact3_relation,
+            "contact3_email": self.contact3_email,
+            "contact3_last_name": self.contact3_last_name,
+            "contact3_first_name": self.contact3_first_name,
+            "paying": self.paying,
+            "release_date": self.release_date,
+            "recruitment_date": self.recruitment_date,
+            "base_address": self.base_address,
+            "hadar_plan_session": self.hadar_plan_session,
+            "institution_id": self.institution_id,
+            "teacher_grade_b_phone": self.teacher_grade_b_phone,
+            "teacher_grade_b": self.teacher_grade_b,
+            "teacher_grade_a_phone": self.teacher_grade_a_phone,
+            "teacher_grade_a": self.teacher_grade_a,
+            "high_school_teacher_email": self.high_school_teacher_email,
+            "militaryupdateddatetime": self.militaryupdateddatetime,
+            "militaryPositionOld": self.militaryPositionOld,
+            "educationalinstitution": self.educationalinstitution,
+            "educationfaculty": self.educationfaculty,
+            "workoccupation": self.workoccupation,
+            "worktype": self.worktype,
+            "workplace": self.workplace,
+            "workstatus": self.workstatus,
+            "accompany_connect_status": self.accompany_connect_status,
+            "serve_type": self.serve_type,
+            "militaryPositionNew": self.militaryPositionNew,
+            "marriage_date_ivry": self.marriage_date_ivry,
+            "birthday_ivry": self.birthday_ivry,
+            "association_date": self.association_date,
+            "photo_path": self.photo_path,
+            "institution_mahzor": self.institution_mahzor,
+            "teudatZehut": self.teudatZehut,
+            "teacher_grade_b_email": self.teacher_grade_b_email,
+            "teacher_grade_a_email": self.teacher_grade_a_email,
+            "army_role": self.army_role,
+            "unit_name": self.unit_name,
 
-
-def to_attributes(self, city: str, cluster_id: str, apprentice_list):
-    return {
-        "id": str(self.id),
-        "name": self.name,
-        "last_name": self.last_name,
-        "birthday": to_iso(self.birthday),
-        "email": self.email,
-        "city": city,
-        "cluster_id": cluster_id,
-        "role_ids": [int(r) for r in self.role_ids.split(",")],
-        "institution": str(self.institution_id),
-        "eshcol": str(self.cluster_id),
-        "apprentices": apprentice_list,
-        "phone": str(self.id),
-        "teudatZehut": str(self.teudatZehut),
-        "photo_path": self.photo_path if self.photo_path is not None else 'https://www.gravatar.com/avatar'
-    }
-
-
+        }
 front_end_dict = {
     "address": "address",
 

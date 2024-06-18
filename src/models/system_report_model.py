@@ -10,3 +10,4 @@ class SystemReport(db.Model):
     type = db.Column("type", db.String(20), nullable=False)
     related_id = db.Column("related_id", db.Integer, nullable=False)
     value = db.Column("value", db.String(20), nullable=False)
+

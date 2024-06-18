@@ -19,3 +19,20 @@ class Task(db.Model):
     details = db.Column(db.String(100), nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.String(20), nullable=False, default="todo")
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "userid": str(self.user_id),
+            "event": self.event,
+            "date": self.date,
+            "frequency_weekday": self.frequency_weekday,
+            "frequency_end": self.frequency_end,
+            "frequency_meta": str(self.frequency_meta),
+            "details": self.details,
+            "created_at": self.created_at,
+            "status": self.status,
+
+        }

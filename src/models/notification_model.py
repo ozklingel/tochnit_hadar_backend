@@ -21,3 +21,20 @@ class Notification(db.Model):
     details = db.Column(db.String(100), nullable=False, default="")
     frequency = db.Column(db.String(100), nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "userid": str(self.userid),
+            "subject": self.subject,
+            "event": self.event,
+            "date": self.date,
+            "allreadyread": self.allreadyread,
+            "details": self.details,
+            "frequency": self.frequency,
+            "created_at": self.created_at,
+
+        }

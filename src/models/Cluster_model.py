@@ -11,3 +11,12 @@ class Cluster(db.Model):
     def __init__(self, id, name):
         self.id = id
         self.name = name
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "name": self.name,
+           }

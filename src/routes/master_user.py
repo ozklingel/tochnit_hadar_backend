@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
+from src.models.Cluster_model import Cluster
 from src.models.madadim_setting_model import MadadimSetting
 from src.routes.user_profile import correct_auth
 from src.services import db
@@ -415,3 +416,91 @@ def add_report(wb):
         return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
+
+
+def upload_CitiesDB(wb):
+    try:
+        import csv
+        my_list = []
+        sheet = wb.active
+        for row in sheet.iter_rows(min_row=2):
+                my_list.append(City(row[2].value, row[1].value.strip(), row[0].value))
+        for ent in my_list:
+            db.session.add(ent)
+            db.session.commit()
+
+        return jsonify({"result": "success"}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
+
+
+def add_mosad_excel(wb):
+    sheet = wb.active
+    not_commited = []
+    for row in sheet.iter_rows(min_row=2):
+        name = row[0].value.strip()
+        phone = str(row[1].value)
+        email = row[2].value.strip()
+        eshcol = row[3].value.strip()
+        roshYeshiva_phone = row[4].value
+        roshYeshiva_name = row[5].value.strip()
+        admin_phone = row[6].value.strip()
+        admin_name = row[7].value.strip()
+        owner_id = row[8].value
+        logo_path = row[9].value.strip() if row[9].value else ""
+        address = row[10].value.strip()
+        city = row[11].value.strip()
+        contact_name = row[12].value.strip()
+        contact_phone = row[13].value
+        try:
+            CityId = db.session.query(City.id).filter(City.name == city).first()
+            Institution1 = db.session.query(Institution.id).filter(Institution.name == name).first()
+            if Institution1:
+                not_commited.append(name)
+                continue
+            Cluster1 = db.session.query(Cluster.id).filter(Cluster.name == eshcol).first()
+            if Cluster1:
+                cluster_id1=Cluster1.id
+            else:
+                cluster_id1=uuid.uuid4()
+                Cluster1=Cluster(id=cluster_id1,name=eshcol)
+                db.session.add(Cluster1)
+            Institution1 = Institution(
+                # email=email,
+                id=uuid.uuid4(),
+                cluster_id=cluster_id1,
+                roshYeshiva_phone=roshYeshiva_phone,
+                roshYeshiva_name=roshYeshiva_name,
+                admin_phone=admin_phone,
+                admin_name=admin_name,
+                name=name,
+                owner_id=owner_id,
+                logo_path=logo_path,
+                contact_phone=str(contact_phone),
+                contact_name=str(contact_name),
+                phone=phone,
+                city_id=CityId.id,
+                address=address
+            )
+            db.session.add(Institution1)
+            db.session.commit()
+        except Exception as e:
+            print(str(e))
+            not_commited.append(name)
+    return jsonify({'result': 'success', "not_commited": not_commited}), HTTPStatus.OK
+
+
+def upload_baseDB():
+    try:
+        import csv
+        my_list = []
+        # /home/ubuntu/flaskapp/
+        with open(base_dir + 'data/base_add.csv', 'r', encoding="utf8") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                ent = Base(uuid.uuid4(), row[0].strip(), row[1].strip())
+                db.session.add(ent)
+        db.session.commit()
+        return jsonify({"result": "success"}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK

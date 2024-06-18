@@ -22,7 +22,7 @@ class Institution(db.Model):
     admin_phone = db.Column("admin_phone", db.String(50), nullable=False, default="")
     roshYeshiva_name = db.Column("roshyeshiva_name", db.String(50), nullable=False, default="")
     roshYeshiva_phone = db.Column("roshyeshiva_phone", db.String(50), nullable=False, default="")
-    eshcol_id = db.Column("eshcol_id", db.String(50), nullable=False, default="")
+    cluster_id = db.Column("eshcol_id", db.String(50), nullable=False, default="")
 
     # eshcol_id = db.Column("eshcol_id",db.Integer,ForeignKey(get_forgein_key_source("eshcol", ID_COL)), nullable=False)
 
@@ -36,7 +36,7 @@ front_end_dict = {
     "contact_name": "contact_name",
     "phone": "phone",
     "avatar": "logo_path",
-    "eshcol": "eshcol_id",
+    "eshcol": "cluster_id",
     "roshYeshiva_phone": "roshYeshiva_phone",
     "roshYeshiva_name": "roshYeshiva_name",
     "admin_phone": "admin_phone",

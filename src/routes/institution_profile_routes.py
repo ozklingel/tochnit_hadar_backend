@@ -13,7 +13,7 @@ from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
-from src.models.cluster_model import Cluster
+from src.models.Region_model import Region, Region
 from src.models.institution_model import Institution, front_end_dict
 from src.models.user_model import User
 from src.routes.set_entity_details_form_routes import validate_email
@@ -147,7 +147,7 @@ def getmyApprentices_form():
                     "street": noti.address,
                     "houseNumber": "1",
                     "apartment": "1",
-                    "region": str(city.cluster_id),
+                    "region": str(city.region_id),
                     "entrance": "a",
                     "floor": "1",
                     "postalCode": "12131",
@@ -168,7 +168,7 @@ def getmyApprentices_form():
                     "street": noti.address,
                     "houseNumber": "1",
                     "apartment": "1",
-                    "region": str(city.cluster_id) if city is not None else "",
+                    "region": str(city.region_id) if city is not None else "",
                     "entrance": "a",
                     "floor": "1",
                     "postalCode": "12131",
@@ -231,7 +231,7 @@ def getProfileAtributes_form():
                 "phone": str(institution_Ent.phone),
                 "address": institution_Ent.address,
                 "avatar": institution_Ent.logo_path if institution_Ent.logo_path is not None else 'https://www.gravatar.com/avatar',
-                "eshcol": str(institution_Ent.eshcol_id),
+                "eshcol": str(institution_Ent.cluster_id),
                 "roshYeshiva_phone": institution_Ent.roshYeshiva_phone,
                 "roshYeshiva_name": institution_Ent.roshYeshiva_name,
                 "admin_phone": str(institution_Ent.admin_phone),
@@ -248,7 +248,7 @@ def add_mosad():
     data = request.json
     print(data)
     name = data['name']
-    eshcol = data['eshcol']
+    cluster_id = data['eshcol']
     roshYeshiva_phone = data['roshYeshiva_phone']
     roshYeshiva_name = data['roshYeshiva_name']
     admin_phone = data['admin_phone']
@@ -268,7 +268,7 @@ def add_mosad():
             name=name,
             phone=phone,
             city_id=cityid[0] if cityid is not None else "",
-            eshcol_id=eshcol,
+            cluster_id=cluster_id,
             roshYeshiva_phone=roshYeshiva_phone,
             roshYeshiva_name=roshYeshiva_name,
             admin_phone=admin_phone,
@@ -301,13 +301,13 @@ def getAll():
         region = None
         if r.city_id != "":
             city = db.session.query(City).filter(City.id == r.city_id).first()
-            region = db.session.query(Cluster).filter(Cluster.id == city.cluster_id).first()
+            region = db.session.query(Region).filter(Region.id == city.region_id).first()
         melave_List = db.session.query(User).filter(User.institution_id == r.id, User.role_ids.contains("0")).all()
         apprenticeList = db.session.query(Apprentice.id).filter(Apprentice.institution_id == r.id).all()
         owner_details = db.session.query(User.name,User.last_name).filter(User.id == r.owner_id).first()
 
         my_list.append(
-            {"eshcol": str(r.eshcol_id),"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
+            {"eshcol": str(r.cluster_id),"id": str(r.id), "roshYeshiva_phone": r.roshYeshiva_phone, "roshYeshiva_name": r.roshYeshiva_name,
              "admin_name": r.admin_name, "admin_phone": r.admin_phone,
              "name": r.name, "racaz_firstName": owner_details.name if owner_details else "no owner","racaz_lastName": owner_details.last_name if owner_details else "no owner", "logo_path": r.logo_path or "",
              "contact_phone": r.contact_phone, "address": {
@@ -361,9 +361,9 @@ def update():
                     City.name == str(data[key])).first()
                 setattr(updatedEnt, "city_id", CityId.id)
             if key == "region":
-                ClusterId = db.session.query(Cluster.id).filter(
-                    Cluster.name == str(data[key])).first()
-                setattr(updatedEnt, "cluster_id", ClusterId.id)
+                region_id = db.session.query(Region.id).filter(
+                    Region.name == str(data[key])).first()
+                setattr(updatedEnt, "region_id", region_id.id)
             elif key == "email" or key == "birthday":
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
@@ -392,7 +392,7 @@ def add_mosad_excel():
         name = row[0].value.strip()
         phone = str(row[1].value)
         email = row[2].value.strip()
-        eshcol = row[3].value.strip()
+        cluster_id = row[3].value.strip()
         roshYeshiva_phone = row[4].value
         roshYeshiva_name = row[5].value.strip()
         admin_phone = row[6].value.strip()
@@ -412,7 +412,7 @@ def add_mosad_excel():
             Institution1 = Institution(
                 # email=email,
                 id=int(str(uuid.uuid4().int)[:5]),
-                eshcol_id=eshcol,
+                cluster_id=cluster_id,
                 roshYeshiva_phone=roshYeshiva_phone,
                 roshYeshiva_name=roshYeshiva_name,
                 admin_phone=admin_phone,

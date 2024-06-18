@@ -15,17 +15,17 @@ import src.routes.notification_form_routes as nt
 homepage_form_blueprint = Blueprint('homepage_form', __name__, url_prefix='/homepage_form')
 
 
-def get_melave_score(eshcol="0", mosad="0"):
+def get_melave_score(cluster_id="0", mosad="0"):
     # compute score diagram
     counts = dict()
     score_melaveProfile = []
-    if eshcol != "0" and mosad != "0":
+    if cluster_id != "0" and mosad != "0":
         all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
-                                                                                         User.eshcol == eshcol,
+                                                                                         User.cluster_id == cluster_id,
                                                                                          User.institution_id == mosad).all()
-    elif eshcol != "0":
+    elif cluster_id != "0":
         all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
-                                                                                         User.eshcol == eshcol).all()
+                                                                                         User.cluster_id == cluster_id).all()
     elif mosad != "0":
         all_melave = db.session.query(User.id, User.name, User.institution_id).filter(User.role_ids.contains("0"),
                                                                                          User.institution_id == mosad).all()
@@ -45,10 +45,10 @@ def get_melave_score(eshcol="0", mosad="0"):
     return (k, v), score_melaveProfile
 
 
-def get_mosad_Coordinators_score(eshcol="0"):
-    if eshcol != "0":
+def get_mosad_Coordinators_score(cluster_id="0"):
+    if cluster_id != "0":
         all_Mosad_coord = db.session.query(User.id, User.institution_id, User.name).filter(
-            User.role_ids.contains("1"), User.eshcol == eshcol).all()
+            User.role_ids.contains("1"), User.cluster_id == cluster_id).all()
     else:
         all_Mosad_coord = db.session.query(User.id, User.institution_id, User.name).filter(
             User.role_ids.contains("1")).all()
@@ -70,7 +70,7 @@ def get_mosad_Coordinators_score(eshcol="0"):
 
 
 def get_Eshcol_corrdintors_score():
-    all_Eshcol_coord = db.session.query(User.id, User.cluster_id, User.name, User.institution_id).filter(
+    all_Eshcol_coord = db.session.query(User.id, User.region_id, User.name, User.institution_id).filter(
         User.role_ids.contains("2")).all()
     eshcol_Cooordinator_score = dict()
     score_EshcolCoordProfile = []
@@ -215,9 +215,9 @@ def init_eshcolCoord():
         red.hset(userId, "email", record.email)
         red.hset(userId, "role", record.role_id)
     '''
-        all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.eshcol == record.eshcol).all()
+        all_Apprentices = db.session.query(Apprentice.id).filter(Apprentice.cluster_id == record.cluster_id).all()
 
-        counts_melave_score, score_melaveProfile_list = get_melave_score(eshcol=record.eshcol)
+        counts_melave_score, score_melaveProfile_list = get_melave_score(cluster_id=record.cluster_id)
         mosad_Cooordinator_score, score_MosadCoordProfile_list = get_mosad_Coordinators_score()
 
         greenvisitmeetings, orangevisitmeetings, redvisitmeetings, greenvisitcalls, orangevisitcalls, redvisitcalls, forgotenApprenticCount = red_green_orange_status(

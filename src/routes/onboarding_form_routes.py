@@ -14,7 +14,7 @@ from twilio.rest import Client
 from src.services import red, db
 from src.models.city_model import City
 from src.models.user_model import User
-from src.routes.utils.sms import send_sms_019
+from src.routes.Utils.sms import send_sms_019
 from src.routes.messages_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()
@@ -80,7 +80,7 @@ def verifyOTP_form():
         userEnt = User.query.get(created_by_phone)
         if userEnt is None:
             return jsonify({"result": "not in system", "firsOnboarding": True}), 401
-        if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
+        if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.region_id:
             accessToken = int(str(uuid.uuid4().int)[:5])
             red.hset(created_by_phone, "accessToken", accessToken)
             redisaccessToken = red.hget(created_by_phone, "accessToken").decode("utf-8")
@@ -148,7 +148,7 @@ def verifyOTP_twilo():
     if userEnt is None:
         return jsonify({"result": "not in system"}), HTTPStatus.OK
 
-    if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.cluster_id:
+    if userEnt.name and userEnt.last_name and userEnt.email and userEnt.birthday and userEnt.region_id:
         print("not null")
         red.hdel(int(str(created_by_phone)), "accessToken")
         accessToken = int(str(uuid.uuid4().int)[:5])

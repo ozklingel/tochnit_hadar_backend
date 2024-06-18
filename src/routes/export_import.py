@@ -635,7 +635,7 @@ def rivony():
         db.session.add(system_report1)
 
     # eshcol Madadim:
-    all_eshcolCoordinator = db.session.query(User.id, User.eshcol).filter(User.role_ids.contains("2")).all()
+    all_eshcolCoordinator = db.session.query(User.id, User.cluster_id).filter(User.role_ids.contains("2")).all()
     for eshcolCoord in all_eshcolCoordinator:
         eshcolCoord_id = eshcolCoord[0]
         eshco = eshcolCoord[1]

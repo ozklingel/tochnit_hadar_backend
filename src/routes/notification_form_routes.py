@@ -9,7 +9,7 @@ from pyluach import dates
 
 import config
 
-from .utils.notification_details import GROUP_MEET_DETAILS, PERSONAL_MEET_DETAILS, BASIS_VISIT_DETAILS, EVENT_DETAILS, \
+from src.routes.Utils.notification_details import GROUP_MEET_DETAILS, PERSONAL_MEET_DETAILS, BASIS_VISIT_DETAILS, EVENT_DETAILS, \
     PERSONAL_CALL_DETAILS, BIRTHDAY_DETAILS, MELAVIM_LOW_SCORE_DETAILS, MATZBAR_DETAILS, DO_FOR_BOGRIM_DETAILS, \
     YESHIVAT_MELAVIM_DETAILS, FORGOTTEN_APPRENTICE_DETAILS, LOW_SCORE_MOSDOT_DETAILS, MOSAD_ESCHOL_MEETING_DETAILS
 from .madadim import melave_score, mosad_score
@@ -269,8 +269,8 @@ def add_notificaion_to_mosad(user):
 
 
 def add_notificaion_to_eshcol(user):
-    institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).filter(
-        Institution.eshcol_id == user.eshcol).all()
+    institotionList = db.session.query(Institution.id, Institution.name, Institution.cluster_id).filter(
+        Institution.cluster_id == user.cluster_id).all()
     eshcol_dict = dict()
     lowScore_mosdot = []
     no_MOsadEshcolMeeting = []
@@ -388,15 +388,15 @@ def add_notificaion_to_ahraiTohnit(user):
     lowScore_mosdot = dict()
     no_MOsadEshcolMeeting = []
     all_eshcols_forgoten = dict()
-    eshcol_list = db.session.query(Institution.eshcol_id).distinct(Institution.eshcol_id).all()
+    eshcol_list = db.session.query(Institution.cluster_id).distinct(Institution.cluster_id).all()
     for eshcol in eshcol_list:
         eshcol_forgoten = dict()
-        institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).filter(
-            Institution.eshcol_id == eshcol.eshcol_id).all()
+        institotionList = db.session.query(Institution.id, Institution.name, Institution.cluster_id).filter(
+            Institution.cluster_id == eshcol.cluster_id).all()
         for institution_ in institotionList:
             mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])
             if mosad__score1 < 65:
-                lowScore_mosdot[institution_.eshcol_id] = lowScore_mosdot.get(institution_.eshcol_id, []) + [
+                lowScore_mosdot[institution_.cluster_id] = lowScore_mosdot.get(institution_.cluster_id, []) + [
                     institution_.name]
             mosadCoord_ = db.session.query(User.id, User.name, User.last_name).filter(User.role_ids.contains("1"),
                                                                                          User.institution_id == institution_.id).first()

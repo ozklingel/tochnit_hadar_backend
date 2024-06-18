@@ -1,9 +1,10 @@
 import datetime
+
 from sqlalchemy import ForeignKey
 
-from src.models.models_utils import get_foreign_key_source
-from src.services import db
 from src.models.models_defines import *
+from src.models.models_utils import get_foreign_key_source, to_iso
+from src.services import db
 
 
 class Apprentice(db.Model):
@@ -17,7 +18,7 @@ class Apprentice(db.Model):
     phone = db.Column(PHONE_COL, db.String(50), nullable=False, default="")
     email = db.Column(EMAIL_COL, db.String(50), nullable=False, default="")
     birthday = db.Column(BIRTHDAY_COL, db.DateTime, nullable=True)
-    eshcol = db.Column("eshcol", db.String(20), nullable=False, default="")
+    cluster_id = db.Column("eshcol", db.String(20), nullable=False, default="")
     marriage_status = db.Column("maritalstatus", db.String(20), nullable=False, default="")
     marriage_date = db.Column(MARRIAGE_DATE_COL, db.DateTime, nullable=True)
     contact1_email = db.Column("contact1_email", db.String(50), nullable=False, default="")
@@ -79,6 +80,29 @@ class Apprentice(db.Model):
     unit_name = db.Column(UNIT_NAME_COL, db.String(50), nullable=False, default="")  # צנחנים
 
 
+def as_dict(self):
+    return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+def to_attributes(self, city: str, cluster_id: str, apprentice_list):
+    return {
+        "id": str(self.id),
+        "name": self.name,
+        "last_name": self.last_name,
+        "birthday": to_iso(self.birthday),
+        "email": self.email,
+        "city": city,
+        "cluster_id": cluster_id,
+        "role_ids": [int(r) for r in self.role_ids.split(",")],
+        "institution": str(self.institution_id),
+        "eshcol": str(self.cluster_id),
+        "apprentices": apprentice_list,
+        "phone": str(self.id),
+        "teudatZehut": str(self.teudatZehut),
+        "photo_path": self.photo_path if self.photo_path is not None else 'https://www.gravatar.com/avatar'
+    }
+
+
 front_end_dict = {
     "address": "address",
 
@@ -133,7 +157,7 @@ front_end_dict = {
     "militaryDateOfEnlistment": "recruitment_date",
     "militaryUpdatedDateTime": "militaryupdateddatetime",
     "militaryPositionOld": "militaryPositionOld",
-    "educationalInstitution": "educationalinstitution", 
+    "educationalInstitution": "educationalinstitution",
     "educationFaculty": "educationfaculty",
     "workOccupation": "workoccupation",
     "workType": "worktype",

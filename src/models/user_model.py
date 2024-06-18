@@ -6,7 +6,7 @@ from src.models.models_utils import to_iso
 from src.services import db
 
 from .city_model import City
-from .cluster_model import Cluster
+from .Region_model import Region
 from .institution_model import Institution
 
 
@@ -23,7 +23,7 @@ class User(db.Model):
     city_id = db.Column(CITY_ID_COL, db.Integer, ForeignKey(City.id), nullable=False, default=313)
     address = db.Column(ADDRESS_COL, db.String(50), nullable=False, default="")
     institution_id = db.Column(INSTITUTION_ID_COL, db.Integer, ForeignKey(Institution.id), nullable=False, default=0)
-    cluster_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(Cluster.id), nullable=False, default=0)
+    region_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(Region.id), nullable=False, default=0)
     photo_path = db.Column(PHOTO_PATH_COL, db.String(50), nullable=False, default="https://www.gravatar.com/avatar")
     notifyStartWeek = db.Column(NOTIFY_START_WEEK_COL, db.Boolean, nullable=False, default=True)
     notifyDayBefore = db.Column(NOTIFY_DAY_BEFORE_COL, db.Boolean, nullable=False, default=True)
@@ -32,7 +32,7 @@ class User(db.Model):
     notifyDayBefore_sevev = db.Column("notifydaybefore_sevev", db.Boolean, nullable=False, default=True)
     notifyMorning_sevev = db.Column("notifymorning_sevev", db.Boolean, nullable=False, default=True)
     notifyMorning_weekly_report = db.Column("notifymorning_weekly_report", db.Boolean, nullable=False, default=True)
-    eshcol = db.Column("eshcol", db.String(50), nullable=False, default="")
+    cluster_id = db.Column("eshcol", db.String(50), nullable=False, default="")
     association_date = db.Column("association_date", db.DateTime, nullable=False, default=datetime.date.today())
 
     def as_dict(self):
@@ -50,7 +50,7 @@ class User(db.Model):
                 "cluster_id": region,
                 "role_ids": [int(r) for r in self.role_ids.split(",")],
                 "institution": str(self.institution_id),
-                "eshcol": str(self.eshcol),
+                "eshcol": str(self.cluster_id),
                 "apprentices": apprentice_list,
                 "phone": str(self.id),
                 "teudatZehut": str(self.teudatZehut),

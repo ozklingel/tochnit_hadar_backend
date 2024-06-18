@@ -31,11 +31,11 @@ def add():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         name = data['name']
-        cluster_id = data['cluster']
+        region_id = data['cluster']
         city = City(
             id=str(uuid.uuid1().int)[:5],  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
             name=name,
-            cluster_id=cluster_id
+            region_id=region_id
         )
         db.session.add(city)
         db.session.commit()

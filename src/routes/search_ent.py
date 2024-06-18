@@ -7,7 +7,7 @@ from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
-from src.models.cluster_model import Cluster
+from src.models.Region_model import Region
 from src.models.institution_model import Institution
 from src.models.user_model import User
 
@@ -73,10 +73,10 @@ def filter_by_request(request):
                 query = query.filter(User.institution_id == Institution.id, Institution.name.in_(institutions))
             if region:
                 ent_group_dict["region"] = region
-                query = query.filter(User.cluster_id == Cluster.id, Cluster.name == region)
+                query = query.filter(User.region_id == Region.id, Region.name == region)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
-                query = query.filter(User.eshcol.in_(eshcols))
+                query = query.filter(User.cluster_id.in_(eshcols))
             if city:
                 ent_group_dict["city"] = city
                 query = query.filter(User.city_id == City.id, city == City.name)
@@ -112,7 +112,7 @@ def filter_by_request(request):
                 query = query.filter(Apprentice.unit_name.in_(hativa))
             if region:
                 ent_group_dict["region"] = region
-                query = query.filter(Apprentice.city_id == City.id, City.cluster_id == Cluster.id,
+                query = query.filter(Apprentice.city_id == City.id, City.region_id == Cluster.id,
                                      Cluster.name == region)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")

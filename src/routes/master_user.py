@@ -161,8 +161,8 @@ def addApperntice(wb):
         if institution_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
-        eshcol = db.session.query(Institution.eshcol_id).filter(Institution.id == institution_id.id).first()
-        if institution_id is None or eshcol is None or CityId is None or militaryCompoundId is None:
+        cluster_id = db.session.query(Institution.cluster_id).filter(Institution.id == institution_id.id).first()
+        if institution_id is None or cluster_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
 
@@ -180,7 +180,7 @@ def addApperntice(wb):
                 teacher_grade_b_phone=teacher_grade_b_phone,
                 city_id=CityId.id,
                 id=phone,
-                eshcol=eshcol.eshcol_id,
+                cluster_id=cluster_id.cluster_id,
                 base_address=militaryCompoundId.id,
                 institution_id=institution_id.id if institution_id is not None else 0,
                 address=address,
@@ -250,7 +250,7 @@ def addUsers(wb):
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        eshcol = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
+        cluster_id = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
@@ -262,7 +262,7 @@ def addUsers(wb):
                 last_name=last_name,
                 role_ids=role_ids,
                 # email=str(email),
-                eshcol=eshcol,
+                cluster_id=cluster_id,
                 institution_id=institution_id[0],
             )
 

@@ -793,10 +793,10 @@ def EshcolCoordinator():
                                                        User.role_ids.contains("2")).first()
         if eshcol is None:
             return jsonify({'result': "not  eshcolCoordinator", }), HTTPStatus.OK
-        all_MosadCoordinator = db.session.query(User.id).filter(User.eshcol == eshcol[0],
+        all_MosadCoordinator = db.session.query(User.id).filter(User.cluster_id == eshcol[0],
                                                                  User.role_ids.contains("1")).all()
         all_EshcolApprentices = db.session.query(Apprentice.id).filter(Apprentice.institution_id == Institution.id,
-                                                                       Institution.eshcol_id == str(eshcol[0])).all()
+                                                                       Institution.cluster_id == str(eshcol[0])).all()
         # MosadEshcolMeeting
         MosadCoordinator_old_MosadEshcolMeeting = [r[0] for r in all_MosadCoordinator]
         too_old = datetime.today() - timedelta(days=30)
@@ -1130,7 +1130,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
 
 @madadim_form_blueprint.route("/mosadot_scores", methods=['GET'])
 def mosadot_scores():
-    institotionList = db.session.query(Institution.id, Institution.name, Institution.eshcol_id).all()
+    institotionList = db.session.query(Institution.id, Institution.name, Institution.cluster_id).all()
     mosadlist_score = []
     for institution_ in institotionList:
         mosad__score1, forgotenApprentice_Mosad1 = mosad_score(institution_[0])

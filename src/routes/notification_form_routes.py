@@ -602,12 +602,8 @@ def add_notification_form():
             event=event,
             date=date,
             allreadyread=False,
-            numoflinesdisplay=3,
             details=details,
-            frequency=frequency,
-
             id=int(str(uuid.uuid4().int)[:5]),
-
         )
 
         db.session.add(notification1)
@@ -616,23 +612,6 @@ def add_notification_form():
         return jsonify({"result": str(e)}), HTTPStatus.BAD_REQUEST
     return jsonify({"result": "success"}), HTTPStatus.OK
     # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
-
-
-@notification_form_blueprint.route('/setWasRead', methods=['post'])
-def setWasRead_notification_form():
-    if correct_auth() == False:
-        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-    data = request.json
-    notiId = data['noti_id']
-    try:
-        noti = Task.query.get(notiId)
-        noti.allreadyread = True
-        db.session.commit()
-        if notiId:
-            # TODO: add contact form to DB
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-    except:
-        return jsonify({'result': 'wrong id'}), HTTPStatus.OK
 
 
 @notification_form_blueprint.route('/setSetting', methods=['post'])

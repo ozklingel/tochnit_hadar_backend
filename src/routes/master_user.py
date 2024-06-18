@@ -251,26 +251,30 @@ def addUsers(wb):
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        cluster_id = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
+        cluster_name = row[4].value.strip() if not row[4].value is None else None
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
+            cluster_id = db.session.query(Cluster.id).filter(
+                Cluster.name == cluster_name).first()
+
             user = User(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
                 role_ids=role_ids,
                 # email=str(email),
-                cluster_id=cluster_id,
-                institution_id=institution_id[0],
+                cluster_id=cluster_id.id,
+                institution_id=institution_id.id,
             )
 
             db.session.add(user)
 
             db.session.commit()
         except Exception as e:
+            print("user")
             print(str(e))
             return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
     return [x for x in uncommited_ids if x is not None]
@@ -299,9 +303,6 @@ def initDB():
             wb = load_workbook(filename=path)
             res = db.session.query(Institution).delete()
             add_mosad_excel(wb)
-            path = base_dir + 'data/mosad.xlsx'
-            wb = load_workbook(filename=path)
-            res = db.session.query(Base).delete()
             upload_baseDB()
         if type == "lab":
             path = 'data/apprentice_enter_lab.xlsx'

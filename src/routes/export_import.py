@@ -348,7 +348,7 @@ def upload_CitiesDB():
         import csv
         my_list = []
         # /home/ubuntu/flaskapp/
-        with open(base_dir + 'data/cities_add.csv', 'r', encoding="utf8") as f:
+        with open(base_dir + 'data/citiesToAdd.xlsx', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
                 my_list.append(City(row[0].strip(), row[1].strip(), row[2].strip()))

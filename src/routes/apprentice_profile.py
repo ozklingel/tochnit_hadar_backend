@@ -145,7 +145,6 @@ def add_apprentice_excel():
 
     # /home/ubuntu/flaskapp/
     file = request.files['file']
-    wb = load_workbook(file)
     sheet = wb.active
     uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
@@ -199,7 +198,7 @@ def add_apprentice_excel():
         # worktype = row[42].value.strip()  #
         army_role = row[42].value.strip() if not row[43].value is None else ""  # סיירות
         unit_name = row[43].value.strip() if not row[42].value is None else ""  # צנחנים
-        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקצ
+        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקד כיתה
         militaryPositionOld = row[46].value.strip() if not row[46].value is None else ""  # צנחנים
         recruitment_date = row[47].value if not row[47].value is None else None  # צנחנים
         release_date = row[48].value if not row[48].value is None else None  # צנחנים

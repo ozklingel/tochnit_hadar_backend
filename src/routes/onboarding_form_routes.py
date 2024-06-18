@@ -108,10 +108,11 @@ def upload_CitiesDB():
     try:
         my_list = []
         # /home/ubuntu/flaskapp/src/routes/
-        path = '/home/ubuntu/flaskapp/citiesToAdd.xlsx'
+        path = 'data/citiesToAdd.xlsx'
         wb = load_workbook(filename=path)
         sheet = wb.active
         for row in sheet.iter_rows(min_row=2):
+            print(row[0].value)
             my_list.append(City(int(row[2].value), row[1].value.strip(), int(row[0].value)))
         for ent in my_list:
             db.session.add(ent)

@@ -130,7 +130,7 @@ def getProfileAtributes_form():
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = userEnt.to_attributes(
-                city.name, str(regionName[0]), myApprenticesNamesList
+                city.name, str(regionName.name), myApprenticesNamesList
             )
             return jsonify(list), HTTPStatus.OK
         else:
@@ -163,12 +163,7 @@ def add_user_excel():
     sheet = wb.active
     uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
-        if (
-            row[0].value is None
-            or row[1].value is None
-            or row[2].value is None
-            or row[5].value is None
-        ):
+        if row[0].value is None or row[1].value is None or row[2].value is None or row[5].value is None:
             uncommited_ids.append(row[5].value)
             continue
         role_ids = ""
@@ -183,22 +178,15 @@ def add_user_excel():
         role_ids = role_ids[:-1]
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
-        institution_name = (
-            row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        )
-        cluster_id = (
-            row[4].value.strip()
-            if not row[4].value is None
-            else "" if not row[4].value is None else "לא ידוע"
-        )
+        institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
+        cluster_name = row[4].value.strip() if not row[4].value is None else None
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
-            institution_id = (
-                db.session.query(Institution.id)
-                .filter(Institution.name == str(institution_name))
-                .first()
-            )
+            institution_id = db.session.query(Institution.id).filter(
+                Institution.name == str(institution_name)).first()
+            cluster_id = db.session.query(Cluster.id).filter(
+                Cluster.name == cluster_name).first()
 
             user = User(
                 id=int(str(phone).replace("-", "")),
@@ -206,8 +194,8 @@ def add_user_excel():
                 last_name=last_name,
                 role_ids=role_ids,
                 # email=str(email),
-                cluster_id=cluster_id,
-                institution_id=institution_id[0],
+                cluster_id=cluster_id.id,
+                institution_id=institution_id.id,
             )
 
             db.session.add(user)

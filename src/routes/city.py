@@ -18,7 +18,7 @@ def getAll():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         CityList = db.session.query(City).all()
         if CityList:
-            return [{"id": str(row.id), "name": row.name, "cluster_id": row.cluster_id} for row in CityList]
+            return [{"id": str(row.id), "name": row.name, "cluster_id": row.region_id} for row in CityList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST

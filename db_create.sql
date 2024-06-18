@@ -3,11 +3,16 @@ DROP TABLE IF EXISTS institutions CASCADE ;
 DROP TABLE IF EXISTS clusters CASCADE ;
 DROP TABLE IF EXISTS user1 CASCADE ;
 DROP TABLE IF EXISTS apprentice CASCADE ;
-DROP TABLE IF EXISTS notifications CASCADE ;
 DROP TABLE IF EXISTS contact_forms CASCADE ;
 DROP TABLE IF EXISTS visits CASCADE ;
 DROP TABLE IF EXISTS ent_group CASCADE ;
 DROP TABLE IF EXISTS task_user_made CASCADE ;
+DROP TABLE IF EXISTS regions CASCADE ;
+DROP TABLE IF EXISTS cities CASCADE ;
+DROP TABLE IF EXISTS task_user_made CASCADE ;
+DROP TABLE IF EXISTS system_report CASCADE ;
+DROP TABLE IF EXISTS base CASCADE ;
+DROP TABLE IF EXISTS gift CASCADE ;
 
 
 CREATE TABLE institutions(
@@ -38,6 +43,15 @@ name text DEFAULT '',
 
 );
 
+CREATE TABLE  regions(
+
+id int,
+name text DEFAULT '',
+    PRIMARY KEY(id)
+
+);
+
+
  CREATE TABLE  cities(
 id int,
 name text DEFAULT '',
@@ -45,9 +59,13 @@ cluster_id int DEFAULT 0,
     PRIMARY KEY(id),
 CONSTRAINT fk_1
       FOREIGN KEY(cluster_id)
-      REFERENCES clusters(id)
+      REFERENCES regions(id)
 );
-
+CREATE TABLE base (
+id INTEGER NOT NULL,
+ name TEXT DEFAULT ''::text,
+ cordinatot TEXT DEFAULT ''::text,
+  PRIMARY KEY (id));
 
 CREATE TABLE user1(
 id int,
@@ -95,7 +113,7 @@ accompany_id int ,
 last_name text DEFAULT '',
 maritalStatus text DEFAULT '',
 marriage_date date ,
-marriage_date_ivry text DEFAULT 'ה' בטבת',
+marriage_date_ivry text ,
 teacher_grade_b_phone text DEFAULT '',
 teacher_grade_b text DEFAULT '',
 teacher_grade_b_email  text DEFAULT '',
@@ -218,27 +236,6 @@ CONSTRAINT fk_1
 
 
 );
-CREATE TABLE  notifications(
-
-id int,
-subject text DEFAULT '' ,
-userid int ,
-event text DEFAULT '',
-date DATE ,
-created_at timestamp,
-allreadyread boolean DEFAULT False,
-numOfLinesDisplay int  ,
-details text DEFAULT '',
-frequency text DEFAULT '',
-institution_id boolean DEFAULT False,
-PRIMARY KEY(id),
-CONSTRAINT fk_1
-      FOREIGN KEY(userid)
-      REFERENCES user1(id)
-
-
-
-);
 
 
 
@@ -272,11 +269,7 @@ value int,
 PRIMARY KEY(id)
 
 );
-CREATE TABLE base (
-id INTEGER NOT NULL,
- name TEXT DEFAULT ''::text,
- cordinatot TEXT DEFAULT ''::text,
-  PRIMARY KEY (id));
+
 
 
 CREATE TABLE  task_user_made(
@@ -291,6 +284,8 @@ Frequency_weekday text DEFAULT '',
 Frequency_meta text DEFAULT ''  ,
 details text DEFAULT '',
 status text DEFAULT '',
+subject text DEFAULT '' ,
+allreadyread boolean DEFAULT False,
 
 institution_id boolean DEFAULT False,
 PRIMARY KEY(id),
@@ -301,4 +296,12 @@ CONSTRAINT fk_1
 
 
 );
-
+INSERT INTO regions (id, name) VALUES (0,'ירושלים והסביבה');;
+INSERT INTO regions (id, name) VALUES (1,'יהודה ושומרון');
+INSERT INTO regions (id, name) VALUES (2,'אזור דרום');
+INSERT INTO regions (id, name) VALUES (3,'אזור צפון');
+INSERT INTO regions (id, name) VALUES (4,'אזור המרכז');
+INSERT INTO regions (id, name) VALUES (5,'un known');
+INSERT INTO clusters (id, name) VALUES (0,'מרכז');
+INSERT INTO clusters (id, name) VALUES (1,'דרום');
+INSERT INTO clusters (id, name) VALUES (2,'צפון');

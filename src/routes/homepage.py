@@ -1,4 +1,6 @@
 import datetime
+import uuid
+
 from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 from datetime import datetime, date
@@ -317,7 +319,7 @@ def get_closest_Events():
 
             if (gap <= 0 and gap >= -30) or (gap_loazi <= 0 and gap_loazi >= -30):
                 my_dict.append(
-                    {"id": str(Apprentice1.id), "subject": Apprentice1.id,
+                    {"id": str(uuid.uuid4().int)[:5], "subject": Apprentice1.id,
                      "date": datetime(thisYearBirthday.year, thisYearBirthday.month, thisYearBirthday.day).isoformat(),
                      "created_at": str(thisYearBirthday),
                      "daysfromnow": gap, "event": "יומהולדת", "allreadyread": False, "description": "יומהולדת",

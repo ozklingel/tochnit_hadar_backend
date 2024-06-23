@@ -640,7 +640,7 @@ def rivony():
         eshcolCoord_id = eshcolCoord[0]
         eshco = eshcolCoord[1]
         all_Apprentices = db.session.query(Apprentice.id).filter(
-            Apprentice.eshcol == eshco).all()
+            Apprentice.cluster_id == eshco).all()
         Apprentice_ids_forgoten = [r[0] for r in all_Apprentices]
         too_old = datetime.today() - timedelta(days=100)
         Oldvisitcalls = db.session.query(Report.ent_reported).filter(

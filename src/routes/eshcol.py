@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from http import HTTPStatus
 
-from src.models.Cluster_model import Cluster
+from src.models.cluster_model import Cluster
 from src.routes.user_profile import correct_auth
 from src.services import db
 from src.models.apprentice_model import Apprentice

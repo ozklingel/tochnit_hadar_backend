@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
-from src.models.Cluster_model import Cluster
+from src.models.cluster_model import Cluster
 from src.models.madadim_setting_model import MadadimSetting
 from src.routes.user_profile import correct_auth
 from src.services import db
@@ -15,7 +15,7 @@ from src.models.city_model import City
 from src.models.message_model import Message
 from src.models.gift_model import Gift
 from src.models.institution_model import Institution
-from src.models.notification_model import Notification
+from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
 
@@ -289,7 +289,7 @@ def initDB():
         giftCode = db.session.query(Gift).delete()
         giftCode = db.session.query(Report).delete()
         giftCode = db.session.query(Message).delete()
-        giftCode = db.session.query(Notification).delete()
+        giftCode = db.session.query(Task).delete()
         giftCode = db.session.query(User).delete()
         giftCode = db.session.query(Apprentice).delete()
         db.session.commit()

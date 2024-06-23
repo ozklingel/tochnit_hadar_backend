@@ -285,7 +285,7 @@ Frequency_meta text DEFAULT ''  ,
 details text DEFAULT '',
 status text DEFAULT '',
 subject text DEFAULT '' ,
-allreadyread boolean DEFAULT False,
+already_read boolean DEFAULT False,
 
 institution_id boolean DEFAULT False,
 PRIMARY KEY(id),

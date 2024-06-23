@@ -6,7 +6,7 @@ from http import HTTPStatus
 from src.routes.user_profile import correct_auth
 from src.services import db
 from src.models.gift_model import Gift
-from src.models.notification_model import Notification
+from src.models.task_model import Task
 
 gift_blueprint = Blueprint('gift', __name__, url_prefix='/gift')
 
@@ -61,9 +61,9 @@ def delete():
         if giftCode is not None:
             giftCode.was_used = True
             # res = db.session.query(gift).filter(gift.code == giftCode.code).delete()
-            res = db.session.query(Notification).filter(
-                Notification.subject == apprentice_id,
-                Notification.event == "יומהולדת",
+            res = db.session.query(Task).filter(
+                Task.subject == apprentice_id,
+                Task.event == "יומהולדת",
             ).delete()
 
             db.session.commit()

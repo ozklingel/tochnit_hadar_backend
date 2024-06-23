@@ -491,6 +491,8 @@ def add_notificaion_to_ahraiTohnit(user):
 
 
 def add_task(user_id: str, subject: str,  event: str, details: str, task_date):
+    # Disabling this for now, since we'll change this logic for creating tasks from here
+    return
     task = Task(
         id=int(str(uuid.uuid4().int)[:5]),
         userid=user_id,

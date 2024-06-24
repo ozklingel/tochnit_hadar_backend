@@ -40,7 +40,7 @@ def updateTask():
             setattr(task, key, data[key])
 
         db.session.commit()
-        return jsonify({"result": "error"}), HTTPStatus.OK
+        return jsonify({"result": "success"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({"result": str(e)}), HTTPStatus.BAD_REQUEST
 
@@ -50,10 +50,10 @@ def add_task():
     try:
         if correct_auth() == False:
             return jsonify({"result": "wrong access token"}), HTTPStatus.OK
-        data = request.json
 
+        data = request.json
         if not data:
-            return jsonify({"result": "no data"}), HTTPStatus.BAD_REQUEST
+            raise Exception("no data")
 
         task = Task().from_attributes(data)
         db.session.add(task)

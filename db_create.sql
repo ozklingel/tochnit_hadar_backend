@@ -296,7 +296,7 @@ CONSTRAINT fk_1
 
 
 );
-INSERT INTO regions (id, name) VALUES (0,'ירושלים והסביבה');;
+INSERT INTO regions (id, name) VALUES (0,'ירושלים והסביבה');
 INSERT INTO regions (id, name) VALUES (1,'יהודה ושומרון');
 INSERT INTO regions (id, name) VALUES (2,'אזור דרום');
 INSERT INTO regions (id, name) VALUES (3,'אזור צפון');

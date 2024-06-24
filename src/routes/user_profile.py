@@ -95,7 +95,7 @@ def getProfileAtributes_form():
         userEnt = User.query.get(created_by_id)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            regionName = db.session.query(Cluster.name).filter(Region.id == city.region_id).first()
+            regionName = db.session.query(Region.name).filter(Region.id == city.region_id).first()
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = userEnt.to_attributes(city.name, str(regionName[0]), myApprenticesNamesList)

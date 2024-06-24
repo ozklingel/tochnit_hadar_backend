@@ -789,7 +789,7 @@ def EshcolCoordinator():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         eshcolCoordinatorId = request.args.get("eshcolCoordinator")
         # get  Eshcol id
-        eshcol = db.session.query(User.eshcol).filter(User.id == eshcolCoordinatorId,
+        eshcol = db.session.query(User.cluster_id).filter(User.id == eshcolCoordinatorId,
                                                        User.role_ids.contains("2")).first()
         if eshcol is None:
             return jsonify({'result': "not  eshcolCoordinator", }), HTTPStatus.OK
@@ -801,7 +801,7 @@ def EshcolCoordinator():
         MosadCoordinator_old_MosadEshcolMeeting = [r[0] for r in all_MosadCoordinator]
         too_old = datetime.today() - timedelta(days=30)
         new_visit_MosadEshcolMeeting = db.session.query(Report.user_id).filter(Report.ent_reported == User.id,
-                                                                              User.eshcol == eshcol[0],
+                                                                              User.cluster_id == eshcol[0],
                                                                               Report.title == config.MOsadEshcolMeeting_report,
                                                                               Report.visit_date > too_old).all()
         for i in new_visit_MosadEshcolMeeting:
@@ -816,7 +816,7 @@ def EshcolCoordinator():
 
         # forgoten-no reports_as_call
         too_old = datetime.today() - timedelta(days=100)
-        Apprentice_eshcol_forgoten = db.session.query(Apprentice.id).filter(Apprentice.eshcol == eshcol[0],
+        Apprentice_eshcol_forgoten = db.session.query(Apprentice.id).filter(Apprentice.cluster_id == eshcol[0],
                                                                             Apprentice.association_date < too_old).all()
         Apprentice_eshcol_forgoten = [r[0] for r in Apprentice_eshcol_forgoten]
         newvisitcalls = db.session.query(Report.ent_reported).filter(Apprentice.id == Report.ent_reported,
@@ -1082,11 +1082,11 @@ def mosad_Coordinators_score(mosadCoord_id):
 
 
 def eshcol_Coordinators_score(eshcolCoord_id):
-    eshcol = db.session.query(User.eshcol).filter(User.id == eshcolCoord_id).first()[0]
+    eshcol = db.session.query(User.cluster_id).filter(User.id == eshcolCoord_id).first()[0]
     all_eshcol_mosadCoord = db.session.query(User.id).filter(User.role_ids.contains("1"),
-                                                              User.eshcol == eshcol).all()
+                                                              User.cluster_id == eshcol).all()
     all_eshcol_apprentices = db.session.query(Apprentice.id).filter(
-        Apprentice.eshcol == eshcol).all()
+        Apprentice.cluster_id == eshcol).all()
     if len(all_eshcol_mosadCoord) == 0:
         return 100, 0
     madadim_setting1 = db.session.query(MadadimSetting).first()
@@ -1116,7 +1116,7 @@ def eshcol_Coordinators_score(eshcolCoord_id):
     too_old = datetime.today() - timedelta(days=100)
     Oldvisitcalls = db.session.query(Report.ent_reported).filter(
         Apprentice.id == Report.ent_reported,
-        eshcol == Apprentice.eshcol,
+        eshcol == Apprentice.cluster_id,
         or_(Report.title == config.call_report, Report.title == config.groupMeet_report,
             Report.title == config.personalMeet_report),
         Report.visit_date > too_old).all()

@@ -229,7 +229,7 @@ def get_all_messages_form():
         if correct_auth()==False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         user = request.args.get('userId')
-        user_role = db.session.query(User.role_id).filter(
+        user_role = db.session.query(User.role_ids).filter(
             user == User.id).first()[0]
         messages_list = db.session.query(Message.created_for_id, Message.created_at, Message.id,
                                          Message.attachments, Message.type, Message.icon,

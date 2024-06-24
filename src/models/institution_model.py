@@ -24,30 +24,6 @@ class Institution(db.Model):
     roshYeshiva_phone = db.Column("roshyeshiva_phone", db.String(50), nullable=False, default="")
     cluster_id = db.Column("eshcol_id", db.String(50), nullable=False, default="")
 
-    # eshcol_id = db.Column("eshcol_id",db.Integer,ForeignKey(get_forgein_key_source("eshcol", ID_COL)), nullable=False)
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
-    def to_attributes(self):
-        return {
-            "admin_name": self.admin_name,
-            "name": self.name,
-            "owner_id": str(self.owner_id),
-            "logo_path": self.logo_path,
-            "contact_phone": self.contact_phone,
-            "contact_name": self.contact_name,
-            "phone": self.phone,
-            "city_id": self.city_id,
-            "address": self.address,
-            "id": str(self.id),
-            "admin_phone": self.admin_phone,
-            "roshYeshiva_name": self.roshYeshiva_name,
-            "roshYeshiva_phone": self.roshYeshiva_phone,
-            "cluster_id": str(self.cluster_id),
-
-
-        }
-
 front_end_dict = {
     "id": "id",
     "name": "name",

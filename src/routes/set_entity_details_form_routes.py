@@ -35,8 +35,8 @@ def setEntityDetailsByType():
                     setattr(updatedEnt, key, CityId)
                     continue
                 if key == "region":
-                    clusterId = db.session.query(Cluster).filter(
-                        Cluster.name == str(atrrToBeSet[key])).first()
+                    clusterId = db.session.query(Region).filter(
+                        Region.name == str(atrrToBeSet[key])).first()
                     setattr(updatedEnt, key, clusterId)
                     continue
                 if key == "email":

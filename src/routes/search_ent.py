@@ -116,7 +116,7 @@ def filter_by_request(request):
                                      Cluster.name == region)
             if eshcols:
                 ent_group_dict["eshcols"] = str(eshcols).replace("[", "").replace("]", "")
-                query = query.filter(Apprentice.eshcol.in_(eshcols))
+                query = query.filter(Apprentice.cluster_id.in_(eshcols))
             if city:
                 ent_group_dict["city"] = city
                 query = query.filter(City.id == Apprentice.city_id, city == City.name)

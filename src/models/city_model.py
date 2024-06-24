@@ -17,12 +17,3 @@ class City(db.Model):
         self.id = id
         self.name = name
         self.region_id = region_id
-    def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
-    def to_attributes(self):
-        return {
-            "id": str(self.id),
-            "name": self.name,
-            "region_id": str(self.region_id),
-           }

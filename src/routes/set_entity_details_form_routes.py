@@ -6,7 +6,7 @@ import boto3
 
 from ..models.apprentice_model import Apprentice
 from ..models.city_model import City
-from ..models.Region_model import Region
+from ..models.region_model import Region
 from ..models.institution_model import Institution
 
 from src.services import db

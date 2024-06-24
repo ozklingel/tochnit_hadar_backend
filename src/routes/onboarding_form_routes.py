@@ -14,7 +14,7 @@ from twilio.rest import Client
 from src.services import red, db
 from src.models.city_model import City
 from src.models.user_model import User
-from src.routes.Utils.sms import send_sms_019
+from src.routes.utils.sms import send_sms_019
 from src.routes.messages_routes import send_green_whatsapp
 
 secret_key = pyotp.random_base32()

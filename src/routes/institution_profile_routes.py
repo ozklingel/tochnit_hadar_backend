@@ -13,7 +13,7 @@ from src.services import db, red
 from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
-from src.models.Region_model import Region, Region
+from src.models.region_model import Region, Region
 from src.models.institution_model import Institution, front_end_dict
 from src.models.user_model import User
 from src.routes.set_entity_details_form_routes import validate_email

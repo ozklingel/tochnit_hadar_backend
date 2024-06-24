@@ -7,7 +7,7 @@ from src.services import db
 from src.models.apprentice_model import Apprentice
 from src.models.base_model import Base
 from src.models.city_model import City
-from src.models.Region_model import Region
+from src.models.region_model import Region
 from src.models.institution_model import Institution
 from src.models.user_model import User
 

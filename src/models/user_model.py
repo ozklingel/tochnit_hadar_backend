@@ -6,7 +6,7 @@ from src.models.models_utils import to_iso
 from src.services import db
 
 from .city_model import City
-from .Region_model import Region
+from .region_model import Region
 from .institution_model import Institution
 
 

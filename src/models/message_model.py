@@ -22,3 +22,22 @@ class Message(db.Model):
     icon = db.Column(db.String(20), nullable=False, default="")
     type = db.Column("type", db.String(250), nullable=False, default="")
     ent_group = db.Column(db.String(100), nullable=True)
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "subject": str(self.subject),
+            "content": self.content,
+            "created_at": self.created_at,
+            "created_by_id": str(self.created_by_id),
+            "created_for_id": str(self.created_for_id),
+            "allreadyread": self.allreadyread,
+            "attachments": self.attachments,
+            "icon": self.icon,
+            "ent_group": self.allreadyread,
+            "type": self.attachments,
+
+        }

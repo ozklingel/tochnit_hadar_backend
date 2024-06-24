@@ -348,7 +348,7 @@ def upload_CitiesDB():
         import csv
         my_list = []
         # /home/ubuntu/flaskapp/
-        with open(base_dir + 'data/cities_add.csv', 'r', encoding="utf8") as f:
+        with open(base_dir + 'data/citiesToAdd.xlsx', 'r', encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
                 my_list.append(City(row[0].strip(), row[1].strip(), row[2].strip()))
@@ -635,12 +635,12 @@ def rivony():
         db.session.add(system_report1)
 
     # eshcol Madadim:
-    all_eshcolCoordinator = db.session.query(User.id, User.eshcol).filter(User.role_ids.contains("2")).all()
+    all_eshcolCoordinator = db.session.query(User.id, User.cluster_id).filter(User.role_ids.contains("2")).all()
     for eshcolCoord in all_eshcolCoordinator:
         eshcolCoord_id = eshcolCoord[0]
         eshco = eshcolCoord[1]
         all_Apprentices = db.session.query(Apprentice.id).filter(
-            Apprentice.eshcol == eshco).all()
+            Apprentice.cluster_id == eshco).all()
         Apprentice_ids_forgoten = [r[0] for r in all_Apprentices]
         too_old = datetime.today() - timedelta(days=100)
         Oldvisitcalls = db.session.query(Report.ent_reported).filter(

@@ -1,19 +1,17 @@
 from src.services import db
-from src.models.models_defines import ID_COL, NAME_COL
+from src.models.models_defines import CLUSTERS_TBL, ID_COL, NAME_COL
 
 
-class Base(db.Model):
-    __tablename__ = "base"
+# region where the entity is in Israel
+class Region(db.Model):
+    __tablename__ = "regions"
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     name = db.Column(NAME_COL, db.String(50), nullable=False)
-    cordinatot = db.Column("cordinatot", db.String(50), nullable=False)
 
-    def __init__(self, id, name, cordinatot):
+    def __init__(self, id, name):
         self.id = id
         self.name = name
-        self.cordinatot = cordinatot
-
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
@@ -21,6 +19,4 @@ class Base(db.Model):
         return {
             "id": str(self.id),
             "name": self.name,
-            "cordinatot": self.last_name,
            }
-

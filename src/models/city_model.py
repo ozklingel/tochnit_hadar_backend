@@ -10,10 +10,19 @@ class City(db.Model):
 
     id = db.Column(ID_COL, db.Integer, primary_key=True, autoincrement=True, nullable=False)
     name = db.Column(NAME_COL, db.String(50), nullable=False)
-    cluster_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(get_foreign_key_source(CLUSTERS_TBL, ID_COL)),
+    region_id = db.Column(CLUSTER_ID_COL, db.Integer, ForeignKey(get_foreign_key_source("regions", ID_COL)),
                            nullable=False)
 
-    def __init__(self, id, name, cluster_id):
+    def __init__(self, id, name, region_id):
         self.id = id
         self.name = name
-        self.cluster_id = cluster_id
+        self.region_id = region_id
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "region_id": str(self.region_id),
+           }

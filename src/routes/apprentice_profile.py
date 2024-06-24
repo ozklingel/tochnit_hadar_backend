@@ -145,7 +145,6 @@ def add_apprentice_excel():
 
     # /home/ubuntu/flaskapp/
     file = request.files['file']
-    wb = load_workbook(file)
     sheet = wb.active
     uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
@@ -199,7 +198,7 @@ def add_apprentice_excel():
         # worktype = row[42].value.strip()  #
         army_role = row[42].value.strip() if not row[43].value is None else ""  # סיירות
         unit_name = row[43].value.strip() if not row[42].value is None else ""  # צנחנים
-        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקצ
+        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקד כיתה
         militaryPositionOld = row[46].value.strip() if not row[46].value is None else ""  # צנחנים
         recruitment_date = row[47].value if not row[47].value is None else None  # צנחנים
         release_date = row[48].value if not row[48].value is None else None  # צנחנים
@@ -213,8 +212,8 @@ def add_apprentice_excel():
         if institution_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
-        eshcol = db.session.query(Institution.eshcol_id).filter(Institution.id == institution_id.id).first()
-        if institution_id is None or eshcol is None or CityId is None or militaryCompoundId is None:
+        cluster_id = db.session.query(Institution.cluster_id).filter(Institution.id == institution_id.id).first()
+        if institution_id is None or cluster_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
 
@@ -232,7 +231,7 @@ def add_apprentice_excel():
                 teacher_grade_b_phone=teacher_grade_b_phone,
                 city_id=CityId.id,
                 id=phone,
-                eshcol=eshcol.eshcol_id,
+                cluster_id=cluster_id.cluster_id,
                 base_address=militaryCompoundId.id,
                 institution_id=institution_id.id if institution_id is not None else 0,
                 address=address,
@@ -288,13 +287,13 @@ def maps_apprentices():
 
         created_by_id = request.args.get('userId')
         apprenticeList = []
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(
             User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(
                 Apprentice.institution_id == user1ent.institution_id).all()
         if "1" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
+            apprenticeList = db.session.query(Apprentice).filter(Apprentice.cluster_id == user1ent.cluster_id).all()
         if "2" in user1ent.role_ids or "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
 
@@ -335,7 +334,7 @@ def maps_apprentices():
                         "street": noti.address,
                         "houseNumber": "1",
                         "apartment": "1",
-                        "region": str(city.cluster_id) if city else "",
+                        "region": str(city.region_id) if city else "",
                         "entrance": "a",
                         "floor": "1",
                         "postalCode": "12131",

@@ -97,14 +97,14 @@ def getAll_reports_form():
                  "title": str(noti.title), "allreadyread": str(noti.allreadyread), "description": str(noti.description),
                  "attachments": noti.attachments})
         #add my personas reports:
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol,User.id).filter(
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(
             User.id == user).first()
         if "0" in user1ent.role_ids:
             userList = []
         if "1" in user1ent.role_ids:
             userList = db.session.query(User.id).filter(User.institution_id == user1ent.institution_id,User.role_ids.contains("0")).all()
         if "2" in user1ent.role_ids:
-            userList = db.session.query(User.id).filter(User.eshcol == user1ent.eshcol,or_(User.role_ids.contains("0"),User.role_ids.contains("1"))).all()
+            userList = db.session.query(User.id).filter(User.cluster_id == user1ent.cluster_id,or_(User.role_ids.contains("0"),User.role_ids.contains("1"))).all()
         if "3" in user1ent.role_ids:
             userList = db.session.query(User.id).all()
         for ent in userList:

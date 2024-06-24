@@ -18,7 +18,7 @@ def getAll():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         CityList = db.session.query(City).all()
         if CityList:
-            return [{"id": str(row.id), "name": row.name, "cluster_id": row.cluster_id} for row in CityList]
+            return [{"id": str(row.id), "name": row.name, "cluster_id": row.region_id} for row in CityList]
         return jsonify({'result': "error"}), HTTPStatus.OK
     except Exception as e:
         return jsonify({'result': str(e)}), HTTPStatus.BAD_REQUEST
@@ -31,11 +31,11 @@ def add():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         name = data['name']
-        cluster_id = data['cluster']
+        region_id = data['cluster']
         city = City(
             id=str(uuid.uuid1().int)[:5],  # if ent_group_name!="" else str(uuid.uuid1().int)[:5],
             name=name,
-            cluster_id=cluster_id
+            region_id=region_id
         )
         db.session.add(city)
         db.session.commit()

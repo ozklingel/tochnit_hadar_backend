@@ -23,3 +23,23 @@ class Report(db.Model):
     description = db.Column("description", db.String(100), nullable=True, default="")
     ent_group = db.Column(db.String(100), nullable=True, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def to_attributes(self):
+        return {
+            "id": str(self.id),
+            "ent_reported": str(self.ent_reported),
+            "visit_date": self.visit_date,
+            "user_id": str(self.user_id),
+            "visit_in_army": self.visit_in_army,
+            "note": self.note,
+            "title": self.title,
+            "allreadyread": self.allreadyread,
+            "attachments": self.attachments,
+            "description": self.description,
+            "ent_group": self.ent_group,
+            "created_at": self.created_at,
+
+        }

@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
+from src.models.Region_model import Region
 from src.models.models_utils import to_iso
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
@@ -94,7 +95,7 @@ def getProfileAtributes_form():
         userEnt = User.query.get(created_by_id)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            regionName = db.session.query(Cluster.name).filter(Cluster.id == city.cluster_id).first()
+            regionName = db.session.query(Cluster.name).filter(Region.id == city.region_id).first()
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = userEnt.to_attributes(city.name, str(regionName[0]), myApprenticesNamesList)
@@ -152,7 +153,7 @@ def add_user_excel():
                 last_name=last_name,
                 role_ids=role_ids,
                 # email=str(email),
-                eshcol=eshcol,
+                cluster_id=eshcol,
                 institution_id=institution_id[0],
             )
 
@@ -210,7 +211,7 @@ def myPersonas():
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         apprenticeList = []
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.eshcol).filter(
+        user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(
             User.id == created_by_id).first()
         if "0" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
@@ -220,7 +221,7 @@ def myPersonas():
                 Apprentice.institution_id == user1ent.institution_id).all()
             userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
         if "2" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.eshcol == user1ent.eshcol).all()
+            apprenticeList = db.session.query(Apprentice).filter(Apprentice.cluster_id == user1ent.cluster_id).all()
             userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
         if "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
@@ -263,7 +264,7 @@ def myPersonas():
                      "street": noti.address,
                      "houseNumber": "1",
                      "apartment": "1",
-                     "region": str(city.cluster_id) if city else "",
+                     "region": str(city.region_id) if city else "",
                      "entrance": "a",
                      "floor": "1",
                      "postalCode": "12131",
@@ -350,7 +351,7 @@ def myPersonas():
                      "street": noti.address,
                      "houseNumber": "1",
                      "apartment": "1",
-                     "region": str(city.cluster_id) if city else "",
+                     "region": str(city.region_id) if city else "",
                      "entrance": "a",
                      "floor": "1",
                      "postalCode": "12131",

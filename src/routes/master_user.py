@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from openpyxl.reader.excel import load_workbook
 
 import config
+from src.models.cluster_model import Cluster
 from src.models.madadim_setting_model import MadadimSetting
 from src.routes.user_profile import correct_auth
 from src.services import db
@@ -19,7 +20,7 @@ from src.models.user_model import User
 from src.models.report_model import Report
 
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
-homeDir = "/home/ubuntu/flaskapp/"
+base_dir = "" #"/home/ubuntu/flaskapp/"
 
 
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
@@ -135,7 +136,7 @@ def addApperntice(wb):
         teacher_grade_a_phone = row[30].value if not row[30].value is None else ""
         teacher_grade_b = row[31].value.strip() if not row[31].value is None else ""
         teacher_grade_b_phone = row[32].value if not row[32].value is None else ""
-        paying = row[33].value.strip() if not row[33].value is None else ""
+        paying = row[33].value if not row[33].value is None else ""
         matzbar = row[34].value.strip() if not row[34].value is None else ""
         high_school_name = row[35].value.strip() if not row[35].value is None else ""
         high_school_teacher = row[36].value if not row[36].value is None else ""
@@ -161,8 +162,8 @@ def addApperntice(wb):
         if institution_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
-        eshcol = db.session.query(Institution.eshcol_id).filter(Institution.id == institution_id.id).first()
-        if institution_id is None or eshcol is None or CityId is None or militaryCompoundId is None:
+        cluster_id = db.session.query(Institution.cluster_id).filter(Institution.id == institution_id.id).first()
+        if institution_id is None or cluster_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
 
@@ -180,7 +181,7 @@ def addApperntice(wb):
                 teacher_grade_b_phone=teacher_grade_b_phone,
                 city_id=CityId.id,
                 id=phone,
-                eshcol=eshcol.eshcol_id,
+                cluster_id=cluster_id.cluster_id,
                 base_address=militaryCompoundId.id,
                 institution_id=institution_id.id if institution_id is not None else 0,
                 address=address,
@@ -250,20 +251,24 @@ def addUsers(wb):
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
         institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        eshcol = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
+        cluster_name = row[4].value.strip() if not row[4].value is None else None
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
             institution_id = db.session.query(Institution.id).filter(
                 Institution.name == str(institution_name)).first()
+            cluster_id = db.session.query(Cluster.id).filter(
+                Cluster.name == cluster_name).first()
+
+
             user = User(
                 id=int(str(phone).replace("-", "")),
                 name=first_name,
                 last_name=last_name,
                 role_ids=role_ids,
                 # email=str(email),
-                eshcol=eshcol,
-                institution_id=institution_id[0],
+                cluster_id=cluster_id.id,
+                institution_id=institution_id.id if institution_id else None,
             )
 
             db.session.add(user)
@@ -279,6 +284,7 @@ def addUsers(wb):
 def initDB():
     try:
         type = request.args.get('type')
+        total = request.args.get('total')
 
         giftCode = db.session.query(Gift).delete()
         giftCode = db.session.query(Report).delete()
@@ -288,6 +294,16 @@ def initDB():
         giftCode = db.session.query(Apprentice).delete()
         db.session.commit()
         uncommited_ids = []
+        if total:
+            path = base_dir + 'data/citiesToAdd.xlsx'
+            wb = load_workbook(filename=path)
+            res = db.session.query(City).delete()
+            upload_CitiesDB(wb)
+            path = base_dir + 'data/mosad.xlsx'
+            wb = load_workbook(filename=path)
+            res = db.session.query(Institution).delete()
+            add_mosad_excel(wb)
+            upload_baseDB()
         if type == "lab":
             path = 'data/apprentice_enter_lab.xlsx'
             wb = load_workbook(filename=path)
@@ -401,3 +417,92 @@ def add_report(wb):
         return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
 
     return jsonify({'result': 'success'}), HTTPStatus.OK
+
+
+def upload_CitiesDB(wb):
+    try:
+        import csv
+        my_list = []
+        sheet = wb.active
+        for row in sheet.iter_rows(min_row=2):
+                my_list.append(City(row[2].value, row[1].value.strip(), row[0].value))
+        for ent in my_list:
+            db.session.add(ent)
+            db.session.commit()
+
+        return jsonify({"result": "success"}), HTTPStatus.OK
+    except Exception as e:
+        return jsonify({'result': str(e)}), HTTPStatus.OK
+
+
+def add_mosad_excel(wb):
+    sheet = wb.active
+    not_commited = []
+    for row in sheet.iter_rows(min_row=2):
+        name = row[0].value.strip()
+        phone = str(row[1].value)
+        email = row[2].value.strip()
+        eshcol = row[3].value.strip()
+        roshYeshiva_phone = row[4].value
+        roshYeshiva_name = row[5].value.strip()
+        admin_phone = row[6].value.strip()
+        admin_name = row[7].value.strip()
+        owner_id = row[8].value
+        logo_path = row[9].value.strip() if row[9].value else ""
+        address = row[10].value.strip()
+        city = row[11].value.strip()
+        contact_name = row[12].value.strip()
+        contact_phone = row[13].value
+        try:
+            CityId = db.session.query(City.id).filter(City.name == city).first()
+            Institution1 = db.session.query(Institution.id).filter(Institution.name == name).first()
+            if Institution1:
+                not_commited.append(name)
+                continue
+            Cluster1 = db.session.query(Cluster.id).filter(Cluster.name == eshcol).first()
+            if Cluster1:
+                cluster_id1=Cluster1.id
+            else:
+                cluster_id1=uuid.uuid4()
+                Cluster1=Cluster(id=cluster_id1,name=eshcol)
+                db.session.add(Cluster1)
+            Institution1 = Institution(
+                # email=email,
+                id=str(uuid.uuid4().int)[:5],
+                cluster_id=cluster_id1,
+                roshYeshiva_phone=roshYeshiva_phone,
+                roshYeshiva_name=roshYeshiva_name,
+                admin_phone=admin_phone,
+                admin_name=admin_name,
+                name=name,
+                owner_id=owner_id,
+                logo_path=logo_path,
+                contact_phone=str(contact_phone),
+                contact_name=str(contact_name),
+                phone=phone,
+                city_id=CityId.id,
+                address=address
+            )
+            db.session.add(Institution1)
+            db.session.commit()
+        except Exception as e:
+            print(str(e))
+            not_commited.append(name)
+    return jsonify({'result': 'success', "not_commited": not_commited}), HTTPStatus.OK
+
+
+def upload_baseDB():
+    try:
+        import csv
+        my_list = []
+        # /home/ubuntu/flaskapp/
+        with open(base_dir + 'data/base_add.csv', 'r', encoding="utf8") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                ent = Base(str(uuid.uuid4().int)[:5], row[0].strip(), row[1].strip())
+                db.session.add(ent)
+        db.session.commit()
+        return jsonify({"result": "success"}), HTTPStatus.OK
+    except Exception as e:
+        print(str(e))
+        return jsonify({'result': str(e)}), HTTPStatus.OK

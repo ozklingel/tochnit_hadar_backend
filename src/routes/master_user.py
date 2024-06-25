@@ -292,6 +292,8 @@ def initDB():
         giftCode = db.session.query(Task).delete()
         giftCode = db.session.query(User).delete()
         giftCode = db.session.query(Apprentice).delete()
+        giftCode = db.session.query(Base).delete()
+
         db.session.commit()
         uncommited_ids = []
         if total:

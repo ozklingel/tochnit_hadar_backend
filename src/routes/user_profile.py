@@ -19,7 +19,7 @@ from src.models.user_model import User
 from src.models.report_model import Report
 
 from src.routes.apprentice_profile import visit_gap_color
-from src.routes.set_entity_details_form_routes import validate_email
+from src.routes.set_entity_details_form_routes import validate_email, validate_date
 
 userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
 
@@ -61,14 +61,9 @@ def update():
         data = request.json
         updatedEnt = User.query.get(userId)
         for key in data:
-            if key == "city":
-                CityId = db.session.query(City).filter(
-                    City.name == str(data[key])).first()
-                setattr(updatedEnt, "city_id", CityId.id)
-            if key == "region":
-                ClusterId = db.session.query(Cluster.id).filter(
-                    Cluster.name == str(data[key])).first()
-                setattr(updatedEnt, "cluster_id", ClusterId.id)
+            if key == "birthday":
+                if validate_date(data[key]):
+                    setattr(updatedEnt, key, data[key])
             elif key == "email" or key == "birthday":
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
@@ -76,7 +71,7 @@ def update():
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
                 setattr(updatedEnt, key, data[key])
-
+        print(updatedEnt.region_id)
         db.session.commit()
         if updatedEnt:
             # TODO: add contact form to DB
@@ -95,7 +90,7 @@ def getProfileAtributes_form():
         userEnt = User.query.get(created_by_id)
         if userEnt:
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            regionName = db.session.query(Region.name).filter(Region.id == city.region_id).first()
+            regionName = db.session.query(Region.name).filter(Region.id == userEnt.region_id).first()
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
             city = db.session.query(City).filter(City.id == userEnt.city_id).first()
             list = userEnt.to_attributes(city.name, str(regionName[0]), myApprenticesNamesList)

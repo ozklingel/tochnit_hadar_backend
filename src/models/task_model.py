@@ -29,7 +29,6 @@ class Task(db.Model):
     def to_attributes(self):
         return {
             "id": str(self.id),
-            "userid": str(self.userid),  # for frontend backward compatibility
             "user_id": str(self.userid),
             "event": self.event,
             "date": self.date.isoformat(),
@@ -37,12 +36,10 @@ class Task(db.Model):
             "frequency_end": self.frequency_end,
             "frequency_meta": self.frequency_meta,
             "details": self.details,
-            "description": self.details,  # for frontend backward compatibility
             "created_at": self.created_at.isoformat(),
             "status": self.status,
             "subject": self.subject,
             "already_read": self.allreadyread,
-            "allreadyread": self.allreadyread,  # for frontend backward compatibility
         }
 
     def from_attributes(self, data):

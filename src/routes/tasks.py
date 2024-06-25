@@ -69,8 +69,8 @@ def delete():
         if correct_auth() == False:
             return jsonify({"result": "wrong access token"}), HTTPStatus.OK
         data = request.json
-        taskId = data["task_id"]
-        res = db.session.query(Task).filter(Task.id == taskId).delete()
+        task_id = data["task_id"]
+        res = db.session.query(Task).filter(Task.id == task_id).delete()
 
         db.session.commit()
     except Exception as e:

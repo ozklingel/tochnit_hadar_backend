@@ -145,6 +145,8 @@ def add_apprentice_excel():
 
     # /home/ubuntu/flaskapp/
     file = request.files['file']
+    wb = load_workbook(file)
+
     sheet = wb.active
     uncommited_ids = []
     for row in sheet.iter_rows(min_row=2):
@@ -186,7 +188,7 @@ def add_apprentice_excel():
         teacher_grade_a_phone = row[30].value if not row[30].value is None else ""
         teacher_grade_b = row[31].value.strip() if not row[31].value is None else ""
         teacher_grade_b_phone = row[32].value if not row[32].value is None else ""
-        paying = row[33].value.strip() if not row[33].value is None else ""
+        paying = row[33].value
         matzbar = row[34].value.strip() if not row[34].value is None else ""
         high_school_name = row[35].value.strip() if not row[35].value is None else ""
         high_school_teacher = row[36].value if not row[36].value is None else ""

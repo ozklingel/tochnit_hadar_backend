@@ -77,6 +77,7 @@ class Apprentice(db.Model):
 
 front_end_dict = {
     "address": "address",
+    "cluster_id": "cluster_id",
 
     "highSchoolRavMelamed_phone": "high_school_teacher_phone",
     "highSchoolRavMelamed_name": "high_school_teacher",

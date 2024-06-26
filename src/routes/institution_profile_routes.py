@@ -289,9 +289,17 @@ def add_mosad():
 
 @institutionProfile_form_blueprint.route('/getAll', methods=['GET'])
 def getAll():
-    if correct_auth() == False:
-        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-    inst_List = db.session.query(Institution).all()
+    user_id = request.args.get("userId")
+    user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(
+        User.id == user_id).first()
+    if "0" in user1ent.role_ids:
+        inst_List = [db.session.query(Institution).filter(Institution.id==user1ent.institution_id).first()]
+    if "1" in user1ent.role_ids:
+        inst_List = [db.session.query(Institution).filter(Institution.id==user1ent.institution_id).first()]
+    if "2" in user1ent.role_ids:
+        inst_List = db.session.query(Institution).filter(Institution.cluster_id==user1ent.cluster_id).all()
+    if "3" in user1ent.role_ids:
+        inst_List = db.session.query(Institution).all()
     if inst_List == []:
         return jsonify([]), HTTPStatus.OK
     # print(inst_List)

@@ -17,19 +17,28 @@ from src.models.user_model import User
 from src.models.report_model import Report
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
 
-apprentice_profile_form_blueprint = Blueprint('apprentice_Profile_form', __name__,
-                                              url_prefix='/apprentice_Profile_form')
+apprentice_profile_form_blueprint = Blueprint(
+    "apprentice_Profile_form", __name__, url_prefix="/apprentice_Profile_form"
+)
 
 
-@apprentice_profile_form_blueprint.route('/delete', methods=['POST'])
+@apprentice_profile_form_blueprint.route("/delete", methods=["POST"])
 def delete():
     try:
 
         data = request.json
-        apprenticetId = data['apprenticetId']
+        apprenticetId = data["apprenticetId"]
         res = db.session.query(Task).filter(Task.subject == apprenticetId).delete()
-        res = db.session.query(Report).filter(Report.ent_reported == apprenticetId, ).delete()
-        res = db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
+        res = (
+            db.session.query(Report)
+            .filter(
+                Report.ent_reported == apprenticetId,
+            )
+            .delete()
+        )
+        res = (
+            db.session.query(Apprentice).filter(Apprentice.id == apprenticetId).delete()
+        )
         db.session.commit()
     except Exception as e:
         return jsonify({"result": str(e)}), HTTPStatus.OK
@@ -37,7 +46,7 @@ def delete():
     # return jsonify([{'id':str(noti.id),'result': 'success',"apprenticeId":str(noti.apprenticeid),"date":str(noti.date),"timeFromNow":str(noti.timefromnow),"event":str(noti.event),"allreadyread":str(noti.allreadyread)}]), HTTPStatus.OK
 
 
-@apprentice_profile_form_blueprint.route("/update", methods=['put'])
+@apprentice_profile_form_blueprint.route("/update", methods=["put"])
 def update():
     try:
 
@@ -48,62 +57,70 @@ def update():
 
         for key in data:
             if key == "avatar":
-                s3 = boto3.resource('s3',
-                                    aws_access_key_id=AWS_access_key_id,
-                                    aws_secret_access_key=AWS_secret_access_key)
+                s3 = boto3.resource(
+                    "s3",
+                    aws_access_key_id=AWS_access_key_id,
+                    aws_secret_access_key=AWS_secret_access_key,
+                )
                 s3.Object("th01-s3", data[key]).delete()
             if key == "email":
                 if validate_email(data[key]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "email -wrong format"}), 401
+                    return jsonify({"result": "email -wrong format"}), 401
             elif key == "birthday":
                 if validate_date(data[key][:-9]):
                     setattr(updatedEnt, key, data[key])
                 else:
-                    return jsonify({'result': "email or date -wrong format"}), 401
+                    return jsonify({"result": "email or date -wrong format"}), 401
             else:
                 setattr(updatedEnt, front_end_dict[key], data[key])
         db.session.commit()
         if updatedEnt:
             # TODO: add contact form to DB
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-        return jsonify({'result': 'error'}), 401
+            return jsonify({"result": "success"}), HTTPStatus.OK
+        return jsonify({"result": "error"}), 401
     except Exception as e:
-        return jsonify({'result': str(e)}), 401
+        return jsonify({"result": str(e)}), 401
 
 
-@apprentice_profile_form_blueprint.route("/add_apprentice_manual", methods=['post'])
+@apprentice_profile_form_blueprint.route("/add_apprentice_manual", methods=["post"])
 def add_apprentice_manual():
     try:
 
         data = request.json
-        first_name = data['first_name']
-        last_name = data['last_name']
-        phone = data['phone']
-        institution_name = data['institution_name']
-        accompany_id = data['accompany_id']
-        birthday = data['birthday']
-        city_name = data['city_name']
-        maritalstatus = data['maritalstatus']
-        marriage_date = data['marriage_date']
-        unit_name = data['unit_name']
-        serve_type = data['serve_type']  # סדיר
-        release_date = data['release_date']
-        recruitment_date = data['recruitment_date']
-        onlinestatus = data['onlinestatus']  # אונלין?
-        matsber = data['matsber']  # מצב רוחני
-        hadar_plan_session = data['hadar_plan_session']  # מחזןר בהדר thperiod
-        email = data['email']
-        birthday = data['birthday']
-        address = data['address']  # רחוב ובית
-        teudatzehut = data['teudatzehut']
-        institution_mahzor = data['institution_mahzor']
-        militarycompound_name = data['militarycompound_name']
+        first_name = data["first_name"]
+        last_name = data["last_name"]
+        phone = data["phone"]
+        institution_name = data["institution_name"]
+        accompany_id = data["accompany_id"]
+        birthday = data["birthday"]
+        city_name = data["city_name"]
+        maritalstatus = data["maritalstatus"]
+        marriage_date = data["marriage_date"]
+        unit_name = data["unit_name"]
+        serve_type = data["serve_type"]  # סדיר
+        release_date = data["release_date"]
+        recruitment_date = data["recruitment_date"]
+        onlinestatus = data["onlinestatus"]  # אונלין?
+        matsber = data["matsber"]  # מצב רוחני
+        hadar_plan_session = data["hadar_plan_session"]  # מחזןר בהדר thperiod
+        email = data["email"]
+        birthday = data["birthday"]
+        address = data["address"]  # רחוב ובית
+        teudatzehut = data["teudatzehut"]
+        institution_mahzor = data["institution_mahzor"]
+        militarycompound_name = data["militarycompound_name"]
 
-        militarycompoundid = db.session.query(Base).filter(Base.name == militarycompound_name).first()
+        militarycompoundid = (
+            db.session.query(Base).filter(Base.name == militarycompound_name).first()
+        )
         CityId = db.session.query(City).filter(City.name == city_name).first()
-        institution_id = db.session.query(Institution.id).filter(Institution.name == institution_name).first()
+        institution_id = (
+            db.session.query(Institution.id)
+            .filter(Institution.name == institution_name)
+            .first()
+        )
         institution_id = institution_id[0] if institution_id is not None else 0
         Apprentice1 = Apprentice(
             id=int(phone[1:]),
@@ -128,23 +145,26 @@ def add_apprentice_manual():
             base_address=str(militarycompoundid.id),
             city_id=CityId.id,
             photo_path="https://www.gravatar.com/avatar",
-            birthday=birthday
+            birthday=birthday,
         )
         db.session.add(Apprentice1)
         db.session.commit()
     except Exception as e:
-        return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+        return (
+            jsonify({"result": "error while inserting" + str(e)}),
+            HTTPStatus.BAD_REQUEST,
+        )
 
     if Apprentice1:
         # TODO: add contact form to DB
-        return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({"result": "success"}), HTTPStatus.OK
 
 
-@apprentice_profile_form_blueprint.route("/add_apprentice_excel", methods=['put'])
+@apprentice_profile_form_blueprint.route("/add_apprentice_excel", methods=["put"])
 def add_apprentice_excel():
 
     # /home/ubuntu/flaskapp/
-    file = request.files['file']
+    file = request.files["file"]
     wb = load_workbook(file)
 
     sheet = wb.active
@@ -167,15 +187,21 @@ def add_apprentice_excel():
         marriage_status = row[10].value.strip() if not row[10].value is None else ""
         serve_type = row[11].value.strip() if not row[11].value is None else ""
         hadar_plan_session = row[12].value if not row[12].value is None else ""
-        contact1_first_relation = row[13].value.strip() if not row[13].value is None else ""
+        contact1_first_relation = (
+            row[13].value.strip() if not row[13].value is None else ""
+        )
         contact1_first_name = row[14].value.strip() if not row[14].value is None else ""
         contact1_phone = row[15].value if not row[15].value is None else ""
         contact1_email = row[16].value.strip() if not row[16].value is None else ""
-        contact2_first_relation = row[17].value.strip() if not row[17].value is None else ""
+        contact2_first_relation = (
+            row[17].value.strip() if not row[17].value is None else ""
+        )
         contact2_first_name = row[18].value.strip() if not row[18].value is None else ""
         contact2_phone = row[19].value if not row[19].value is None else ""
         contact2_email = row[20].value.strip() if not row[20].value is None else ""
-        contact3_first_relation = row[21].value.strip() if not row[21].value is None else ""
+        contact3_first_relation = (
+            row[21].value.strip() if not row[21].value is None else ""
+        )
         contact3_first_name = row[22].value.strip() if not row[22].value is None else ""
         contact3_phone = row[23].value if not row[23].value is None else ""
         contact3_email = row[24].value.strip() if not row[24].value is None else ""
@@ -200,27 +226,52 @@ def add_apprentice_excel():
         # worktype = row[42].value.strip()  #
         army_role = row[42].value.strip() if not row[43].value is None else ""  # סיירות
         unit_name = row[43].value.strip() if not row[42].value is None else ""  # צנחנים
-        militaryPositionNew = row[45].value.strip() if not row[45].value is None else ""  # מפקד כיתה
-        militaryPositionOld = row[46].value.strip() if not row[46].value is None else ""  # צנחנים
-        recruitment_date = row[47].value if not row[47].value is None else None  # צנחנים
+        militaryPositionNew = (
+            row[45].value.strip() if not row[45].value is None else ""
+        )  # מפקד כיתה
+        militaryPositionOld = (
+            row[46].value.strip() if not row[46].value is None else ""
+        )  # צנחנים
+        recruitment_date = (
+            row[47].value if not row[47].value is None else None
+        )  # צנחנים
         release_date = row[48].value if not row[48].value is None else None  # צנחנים
         base_name = row[49].value.strip() if not row[49].value is None else "לא ידוע"
         institution_name = row[50].value.strip() if not row[50].value is None else ""
         accompany_id = row[51].value if not row[51].value is None else ""  # מפקד?
 
         CityId = db.session.query(City.id).filter(City.name == city).first()
-        militaryCompoundId = db.session.query(Base.id).filter(Base.name == base_name).first()
-        institution_id = db.session.query(Institution.id).filter(Institution.name == institution_name).first()
+        militaryCompoundId = (
+            db.session.query(Base.id).filter(Base.name == base_name).first()
+        )
+        institution_id = (
+            db.session.query(Institution.id)
+            .filter(Institution.name == institution_name)
+            .first()
+        )
         if institution_id is None or CityId is None or militaryCompoundId is None:
             uncommited_ids.append(row[2].value)
             continue
-        cluster_id = db.session.query(Institution.cluster_id).filter(Institution.id == institution_id.id).first()
-        if institution_id is None or cluster_id is None or CityId is None or militaryCompoundId is None:
+        cluster_id = (
+            db.session.query(Institution.cluster_id)
+            .filter(Institution.id == institution_id.id)
+            .first()
+        )
+        if (
+            institution_id is None
+            or cluster_id is None
+            or CityId is None
+            or militaryCompoundId is None
+        ):
             uncommited_ids.append(row[2].value)
             continue
 
         try:
-            institution_id = db.session.query(Institution.id).filter(Institution.name == str(institution_name)).first()
+            institution_id = (
+                db.session.query(Institution.id)
+                .filter(Institution.name == str(institution_name))
+                .first()
+            )
             Apprentice1 = Apprentice(
                 email=mail,
                 high_school_teacher=high_school_teacher,
@@ -273,29 +324,46 @@ def add_apprentice_excel():
                 paying=paying,
                 contact1_relation=contact1_first_relation,
                 contact2_relation=contact2_first_relation,
-                contact3_relation=contact3_first_relation
-
+                contact3_relation=contact3_first_relation,
             )
             db.session.add(Apprentice1)
         except Exception as e:
-            return jsonify({'result': 'error while inserting' + str(e)}), HTTPStatus.BAD_REQUEST
+            return (
+                jsonify({"result": "error while inserting" + str(e)}),
+                HTTPStatus.BAD_REQUEST,
+            )
     db.session.commit()
-    return jsonify({'result': "success", "uncommited_ids": [x for x in uncommited_ids if x is not None]})
+    return jsonify(
+        {
+            "result": "success",
+            "uncommited_ids": [x for x in uncommited_ids if x is not None],
+        }
+    )
 
 
-@apprentice_profile_form_blueprint.route('/maps_apprentices', methods=['GET'])
+@apprentice_profile_form_blueprint.route("/maps_apprentices", methods=["GET"])
 def maps_apprentices():
     try:
 
-        created_by_id = request.args.get('userId')
+        created_by_id = request.args.get("userId")
         apprenticeList = []
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(
-            User.id == created_by_id).first()
+        user1ent = (
+            db.session.query(User.role_ids, User.institution_id, User.cluster_id)
+            .filter(User.id == created_by_id)
+            .first()
+        )
         if "0" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(
-                Apprentice.institution_id == user1ent.institution_id).all()
+            apprenticeList = (
+                db.session.query(Apprentice)
+                .filter(Apprentice.institution_id == user1ent.institution_id)
+                .all()
+            )
         if "1" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.cluster_id == user1ent.cluster_id).all()
+            apprenticeList = (
+                db.session.query(Apprentice)
+                .filter(Apprentice.cluster_id == user1ent.cluster_id)
+                .all()
+            )
         if "2" in user1ent.role_ids or "3" in user1ent.role_ids:
             apprenticeList = db.session.query(Apprentice).all()
 
@@ -303,16 +371,30 @@ def maps_apprentices():
 
         for noti in apprenticeList:
             call_status = visit_gap_color(config.call_report, noti, 30, 15)
-            personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
+            personalMeet_status = visit_gap_color(
+                config.personalMeet_report, noti, 100, 80
+            )
             Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
             mentor_id = noti.accompany_id
-            mentor_name = db.session.query(User.name, User.last_name).filter(User.id == mentor_id).first()
+            mentor_name = (
+                db.session.query(User.name, User.last_name)
+                .filter(User.id == mentor_id)
+                .first()
+            )
             city = db.session.query(City).filter(City.id == noti.city_id).first()
-            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
-            eventlist = db.session.query(Task.id, Task.event, Task.details,
-                                         Task.date).filter(
-                Task.subject == str(noti.id)).all()
-            base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
+            reportList = (
+                db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
+            )
+            eventlist = (
+                db.session.query(Task.id, Task.event, Task.details, Task.date)
+                .filter(Task.subject == str(noti.id))
+                .all()
+            )
+            base_id = (
+                db.session.query(Base.id)
+                .filter(Base.id == int(noti.base_address))
+                .first()
+            )
             base_id = base_id[0] if base_id else 0
             my_dict.append(
                 {
@@ -341,7 +423,7 @@ def maps_apprentices():
                         "floor": "1",
                         "postalCode": "12131",
                         "lat": 32.04282620026557,  # no need city cord
-                        "lng": 34.75186193813887
+                        "lng": 34.75186193813887,
                     },
                     "contact1_first_name": noti.contact1_first_name,
                     "contact1_last_name": noti.contact1_last_name,
@@ -360,21 +442,35 @@ def maps_apprentices():
                     "contact3_relation": noti.contact3_relation,
                     "activity_score": len(reportList),
                     "reports": [str(i[0]) for i in [tuple(row) for row in reportList]],
-                    "events":
-                        [{"id": str(row[0]), "title": row[1], "description": row[2], "date": to_iso(row[3])} for row in
-                         eventlist],
+                    "events": [
+                        {
+                            "id": str(row[0]),
+                            "title": row[1],
+                            "description": row[2],
+                            "date": to_iso(row[3]),
+                        }
+                        for row in eventlist
+                    ],
                     "id": str(noti.id),
                     "thMentor": str(noti.accompany_id),
-                    "thMentor_name": mentor_name[0] + " " + mentor_name[1] if mentor_name else "",
+                    "thMentor_name": (
+                        mentor_name[0] + " " + mentor_name[1] if mentor_name else ""
+                    ),
                     "militaryPositionNew": str(noti.militaryPositionNew),
-                    "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                    "name": str(noti.name), "last_name": str(noti.last_name),
+                    "avatar": (
+                        noti.photo_path
+                        if noti.photo_path is not None
+                        else "https://www.gravatar.com/avatar"
+                    ),
+                    "name": str(noti.name),
+                    "last_name": str(noti.last_name),
                     "institution_id": str(noti.institution_id),
                     "thPeriod": str(noti.hadar_plan_session),
                     "serve_type": noti.serve_type,
                     "marriage_status": str(noti.marriage_status),
                     "militaryCompoundId": str(base_id),
-                    "phone": noti.phone, "email": noti.email,
+                    "phone": noti.phone,
+                    "email": noti.email,
                     "teudatZehut": noti.teudatZehut,
                     "birthday": to_iso(noti.birthday),
                     "marriage_date": to_iso(noti.marriage_date),
@@ -392,8 +488,9 @@ def maps_apprentices():
                     "workType": noti.worktype,
                     "workPlace": noti.workplace,
                     "workStatus": noti.workstatus,
-                    "paying": noti.paying
-                })
+                    "paying": noti.paying,
+                }
+            )
 
         if apprenticeList is None:
             # acount not found
@@ -405,13 +502,17 @@ def maps_apprentices():
             # TODO: get Noti form to DB
             return jsonify(my_dict), HTTPStatus.OK
     except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
+        return jsonify({"result": str(e)}), HTTPStatus.OK
 
 
 def visit_gap_color(type, apprentice, redLine, greenLine):
     # Apprentice_call_status
-    visitEvent = db.session.query(Report).filter(Report.ent_reported == apprentice.id,
-                                                Report.title == type).order_by(Report.visit_date.desc()).first()
+    visitEvent = (
+        db.session.query(Report)
+        .filter(Report.ent_reported == apprentice.id, Report.title == type)
+        .order_by(Report.visit_date.desc())
+        .first()
+    )
     # handle no row so insert need a call
     if visitEvent is None:
         return "red"

@@ -277,7 +277,8 @@ def add_apprentice_excel():
                     marriage_date_ivry=strip_or_none("יום נישואין תאריך עברי - יום")
                     + "' "
                     + strip_or_none("יום נישואין תאריך עברי - חודש"),
-                    marriage_date=column_value("יום נישואין תאריך לועזי"),
+                    # marriage_date=column_value("יום נישואין תאריך לועזי"),
+                    marriage_date="2000-01-01",  # Temporary, until we fix front-end to handle a null value for this
                     institution_mahzor=strip_or_none("מחזור במכינה/ישיבה"),
                     teacher_grade_a=strip_or_none('ר"מ שנה א'),
                     teacher_grade_a_phone=strip_or_none("פלאפון ר״מ שנה א"),

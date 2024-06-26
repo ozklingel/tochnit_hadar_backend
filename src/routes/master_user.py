@@ -22,7 +22,25 @@ from src.models.report_model import Report
 master_user_form_blueprint = Blueprint('master_user', __name__, url_prefix='/master_user')
 base_dir = "" #"/home/ubuntu/flaskapp/"
 
-
+@master_user_form_blueprint.route('/get_db_tree', methods=['get'])
+def get_db_tree():
+    cluster_coords = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(User.role_ids.contains("2")).all()
+    cluster_coords_dict={}
+    for cluster_coord in cluster_coords:
+        institution_coords= db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(
+            User.role_ids.contains("1"),User.cluster_id==cluster_coord.cluster_id).all()
+        institution_coord_dict={}
+        for institution_coord in institution_coords:
+            accompanys = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(
+                User.role_ids.contains("0"), User.institution_id == institution_coord.institution_id).all()
+            accompanys_dict={}
+            for accompany in accompanys:
+                apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == accompany.id).all()
+                apprenticeList=[r.id for r in apprenticeList]
+                accompanys_dict[str(accompany.id)]=apprenticeList
+            institution_coord_dict[str(institution_coord.id)+"-"+str(institution_coord.institution_id)]=accompanys_dict
+        cluster_coords_dict[str(cluster_coord.id)+"-"+cluster_coord.cluster_id]=institution_coord_dict
+    return cluster_coords_dict
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():
     if correct_auth() == False:
@@ -301,11 +319,16 @@ def initDB():
             wb = load_workbook(filename=path)
             res = db.session.query(City).delete()
             upload_CitiesDB(wb)
+            print("upload_CitiesDB loaded")
+
             path = base_dir + 'data/mosad.xlsx'
             wb = load_workbook(filename=path)
             res = db.session.query(Institution).delete()
             add_mosad_excel(wb)
+            print("mosad loaded")
             upload_baseDB()
+            print("upload_baseDB loaded")
+
         if type == "lab":
             path = 'data/apprentice_enter_lab.xlsx'
             wb = load_workbook(filename=path)
@@ -465,7 +488,7 @@ def add_mosad_excel(wb):
             if Cluster1:
                 cluster_id1=Cluster1.id
             else:
-                cluster_id1=uuid.uuid4()
+                cluster_id1=str(uuid.uuid4().int)[:5]
                 Cluster1=Cluster(id=cluster_id1,name=eshcol)
                 db.session.add(Cluster1)
             Institution1 = Institution(

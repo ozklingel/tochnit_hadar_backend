@@ -162,176 +162,155 @@ def add_apprentice_manual():
 
 @apprentice_profile_form_blueprint.route("/add_apprentice_excel", methods=["put"])
 def add_apprentice_excel():
+    try:
+        file = request.files["file"]
+        wb = load_workbook(file)
 
-    # /home/ubuntu/flaskapp/
-    file = request.files["file"]
-    wb = load_workbook(file)
+        sheet = wb.active
+        columns = [cell.value for cell in sheet[1]]
 
-    sheet = wb.active
-    uncommited_ids = []
-    for row in sheet.iter_rows(min_row=2):
-        if row[0].value is None or row[1].value is None:
-            uncommited_ids.append(row[2].value)
-            continue
-        first_name = row[0].value.strip()
-        last_name = row[1].value.strip()
-        phone = row[2].value
-        city = row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        address = row[4].value.strip() if not row[4].value is None else ""
-        teudatZehut = row[5].value if not row[5].value is None else ""
-        birthday_Ivry_month = row[6].value.strip() if not row[6].value is None else ""
-        birthday_Ivry_day = row[7].value.strip() if not row[7].value is None else ""
-        birthday_Ivry = birthday_Ivry_day + " " + birthday_Ivry_month
-        birthday_loazi = row[8].value if not row[8].value is None else None
-        mail = row[9].value.strip() if not row[9].value is None else ""
-        marriage_status = row[10].value.strip() if not row[10].value is None else ""
-        serve_type = row[11].value.strip() if not row[11].value is None else ""
-        hadar_plan_session = row[12].value if not row[12].value is None else ""
-        contact1_first_relation = (
-            row[13].value.strip() if not row[13].value is None else ""
-        )
-        contact1_first_name = row[14].value.strip() if not row[14].value is None else ""
-        contact1_phone = row[15].value if not row[15].value is None else ""
-        contact1_email = row[16].value.strip() if not row[16].value is None else ""
-        contact2_first_relation = (
-            row[17].value.strip() if not row[17].value is None else ""
-        )
-        contact2_first_name = row[18].value.strip() if not row[18].value is None else ""
-        contact2_phone = row[19].value if not row[19].value is None else ""
-        contact2_email = row[20].value.strip() if not row[20].value is None else ""
-        contact3_first_relation = (
-            row[21].value.strip() if not row[21].value is None else ""
-        )
-        contact3_first_name = row[22].value.strip() if not row[22].value is None else ""
-        contact3_phone = row[23].value if not row[23].value is None else ""
-        contact3_email = row[24].value.strip() if not row[24].value is None else ""
-        marriage_date_month = row[25].value if not row[25].value is None else ""
-        marriage_date_day = row[26].value if not row[26].value is None else ""
-        marriage_date = marriage_date_day + " " + marriage_date_month
-        marriage_date_loazi = row[27].value if not row[27].value is None else None
-        institution_mahzor = row[28].value if not row[28].value is None else ""
-        teacher_grade_a = row[29].value.strip() if not row[29].value is None else ""
-        teacher_grade_a_phone = row[30].value if not row[30].value is None else ""
-        teacher_grade_b = row[31].value.strip() if not row[31].value is None else ""
-        teacher_grade_b_phone = row[32].value if not row[32].value is None else ""
-        paying = row[33].value
-        matzbar = row[34].value.strip() if not row[34].value is None else ""
-        high_school_name = row[35].value.strip() if not row[35].value is None else ""
-        high_school_teacher = row[36].value if not row[36].value is None else ""
-        high_school_teacher_phone = row[37].value if not row[37].value is None else ""
-        workstatus = row[38].value.strip() if not row[38].value is None else ""
-        workplace = row[39].value.strip() if not row[39].value is None else ""
-        educationfaculty = row[40].value.strip() if not row[40].value is None else ""
-        workoccupation = row[41].value.strip() if not row[41].value is None else ""
-        # worktype = row[42].value.strip()  #
-        army_role = row[42].value.strip() if not row[43].value is None else ""  # סיירות
-        unit_name = row[43].value.strip() if not row[42].value is None else ""  # צנחנים
-        militaryPositionNew = (
-            row[45].value.strip() if not row[45].value is None else ""
-        )  # מפקד כיתה
-        militaryPositionOld = (
-            row[46].value.strip() if not row[46].value is None else ""
-        )  # צנחנים
-        recruitment_date = (
-            row[47].value if not row[47].value is None else None
-        )  # צנחנים
-        release_date = row[48].value if not row[48].value is None else None  # צנחנים
-        base_name = row[49].value.strip() if not row[49].value is None else "לא ידוע"
-        institution_name = row[50].value.strip() if not row[50].value is None else ""
-        accompany_id = row[51].value if not row[51].value is None else ""  # מפקד?
+        commited_ids = []
+        uncommited_ids = []
 
-        CityId = db.session.query(City.id).filter(City.name == city).first()
-        militaryCompoundId = (
-            db.session.query(Base.id).filter(Base.name == base_name).first()
-        )
-        institution_id = (
-            db.session.query(Institution.id)
-            .filter(Institution.name == institution_name)
-            .first()
-        )
-        if institution_id is None or CityId is None or militaryCompoundId is None:
-            uncommited_ids.append(row[2].value)
-            continue
-        cluster_id = (
-            db.session.query(Institution.cluster_id)
-            .filter(Institution.id == institution_id.id)
-            .first()
-        )
-        if (
-            institution_id is None
-            or cluster_id is None
-            or CityId is None
-            or militaryCompoundId is None
-        ):
-            uncommited_ids.append(row[2].value)
-            continue
+        unknown_value = "לא ידוע"
 
-        try:
-            institution_id = (
-                db.session.query(Institution.id)
-                .filter(Institution.name == str(institution_name))
-                .first()
-            )
-            Apprentice1 = Apprentice(
-                email=mail,
-                high_school_teacher=high_school_teacher,
-                release_date=release_date,
-                recruitment_date=recruitment_date,
-                militaryPositionOld=militaryPositionOld,
-                militaryPositionNew=militaryPositionNew,
-                institution_mahzor=institution_mahzor,
-                teacher_grade_a_phone=teacher_grade_a_phone,
-                teacher_grade_b_phone=teacher_grade_b_phone,
-                city_id=CityId.id,
-                id=phone,
-                cluster_id=cluster_id.cluster_id,
-                base_address=militaryCompoundId.id,
-                institution_id=institution_id.id if institution_id is not None else 0,
-                address=address,
-                serve_type=serve_type,
-                name=first_name,
-                last_name=last_name,
-                phone=str(phone),
-                army_role=army_role,
-                marriage_status=marriage_status,
-                contact1_email=contact1_email,
-                teacher_grade_b=teacher_grade_b,
-                teacher_grade_a=teacher_grade_a,
-                hadar_plan_session=hadar_plan_session,
-                contact2_phone=contact2_phone,
-                contact2_first_name=contact2_first_name,
-                contact1_phone=contact1_phone,
-                contact1_first_name=contact1_first_name,
-                teudatZehut=teudatZehut,
-                birthday_ivry=birthday_Ivry,
-                birthday=birthday_loazi,
-                unit_name=unit_name,
-                accompany_id=accompany_id,
-                contact3_email=contact3_email,
-                contact3_first_name=contact3_first_name,
-                contact3_phone=contact3_phone,
-                marriage_date_ivry=marriage_date,
-                marriage_date=marriage_date_loazi,
-                spirit_status=matzbar,
-                contact2_email=contact2_email,
-                # worktype=worktype,
-                workoccupation=workoccupation,
-                educationfaculty=educationfaculty,
-                workplace=workplace,
-                workstatus=workstatus,
-                high_school_teacher_phone=high_school_teacher_phone,
-                high_school_name=high_school_name,
-                paying=paying,
-                contact1_relation=contact1_first_relation,
-                contact2_relation=contact2_first_relation,
-                contact3_relation=contact3_first_relation,
-            )
-            db.session.add(Apprentice1)
-        except Exception as e:
-            return (
-                jsonify({"result": "error while inserting" + str(e)}),
-                HTTPStatus.BAD_REQUEST,
-            )
+        for row in sheet.iter_rows(min_row=2):
+
+            def column_value(column_name):
+                # Use the Hebrew labels, to handle files with mixing column orders
+                try:
+                    return row[columns.index(column_name)].value
+                except ValueError:
+                    return None
+
+            def strip_or_none(label, default=""):
+                value = column_value(label)
+                return str(value).strip() if not value is None else default
+
+            try:
+                name = strip_or_none("שם")
+                last_name = strip_or_none("שם משפחה")
+                phone = column_value("פלאפון חניך")
+                if type(phone) is str:
+                    phone = int("".join(filter(str.isdigit, phone)))
+
+                if phone in commited_ids:
+                    continue
+
+                if not name or not last_name or not phone:
+                    uncommited_ids.append(phone)
+                    continue
+
+                city = strip_or_none("עיר", unknown_value)
+                base_name = strip_or_none("בסיס", unknown_value)
+                institution_name = strip_or_none("מוסד")
+
+                city_id = db.session.query(City.id).filter(City.name == city).first()
+                if city_id is None:
+                    city_id = (
+                        db.session.query(City.id)
+                        .filter(City.name == unknown_value)
+                        .first()
+                    )
+
+                military_compound_id = (
+                    db.session.query(Base.id).filter(Base.name == base_name).first()
+                )
+                institution_id = (
+                    db.session.query(Institution.id)
+                    .filter(Institution.name == institution_name)
+                    .first()
+                )
+
+                if institution_id is None or military_compound_id is None:
+                    uncommited_ids.append(phone)
+                    continue
+
+                cluster_id = (
+                    db.session.query(Institution.cluster_id)
+                    .filter(Institution.id == institution_id.id)
+                    .first()
+                )
+                if cluster_id is None:
+                    uncommited_ids.append(phone)
+                    continue
+
+                institution_id = (
+                    db.session.query(Institution.id)
+                    .filter(Institution.name == str(institution_name))
+                    .first()
+                )
+                apprentice = Apprentice(
+                    id=phone,
+                    phone=str(phone),
+                    city_id=city_id.id,
+                    cluster_id=cluster_id.cluster_id,
+                    base_address=military_compound_id.id,
+                    institution_id=(
+                        institution_id.id if institution_id is not None else 0
+                    ),
+                    name=name,
+                    last_name=last_name,
+                    address=strip_or_none("רחוב"),
+                    teudatZehut=strip_or_none("תעודת זהות"),
+                    birthday_ivry=strip_or_none("יום הולדת עברי - יום")
+                    + "' "
+                    + strip_or_none("יום הולדת עברי חודש")
+                    + strip_or_none("יום הולדת עברי - שנה"),
+                    birthday=column_value("יום הולדת לועזי"),
+                    email=strip_or_none("מייל חניך"),
+                    marriage_status=strip_or_none("סטאטוס משפחתי"),
+                    serve_type=strip_or_none("סטאטוס"),
+                    hadar_plan_session=strip_or_none("מחזור תוכנית הדר"),
+                    contact1_relation=strip_or_none("איש קשר - 1 - קירבה"),
+                    contact1_first_name=strip_or_none("איש קשר - 1 - שם "),
+                    contact1_phone=strip_or_none("איש קשר - 1 -פלאפון"),
+                    contact1_email=strip_or_none("איש קשר - 1 - מייל "),
+                    contact2_relation=strip_or_none("איש קשר - 2 - קירבה"),
+                    contact2_first_name=strip_or_none("איש קשר - 2 - שם "),
+                    contact2_phone=strip_or_none("איש קשר - 2 -פלאפון"),
+                    contact2_email=strip_or_none("איש קשר - 2 - מייל "),
+                    contact3_relation=strip_or_none("איש קשר - 3 - קירבה"),
+                    contact3_first_name=strip_or_none("איש קשר - 3 - שם "),
+                    contact3_phone=strip_or_none("איש קשר - 3 -פלאפון"),
+                    contact3_email=strip_or_none("איש קשר - 3 - מייל "),
+                    marriage_date_ivry=strip_or_none("יום נישואין תאריך עברי - יום")
+                    + "' "
+                    + strip_or_none("יום נישואין תאריך עברי - חודש"),
+                    marriage_date=column_value("יום נישואין תאריך לועזי"),
+                    institution_mahzor=strip_or_none("מחזור במכינה/ישיבה"),
+                    teacher_grade_a=strip_or_none('ר"מ שנה א'),
+                    teacher_grade_a_phone=strip_or_none("פלאפון ר״מ שנה א"),
+                    teacher_grade_b=strip_or_none('ר"מ שנה ב'),
+                    teacher_grade_b_phone=strip_or_none("פלאפון ר״מ שנה ב"),
+                    paying=column_value("משלם או לא"),
+                    spirit_status=strip_or_none("מצב״ר - מצב רוחני"),
+                    high_school_name=strip_or_none("שם תיכון"),
+                    high_school_teacher=strip_or_none("שם מחנך תיכון"),
+                    high_school_teacher_phone=strip_or_none("פלאפון מחנך תיכון"),
+                    workstatus=strip_or_none("עיסוק"),
+                    workplace=strip_or_none("מקום עבודה"),
+                    educationfaculty=strip_or_none("פקולטה"),
+                    workoccupation=strip_or_none("סוג עבודה"),
+                    army_role=strip_or_none("סוג שירות"),  # סיירות
+                    unit_name=strip_or_none("חטיבה - שיוך יחידתי"),
+                    militaryPositionNew=strip_or_none("תפקיד נוכחי"),
+                    militaryPositionOld=strip_or_none("תפקיד קודם"),
+                    recruitment_date=column_value("תאריך גיוס"),
+                    release_date=column_value("תאריך שחרור"),
+                    accompany_id=column_value("מלווה אחראי - טלפון"),
+                    # worktype=worktype,
+                )
+                db.session.add(apprentice)
+                commited_ids.append(phone)
+            except Exception as e:
+                print(e)
+                uncommited_ids.append(phone)
+    except Exception as e:
+        return (
+            jsonify({"result": "Error while inserting " + str(e)}),
+            HTTPStatus.BAD_REQUEST,
+        )
     db.session.commit()
     return jsonify(
         {

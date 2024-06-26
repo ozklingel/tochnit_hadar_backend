@@ -24,22 +24,23 @@ base_dir = "" #"/home/ubuntu/flaskapp/"
 
 @master_user_form_blueprint.route('/get_db_tree', methods=['get'])
 def get_db_tree():
-    cluster_coords = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(User.role_ids.contains("2")).all()
+    cluster_coords = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id,User.name).filter(User.role_ids.contains("2")).all()
     cluster_coords_dict={}
     for cluster_coord in cluster_coords:
-        institution_coords= db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(
+        institution_coords= db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id,User.name).filter(
             User.role_ids.contains("1"),User.cluster_id==cluster_coord.cluster_id).all()
         institution_coord_dict={}
         for institution_coord in institution_coords:
-            accompanys = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id).filter(
+            institution_Ent = db.session.query(Institution).filter(Institution.id == institution_coord.institution_id).first()
+            accompanys = db.session.query(User.role_ids, User.institution_id, User.cluster_id,User.id,User.name).filter(
                 User.role_ids.contains("0"), User.institution_id == institution_coord.institution_id).all()
             accompanys_dict={}
             for accompany in accompanys:
                 apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == accompany.id).all()
                 apprenticeList=[r.id for r in apprenticeList]
-                accompanys_dict[str(accompany.id)]=apprenticeList
-            institution_coord_dict[str(institution_coord.id)+"-"+str(institution_coord.institution_id)]=accompanys_dict
-        cluster_coords_dict[str(cluster_coord.id)+"-"+cluster_coord.cluster_id]=institution_coord_dict
+                accompanys_dict[str(accompany.name)]=apprenticeList
+            institution_coord_dict[str(institution_coord.name)+"-"+str(institution_Ent.name)]=accompanys_dict
+        cluster_coords_dict[str(cluster_coord.name)+"-"+cluster_coord.cluster_id]=institution_coord_dict
     return cluster_coords_dict
 @master_user_form_blueprint.route('/setSetting_madadim', methods=['post'])
 def setSetting_madadim():

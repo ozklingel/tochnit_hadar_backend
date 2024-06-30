@@ -198,6 +198,8 @@ def add_apprentice_excel():
                     continue
 
                 if not name or not last_name or not phone:
+                    print("mandatory ",name,last_name,phone)
+
                     uncommited_ids.append(phone)
                     continue
 
@@ -223,6 +225,8 @@ def add_apprentice_excel():
                 )
 
                 if institution_id is None or military_compound_id is None:
+                    print("base,institution_id ",military_compound_id,institution_id)
+
                     uncommited_ids.append(phone)
                     continue
 
@@ -233,6 +237,7 @@ def add_apprentice_excel():
                 )
                 if cluster_id is None:
                     uncommited_ids.append(phone)
+                    print("cluster")
                     continue
 
                 institution_id = (
@@ -284,7 +289,7 @@ def add_apprentice_excel():
                     teacher_grade_a_phone=strip_or_none("פלאפון ר״מ שנה א"),
                     teacher_grade_b=strip_or_none('ר"מ שנה ב'),
                     teacher_grade_b_phone=strip_or_none("פלאפון ר״מ שנה ב"),
-                    paying=column_value("משלם או לא"),
+                    paying=column_value("משלם או לא") =="משלם",
                     spirit_status=strip_or_none("מצב״ר - מצב רוחני"),
                     high_school_name=strip_or_none("שם תיכון"),
                     high_school_teacher=strip_or_none("שם מחנך תיכון"),
@@ -303,6 +308,7 @@ def add_apprentice_excel():
                     # worktype=worktype,
                 )
                 db.session.add(apprentice)
+                print("commted",phone)
                 commited_ids.append(phone)
             except Exception as e:
                 print(e)

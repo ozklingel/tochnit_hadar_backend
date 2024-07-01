@@ -123,10 +123,15 @@ class ApprenticeRepository:
 class RelatedDataRepository:
     @staticmethod
     def fetch_related_data(apprentices: List[Apprentice]) -> Dict[str, Any]:
-        apprentice_ids = [apprentice.id for apprentice in apprentices]
-        accompany_ids = [apprentice.accompany_id for apprentice in apprentices]
-        city_ids = [apprentice.city_id for apprentice in apprentices]
-        base_ids = [int(apprentice.base_address) for apprentice in apprentices]
+        apprentice_ids = []
+        accompany_ids = []
+        city_ids = []
+        base_ids = []
+        for apprentice in apprentices:
+            apprentice_ids.append(apprentice.id)
+            accompany_ids.append(apprentice.accompany_id)
+            city_ids.append(apprentice.city_id)
+            base_ids.append(int(apprentice.base_address))
 
         accompany_users = db.session.query(User.id, User.name, User.last_name).filter(
             User.id.in_(accompany_ids)).all()

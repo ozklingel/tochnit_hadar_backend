@@ -276,9 +276,5 @@ def get_personas(created_by_id):
         builder = PersonaBuilder(created_by_id)
         personas = builder.get_personas()
         return jsonify(personas)
-    except ValueError as e:
-        print(f"ValueError: {str(e)}")
-        return jsonify({'result': str(e)}), HTTPStatus.UNAUTHORIZED
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        return jsonify({'result': 'An unexpected error occurred'}), HTTPStatus.INTERNAL_SERVER_ERROR
+        raise e

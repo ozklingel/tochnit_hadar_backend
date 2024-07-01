@@ -1,4 +1,3 @@
-
 from flask import jsonify
 import config
 from src.models.models_utils import to_iso
@@ -37,56 +36,77 @@ class PersonaBuilder:
 
     def build_apprentice_list(self, user: User) -> None:
         print(f"Building apprentice list for user with ID: {self.user_id}")
-        try:
-            if ROLE_MELAVE in user.role_ids:
-                self.apprentices = db.session.query(Apprentice).filter(
-                    Apprentice.accompany_id == self.user_id).all()
-            elif ROLE_RAKAZ_MOSAD in user.role_ids:
-                self.apprentices = db.session.query(Apprentice).filter(
-                    Apprentice.institution_id == user.institution_id).all()
-            elif ROLE_RAKAZ_ESHKOL in user.role_ids:
-                self.apprentices = db.session.query(Apprentice).filter(
-                    Apprentice.cluster_id == user.cluster_id).all()
-            elif ROLE_AHRAI_TOHEN in user.role_ids:
-                self.apprentices = db.session.query(Apprentice).all()
-        except Exception as e:
-            print(f"Error building apprentice list: {str(e)}")
-            raise ValueError(f"Error building apprentice list: {str(e)}")
+        apprentice_query = db.session.query(Apprentice)
+        if ROLE_MELAVE in user.role_ids:
+            self.apprentices = apprentice_query.filter(Apprentice.accompany_id == self.user_id).all()
+        elif ROLE_RAKAZ_MOSAD in user.role_ids:
+            self.apprentices = apprentice_query.filter(Apprentice.institution_id == user.institution_id).all()
+        elif ROLE_RAKAZ_ESHKOL in user.role_ids:
+            self.apprentices = apprentice_query.filter(Apprentice.cluster_id == user.cluster_id).all()
+        elif ROLE_AHRAI_TOHEN in user.role_ids:
+            self.apprentices = apprentice_query.all()
 
     def build_user_list(self, user: User) -> None:
         print(f"Building user list for user with ID: {self.user_id}")
-        try:
-            if ROLE_RAKAZ_MOSAD in user.role_ids or ROLE_RAKAZ_ESHKOL in user.role_ids:
-                self.users = db.session.query(User).filter(
-                    User.institution_id == user.institution_id).all()
-            elif ROLE_AHRAI_TOHEN in user.role_ids:
-                self.users = db.session.query(User).all()
-        except Exception as e:
-            print(f"Error building user list: {str(e)}")
-            raise ValueError(f"Error building user list: {str(e)}")
+        user_query = db.session.query(User)
+        if ROLE_RAKAZ_MOSAD in user.role_ids or ROLE_RAKAZ_ESHKOL in user.role_ids:
+            self.users = user_query.filter(User.institution_id == user.institution_id).all()
+        elif ROLE_AHRAI_TOHEN in user.role_ids:
+            self.users = user_query.all()
 
-    def build_personas_from_apprentices(self) -> None:
+    def fetch_related_data(self, apprentice_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+        print(f"Fetching related data for apprentices")
+        accompany_ids = [apprentice.accompany_id for apprentice in self.apprentices]
+        city_ids = [apprentice.city_id for apprentice in self.apprentices]
+        base_ids = [int(apprentice.base_address) for apprentice in self.apprentices]
+
+        accompany_users = db.session.query(User.id, User.name, User.last_name).filter(User.id.in_(accompany_ids)).all()
+        cities = db.session.query(City.id, City.name, City.region_id).filter(City.id.in_(city_ids)).all()
+        bases = db.session.query(Base.id).filter(Base.id.in_(base_ids)).all()
+        reports = db.session.query(Report.id, Report.ent_reported).filter(Report.ent_reported.in_(apprentice_ids)).all()
+        tasks = db.session.query(Task.id, Task.event, Task.details, Task.date, Task.subject).filter(
+            Task.subject.in_(map(str, apprentice_ids))
+        ).all()
+
+        accompany_dict = {user.id: user for user in accompany_users}
+        city_dict = {city.id: city for city in cities}
+        base_dict = {base.id: base.id for base in bases}
+        report_dict = {}
+        task_dict = {}
+
+        for report in reports:
+            if report.ent_reported not in report_dict:
+                report_dict[report.ent_reported] = []
+            report_dict[report.ent_reported].append(report.id)
+
+        for task in tasks:
+            if task.subject not in task_dict:
+                task_dict[task.subject] = []
+            task_dict[task.subject].append(task)
+
+        return {
+            'accompany': accompany_dict,
+            'city': city_dict,
+            'base': base_dict,
+            'report': report_dict,
+            'task': task_dict
+        }
+
+    def build_personas_from_apprentices(self, related_data: Dict[int, Dict[str, Any]]) -> None:
         print("Building personas from apprentices")
         try:
             for apprentice in self.apprentices:
-                accompany = db.session.query(User.name, User.last_name).filter(
-                    User.id == Apprentice.accompany_id).first()
-                city = db.session.query(City).filter(
-                    City.id == apprentice.city_id).first()
-                report_list = db.session.query(Report.id).filter(
-                    Report.ent_reported == apprentice.id).all()
-                event_list = db.session.query(Task.id, Task.event, Task.details, Task.date).filter(
-                    Task.subject == str(apprentice.id)).all()
-                base_id = db.session.query(Base.id).filter(
-                    Base.id == int(apprentice.base_address)).first()
-                base_id_value = base_id[0] if base_id else 0
+                accompany = related_data['accompany'].get(apprentice.accompany_id)
+                city = related_data['city'].get(apprentice.city_id)
+                report_list = related_data['report'].get(apprentice.id, [])
+                event_list = related_data['task'].get(apprentice.id, [])
+                base_id_value = related_data['base'].get(int(apprentice.base_address), 0)
 
                 self.personas.append(self.build_apprentice_dict(
                     apprentice, accompany, city, report_list, event_list, base_id_value))
         except Exception as e:
             print(f"Error building personas from apprentices: {str(e)}")
-            raise ValueError(
-                f"Error building personas from apprentices: {str(e)}")
+            raise ValueError(f"Error building personas from apprentices: {str(e)}")
 
     def build_apprentice_dict(self, apprentice: Apprentice, accompany: User, city: City, report_list: List[Report], event_list: List[Task], base_id_value: int) -> Dict[str, Any]:
         return {
@@ -133,7 +153,7 @@ class PersonaBuilder:
             "contact3_email": apprentice.contact3_email,
             "contact3_relation": apprentice.contact3_relation,
             "activity_score": len(report_list),
-            "reports": [str(report.id) for report in report_list],
+            "reports": [str(report) for report in report_list],
             "events": [{"id": event.id, "subject": event.id, "date": to_iso(event.date), "created_at": to_iso(event.date), "event": event.event, "already_read": False, "description": event.details, "frequency": "never"} for event in event_list],
             "id": str(apprentice.id),
             "thMentor_name": f"{accompany.name} {accompany.last_name}",
@@ -173,10 +193,8 @@ class PersonaBuilder:
         print("Building personas from users")
         try:
             for user in self.users:
-                city = db.session.query(City).filter(
-                    City.id == user.city_id).first()
-                report_list = db.session.query(Report.id).filter(
-                    Report.user_id == user.id).all()
+                city = db.session.query(City).filter(City.id == user.city_id).first()
+                report_list = db.session.query(Report.id).filter(Report.user_id == user.id).all()
 
                 self.personas.append({
                     "role": [int(role) for role in user.role_ids.split(",")],
@@ -265,7 +283,9 @@ class PersonaBuilder:
         user = self.fetch_user()
         self.build_apprentice_list(user)
         self.build_user_list(user)
-        self.build_personas_from_apprentices()
+        apprentice_ids = [apprentice.id for apprentice in self.apprentices]
+        related_data = self.fetch_related_data(apprentice_ids)
+        self.build_personas_from_apprentices(related_data)
         self.build_personas_from_users()
         return self.personas
 

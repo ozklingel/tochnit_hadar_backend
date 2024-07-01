@@ -1,3 +1,5 @@
+
+#! TODO: figure out why this script exists -> Ask Itzik
 import subprocess
 
 # Read the requirements.txt file

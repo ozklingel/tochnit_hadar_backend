@@ -10,7 +10,7 @@ from src.models.city_model import City
 from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
-from src.routes.apprentice_profile import visit_gap_color
+from src.logic.apprentices import visit_gap_color
 from typing import Optional, List, Dict, Any
 
 # Constants for roles

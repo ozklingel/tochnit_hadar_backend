@@ -149,7 +149,7 @@ def add_user_excel():
                 role_ids=role_ids,
                 # email=str(email),
                 cluster_id=eshcol,
-                institution_id=institution_id[0],
+                institution_id=institution_id[0] if institution_id else None,
             )
 
             db.session.add(user)
@@ -202,8 +202,7 @@ def add_user_manual():
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
 def myPersonas():
     try:
-        if correct_auth()==False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+
         created_by_id = request.args.get('userId')
         apprenticeList = []
         user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(

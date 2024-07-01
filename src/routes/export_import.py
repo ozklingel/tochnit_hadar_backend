@@ -363,22 +363,6 @@ def upload_CitiesDB():
         return jsonify({'result': str(e)}), HTTPStatus.OK
 
 
-@export_import_blueprint.route('/upload_baseDB', methods=['PUT'])
-def upload_baseDB():
-    try:
-        import csv
-        my_list = []
-        # /home/ubuntu/flaskapp/
-        with open(base_dir + 'data/base_add.csv', 'r', encoding="utf8") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                ent = Base(int(str(uuid.uuid4().int)[:5]), row[0].strip(), row[1].strip())
-                db.session.add(ent)
-        db.session.commit()
-        return jsonify({"result": "success"}), HTTPStatus.OK
-    except Exception as e:
-        return jsonify({'result': str(e)}), HTTPStatus.OK
-
 
 @export_import_blueprint.route("/export_dict", methods=['post'])
 def ZNOTINUSE_export_dict():

@@ -1,4 +1,3 @@
-from datetime import datetime
 from http import HTTPStatus
 from flask import Blueprint, request, jsonify
 
@@ -6,19 +5,15 @@ from openpyxl.reader.excel import load_workbook
 
 import config
 from src.models.region_model import Region
-from src.models.models_utils import to_iso
 from src.services import db, red
 from src.models.apprentice_model import Apprentice
-from src.models.base_model import Base
 from src.models.city_model import City
-from src.models.cluster_model import Cluster
+
 from src.models.message_model import Message
 from src.models.institution_model import Institution
 from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
-
-from src.routes.apprentice_profile import visit_gap_color
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
 from src.logic import my_personas
 

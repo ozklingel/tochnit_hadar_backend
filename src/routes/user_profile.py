@@ -20,29 +20,36 @@ from src.models.report_model import Report
 
 from src.routes.apprentice_profile import visit_gap_color
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
+from src.logic import my_personas
 
-userProfile_form_blueprint = Blueprint('userProfile_form', __name__, url_prefix='/userProfile_form')
+userProfile_form_blueprint = Blueprint(
+    'userProfile_form', __name__, url_prefix='/userProfile_form')
 
 
 @userProfile_form_blueprint.route('/delete', methods=['post'])
 def delete():
     try:
-        if correct_auth()==False:
+        if correct_auth() == False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         data = request.json
         userId = data['userId']
         updatedEnt = User.query.get(userId)
         if updatedEnt:
-            db.session.query(Message).filter(Message.created_for_id == userId, ).delete()
-            db.session.query(Message).filter(Message.created_by_id == userId, ).delete()
+            db.session.query(Message).filter(
+                Message.created_for_id == userId, ).delete()
+            db.session.query(Message).filter(
+                Message.created_by_id == userId, ).delete()
             db.session.query(Task).filter(Task.userid == userId).delete()
             db.session.query(User).filter(User.id == userId).delete()
         else:
             updatedEnt = Apprentice.query.get(userId)
             if updatedEnt:
-                res = db.session.query(Task).filter(Task.subject == userId).delete()
-                res = db.session.query(Report).filter(Report.ent_reported == userId, ).delete()
-                res = db.session.query(Apprentice).filter(Apprentice.id == userId).delete()
+                res = db.session.query(Task).filter(
+                    Task.subject == userId).delete()
+                res = db.session.query(Report).filter(
+                    Report.ent_reported == userId, ).delete()
+                res = db.session.query(Apprentice).filter(
+                    Apprentice.id == userId).delete()
             else:
                 return jsonify({"result": str("no such id")}), HTTPStatus.BAD_REQUEST
 
@@ -55,7 +62,7 @@ def delete():
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
-        if correct_auth()==False:
+        if correct_auth() == False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')
         data = request.json
@@ -84,16 +91,20 @@ def update():
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])
 def getProfileAtributes_form():
     try:
-        if correct_auth()==False:
+        if correct_auth() == False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         created_by_id = request.args.get('userId')
         userEnt = User.query.get(created_by_id)
         if userEnt:
-            city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            regionName = db.session.query(Region.name).filter(Region.id == userEnt.region_id).first()
+            city = db.session.query(City).filter(
+                City.id == userEnt.city_id).first()
+            regionName = db.session.query(Region.name).filter(
+                Region.id == userEnt.region_id).first()
             myApprenticesNamesList = getmyApprenticesNames(created_by_id)
-            city = db.session.query(City).filter(City.id == userEnt.city_id).first()
-            list = userEnt.to_attributes(city.name, str(regionName[0]), myApprenticesNamesList)
+            city = db.session.query(City).filter(
+                City.id == userEnt.city_id).first()
+            list = userEnt.to_attributes(city.name, str(
+                regionName[0]), myApprenticesNamesList)
             return jsonify(list), HTTPStatus.OK
         else:
             return jsonify(results="no such id"), HTTPStatus.OK
@@ -134,8 +145,10 @@ def add_user_excel():
         role_ids = role_ids[:-1]
         first_name = row[0].value.strip()
         last_name = row[1].value.strip()
-        institution_name = row[3].value.strip() if not row[3].value is None else "לא ידוע"
-        eshcol = row[4].value.strip() if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
+        institution_name = row[3].value.strip(
+        ) if not row[3].value is None else "לא ידוע"
+        eshcol = row[4].value.strip(
+        ) if not row[4].value is None else "" if not row[4].value is None else "לא ידוע"
         phone = str(row[5].value).replace("-", "").strip()
         # email = row[3].value.strip()
         try:
@@ -202,204 +215,11 @@ def add_user_manual():
 @userProfile_form_blueprint.route('/myPersonas', methods=['GET'])
 def myPersonas():
     try:
-
-        created_by_id = request.args.get('userId')
-        apprenticeList = []
-        user1ent = db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(
-            User.id == created_by_id).first()
-        if "0" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.accompany_id == created_by_id).all()
-            userList = []
-        if "1" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(
-                Apprentice.institution_id == user1ent.institution_id).all()
-            userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
-        if "2" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).filter(Apprentice.cluster_id == user1ent.cluster_id).all()
-            userList = db.session.query(User).filter(User.institution_id == user1ent.institution_id).all()
-        if "3" in user1ent.role_ids:
-            apprenticeList = db.session.query(Apprentice).all()
-            userList = db.session.query(User).all()
-
-        my_dict = []
-
-        for noti in apprenticeList:
-            accompany = db.session.query(User.name, User.last_name).filter(
-                User.id == Apprentice.accompany_id).first()
-            call_status = visit_gap_color(config.call_report, noti, 30, 15)
-            personalMeet_status = visit_gap_color(config.personalMeet_report, noti, 100, 80)
-            Horim_status = visit_gap_color(config.HorimCall_report, noti, 365, 350)
-            city = db.session.query(City).filter(City.id == noti.city_id).first()
-            reportList = db.session.query(Report.id).filter(Report.ent_reported == noti.id).all()
-            eventlist = db.session.query(Task.id, Task.event, Task.details,
-                                         Task.date).filter(Task.subject == str(noti.id)).all()
-            base_id = db.session.query(Base.id).filter(Base.id == int(noti.base_address)).first()
-            base_id = base_id[0] if base_id else 0
-            my_dict.append(
-                {"role":[],
-                    "Horim_status": Horim_status,
-                 "personalMeet_status": personalMeet_status,
-                 "call_status": call_status,
-                 "highSchoolRavMelamed_phone": noti.high_school_teacher_phone
-                    , "highSchoolRavMelamed_name": noti.high_school_teacher,
-                 "highSchoolRavMelamed_email": noti.high_school_teacher_email,
-
-                 "thRavMelamedYearA_name": noti.teacher_grade_a,
-                 "thRavMelamedYearA_phone": noti.teacher_grade_a_phone,
-                 "thRavMelamedYearA_email": noti.teacher_grade_a_email,
-
-                 "thRavMelamedYearB_name": noti.teacher_grade_b,
-                 "thRavMelamedYearB_phone": noti.teacher_grade_b_phone,
-                 "thRavMelamedYearB_email": noti.teacher_grade_b_email,
-                 "address": {
-                     "country": "IL",
-                     "city": city.name if city else "",
-                     "cityId": str(noti.city_id),
-                     "street": noti.address,
-                     "houseNumber": "1",
-                     "apartment": "1",
-                     "region": str(city.region_id) if city else "",
-                     "entrance": "a",
-                     "floor": "1",
-                     "postalCode": "12131",
-                     "lat": 32.04282620026557,  # no need city cord
-                     "lng": 34.75186193813887
-                 },
-                 "contact1_first_name": noti.contact1_first_name,
-                 "contact1_last_name": noti.contact1_last_name,
-                 "contact1_phone": noti.contact1_phone,
-                 "contact1_email": noti.contact1_email,
-                 "contact1_relation": noti.contact1_relation,
-                 "contact2_first_name": noti.contact2_first_name,
-                 "contact2_last_name": noti.contact2_last_name,
-                 "contact2_phone": noti.contact2_phone,
-                 "contact2_email": noti.contact2_email,
-                 "contact2_relation": noti.contact2_relation,
-                 "contact3_first_name": noti.contact3_first_name,
-                 "contact3_last_name": noti.contact3_last_name,
-                 "contact3_phone": noti.contact3_phone,
-                 "contact3_email": noti.contact3_email,
-                 "contact3_relation": noti.contact3_relation,
-                 "activity_score": len(reportList),
-
-                 "reports":
-                     [str(i[0]) for i in [tuple(row) for row in reportList]]
-                    ,
-                 "events": [{"id": row[0], "subject": row[0],
-                      "date": to_iso(row[3]),
-                      "created_at": to_iso(row[3]),
-                      "event": row[1], "allreadyread": False, "description":row[2],
-                      "frequency": "never",
-                      }for row in
-                      eventlist],
-                "id": str(noti.id),
-                "thMentor_name": accompany.name + " " + accompany.last_name,
-                 "thMentor_id": str(noti.accompany_id),
-                 "militaryPositionNew": str(noti.militaryPositionNew),
-                "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                 "name": str(noti.name), "last_name": str(noti.last_name),
-                 "institution_id": str(noti.institution_id), "thPeriod": str(noti.hadar_plan_session),
-                 "serve_type": noti.serve_type,
-                 "marriage_status": str(noti.marriage_status), "militaryCompoundId": str(base_id),
-                 "phone": str(noti.id), "email": noti.email, "teudatZehut": noti.teudatZehut,
-                 "birthday": to_iso(noti.birthday) if noti.birthday else "", "marriage_date": to_iso(noti.marriage_date),
-                 "highSchoolInstitution": noti.highSchoolInstitution, "army_role": noti.army_role,
-                 "unit_name": noti.unit_name,
-                 "matsber": str(noti.spirit_status),
-                 "militaryDateOfDischarge": to_iso(noti.release_date),
-                 "militaryDateOfEnlistment": to_iso(noti.recruitment_date),
-                 "militaryUpdatedDateTime": to_iso(noti.militaryupdateddatetime),
-                 "militaryPositionOld": noti.militaryPositionOld,
-                 "educationalInstitution": noti.educationalinstitution,
-                 "educationFaculty": noti.educationfaculty,
-                 "workOccupation": noti.workoccupation,
-                 "workType": noti.worktype,
-                 "workPlace": noti.workplace,
-                 "workStatus": noti.workstatus,
-                 "paying": noti.paying
-
-                 })
-        for noti in userList:
-            reportList = db.session.query(Report.id).filter(Report.user_id == noti.id).all()
-            city = db.session.query(City).filter(City.id == noti.city_id).first()
-            my_dict.append(
-                {"role":[int(r) for r in noti.role_ids.split(",")],
-                    "Horim_status": "",
-                 "personalMeet_status": "",
-                 "call_status": "",
-                 "highSchoolRavMelamed_phone": ""
-                    , "highSchoolRavMelamed_name": "",
-                 "highSchoolRavMelamed_email": "",
-
-                 "thRavMelamedYearA_name": "",
-                 "thRavMelamedYearA_phone": "",
-                 "thRavMelamedYearA_email": "",
-
-                 "thRavMelamedYearB_name": "",
-                 "thRavMelamedYearB_phone": "",
-                 "thRavMelamedYearB_email": "",
-                 "address": {
-                     "country": "IL",
-                     "city": city.name if city else "",
-                     "cityId": str(noti.city_id),
-                     "street": noti.address,
-                     "houseNumber": "1",
-                     "apartment": "1",
-                     "region": str(city.region_id) if city else "",
-                     "entrance": "a",
-                     "floor": "1",
-                     "postalCode": "12131",
-                     "lat": 32.04282620026557,  # no need city cord
-                     "lng": 34.75186193813887
-                 },
-                 "contact1_first_name": "",
-                 "contact1_last_name": "",
-                 "contact1_phone": "",
-                 "contact1_email": "",
-                 "contact1_relation": "",
-                 "contact2_first_name": "",
-                 "contact2_last_name": "",
-                 "contact2_phone": "",
-                 "contact2_email": "",
-                 "contact2_relation": "",
-                 "contact3_first_name": "",
-                 "contact3_last_name": "",
-                 "contact3_phone": "",
-                 "contact3_email": "",
-                 "contact3_relation": "",
-                 "activity_score": len(reportList),
-                 "reports": [],
-                 "events": [],
-                 "id": str(noti.id),
-                 "thMentor": "",
-                 "militaryPositionNew": "",
-                 "avatar": noti.photo_path if noti.photo_path is not None else 'https://www.gravatar.com/avatar',
-                 "name": str(noti.name), "last_name": str(noti.last_name),
-                 "institution_id": str(noti.institution_id), "thPeriod": "",
-                 "serve_type": "",
-                 "marriage_status": "",
-                 "militaryCompoundId": "",
-                 "phone": str(noti.id),
-                 "email": noti.email,
-                 "teudatZehut": noti.teudatZehut,
-                 "birthday": "",
-                 "marriage_date": "",
-                 "highSchoolInstitution": "",
-                 "army_role": "",
-                 "unit_name": "",
-                 "matsber": "",
-                 "militaryDateOfDischarge": "",
-                 "militaryDateOfEnlistment": "",
-                 "militaryUpdatedDateTime": "",
-                 "militaryPositionOld": "", "educationalInstitution": "",
-                 "educationFaculty": "", "workOccupation": "",
-                 "workType": "", "workPlace": "", "workStatus": "",
-                 "paying": ""
-
-                 })
-        return jsonify(my_dict)
+        return my_personas.get_personas(request.args.get('userId'))
     except Exception as e:
-        return jsonify({'result': str(e)}), 401
+        raise e
+
+
 def correct_auth(external=True):
     if config.Authorization_is_On and external:
         userId = request.args.get("userId")

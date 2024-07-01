@@ -1,22 +1,17 @@
-import boto3
-from flask import Blueprint, request, jsonify
+from flask import jsonify
 from http import HTTPStatus
-from openpyxl.reader.excel import load_workbook
 from datetime import date
 from typing import List, Dict, Any
-
 import config
+
 from src.services import db
-from config import AWS_secret_access_key, AWS_access_key_id
 from src.models.models_utils import to_iso
-from src.models.apprentice_model import Apprentice, front_end_dict
-from src.models.base_model import Base
+from src.models.apprentice_model import Apprentice
 from src.models.city_model import City
-from src.models.institution_model import Institution
 from src.models.task_model import Task
 from src.models.user_model import User
 from src.models.report_model import Report
-from src.routes.set_entity_details_form_routes import validate_email, validate_date
+
 
 # Constants for role IDs
 ROLE_MELAVE = "0"
@@ -24,9 +19,10 @@ ROLE_RAKAZ_MOSAD = "1"
 ROLE_RAKAZ_ESHOL = "2"
 ROLE_AHRAI_TOHNIT = "3"
 
+
 class Address:
-    def __init__(self, country: str, city: str, city_id: str, street: str, house_number: str, 
-                 apartment: str, region: str, entrance: str, floor: str, postal_code: str, 
+    def __init__(self, country: str, city: str, city_id: str, street: str, house_number: str,
+                 apartment: str, region: str, entrance: str, floor: str, postal_code: str,
                  lat: float, lng: float):
         self.country = country
         self.city = city
@@ -41,12 +37,14 @@ class Address:
         self.lat = lat
         self.lng = lng
 
+
 class Event:
     def __init__(self, event_id: str, title: str, description: str, date: str):
         self.event_id = event_id
         self.title = title
         self.description = description
         self.date = date
+
 
 class Contact:
     def __init__(self, first_name: str, last_name: str, phone: str, email: str, relation: str):
@@ -56,6 +54,7 @@ class Contact:
         self.email = email
         self.relation = relation
 
+
 class ApprenticeBuilder:
     def __init__(self, apprentice, city, mentor_name, base_id, report_list, event_list):
         self.apprentice = apprentice
@@ -64,7 +63,7 @@ class ApprenticeBuilder:
         self.base_id = base_id
         self.report_list = report_list
         self.event_list = event_list
-    
+
     def build_address(self) -> Address:
         return Address(
             country="IL",
@@ -77,10 +76,10 @@ class ApprenticeBuilder:
             entrance="a",
             floor="1",
             postal_code="12131",
-            lat=32.04282620026557, 
+            lat=32.04282620026557,
             lng=34.75186193813887
         )
-    
+
     def build_contacts(self) -> List[Contact]:
         return [
             Contact(
@@ -170,13 +169,16 @@ class ApprenticeBuilder:
             "paying": self.apprentice.paying
         }
 
+
 def get_user_details(user_id: str):
     return db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(User.id == user_id).first()
+
 
 def get_apprentices_by_role(user_details):
     query = db.session.query(Apprentice)
     if ROLE_MELAVE in user_details.role_ids:
-        query = query.filter(Apprentice.institution_id == user_details.institution_id)
+        query = query.filter(Apprentice.institution_id ==
+                             user_details.institution_id)
     elif ROLE_RAKAZ_MOSAD in user_details.role_ids:
         query = query.filter(Apprentice.cluster_id == user_details.cluster_id)
     elif ROLE_RAKAZ_ESHOL in user_details.role_ids or ROLE_AHRAI_TOHNIT in user_details.role_ids:
@@ -187,13 +189,19 @@ def get_apprentices_by_role(user_details):
     apprentices = query.all()
 
     apprentice_ids = [str(apprentice.id) for apprentice in apprentices]
-    city_ids = list(set([apprentice.city_id for apprentice in apprentices if apprentice.city_id is not None]))
-    accompany_ids = list(set([apprentice.accompany_id for apprentice in apprentices if apprentice.accompany_id is not None]))
+    city_ids = list(set(
+        [apprentice.city_id for apprentice in apprentices if apprentice.city_id is not None]))
+    accompany_ids = list(set(
+        [apprentice.accompany_id for apprentice in apprentices if apprentice.accompany_id is not None]))
 
-    cities = {city.id: city for city in db.session.query(City).filter(City.id.in_(city_ids)).all()}
-    mentors = {user.id: user for user in db.session.query(User).filter(User.id.in_(accompany_ids)).all()}
-    reports = db.session.query(Report).filter(Report.ent_reported.in_(apprentice_ids)).all()
-    tasks = db.session.query(Task).filter(Task.subject.in_(apprentice_ids)).all()
+    cities = {city.id: city for city in db.session.query(
+        City).filter(City.id.in_(city_ids)).all()}
+    mentors = {user.id: user for user in db.session.query(
+        User).filter(User.id.in_(accompany_ids)).all()}
+    reports = db.session.query(Report).filter(
+        Report.ent_reported.in_(apprentice_ids)).all()
+    tasks = db.session.query(Task).filter(
+        Task.subject.in_(apprentice_ids)).all()
 
     report_map = {}
     for report in reports:
@@ -205,19 +213,22 @@ def get_apprentices_by_role(user_details):
 
     return apprentices, cities, mentors, report_map, task_map
 
+
 def maps_apprentices(user_id):
     try:
         user_details = get_user_details(user_id)
         if not user_details:
             return jsonify({"result": "Wrong id"}), HTTPStatus.BAD_REQUEST
 
-        apprentices, cities, mentors, report_map, task_map = get_apprentices_by_role(user_details)
+        apprentices, cities, mentors, report_map, task_map = get_apprentices_by_role(
+            user_details)
 
         apprentices_data = [
             ApprenticeBuilder(
                 apprentice=apprentice,
                 city=cities.get(apprentice.city_id),
-                mentor_name=(mentors.get(apprentice.accompany_id).name, mentors.get(apprentice.accompany_id).last_name) if mentors.get(apprentice.accompany_id) else None,
+                mentor_name=(mentors.get(apprentice.accompany_id).name, mentors.get(
+                    apprentice.accompany_id).last_name) if mentors.get(apprentice.accompany_id) else None,
                 base_id=apprentice.base_address,
                 report_list=report_map.get(apprentice.id, []),
                 event_list=task_map.get(apprentice.id, [])
@@ -227,6 +238,7 @@ def maps_apprentices(user_id):
         return jsonify(apprentices_data), HTTPStatus.OK
     except Exception as e:
         return jsonify({"result": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
 
 def visit_gap_color(type, apprentice, redLine, greenLine):
     visitEvent = (

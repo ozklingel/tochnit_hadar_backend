@@ -1,5 +1,5 @@
-from flask import jsonify
-from typing import Optional, List, Dict, Any
+from flask import jsonify, request
+from typing import Optional, List, Dict, Any, Union
 from dataclasses import dataclass, asdict
 
 import config
@@ -13,11 +13,13 @@ from src.models.user_model import User
 from src.models.report_model import Report
 from src.logic.apprentices import visit_gap_color
 
-# Constants for roles
-ROLE_MELAVE = "0"
-ROLE_RAKAZ_MOSAD = "1"
-ROLE_RAKAZ_ESHKOL = "2"
-ROLE_AHRAI_TOHEN = "3"
+# Constants
+ROLE_IDS = {
+    "MELAVE": "0",
+    "RAKAZ_MOSAD": "1",
+    "RAKAZ_ESHKOL": "2",
+    "AHRAI_TOHEN": "3"
+}
 
 
 @dataclass
@@ -32,8 +34,8 @@ class Address:
     entrance: str
     floor: str
     postal_code: str
-    lat: float
-    lng: float
+    latitude: float
+    longitude: float
 
 
 @dataclass
@@ -47,7 +49,7 @@ class Contact:
 
 @dataclass
 class Persona:
-    role: List[int]
+    roles: List[int]
     horim_status: str
     personal_meet_status: str
     call_status: str
@@ -65,15 +67,15 @@ class Persona:
     activity_score: int
     reports: List[str]
     events: List[Dict[str, Any]]
-    apprentice_id: str
-    mentor_name: str
-    mentor_id: str
+    id: str
+    th_mentor_name: str
+    th_mentor_id: str
     military_position_new: str
     avatar: str
     name: str
     last_name: str
     institution_id: str
-    period: str
+    th_period: str
     serve_type: str
     marriage_status: str
     military_compound_id: str
@@ -85,7 +87,7 @@ class Persona:
     high_school_institution: str
     army_role: str
     unit_name: str
-    spirit_status: str
+    matsber: str
     military_date_of_discharge: str
     military_date_of_enlistment: str
     military_updated_datetime: str
@@ -101,189 +103,313 @@ class Persona:
 
 class UserRepository:
     @staticmethod
-    def fetch_user(user_id: str) -> Optional[User]:
-        return db.session.query(User.role_ids, User.institution_id, User.cluster_id).filter(User.id == user_id).first()
+    def fetch_user_by_id(user_id: str) -> Optional[User]:
+        return db.session.query(User).filter(User.id == user_id).first()
+
+    @staticmethod
+    def fetch_users_by_institution_id(institution_id: str) -> List[User]:
+        return db.session.query(User).filter(User.institution_id == institution_id).all()
+
+    @staticmethod
+    def fetch_all_users() -> List[User]:
+        return db.session.query(User).all()
 
 
 class ApprenticeRepository:
     @staticmethod
-    def fetch_apprentices_by_role(user: User, user_id: str) -> List[Apprentice]:
-        apprentice_query = db.session.query(Apprentice)
-        if ROLE_MELAVE in user.role_ids:
-            return apprentice_query.filter(Apprentice.accompany_id == user_id).all()
-        elif ROLE_RAKAZ_MOSAD in user.role_ids:
-            return apprentice_query.filter(Apprentice.institution_id == user.institution_id).all()
-        elif ROLE_RAKAZ_ESHKOL in user.role_ids:
-            return apprentice_query.filter(Apprentice.cluster_id == user.cluster_id).all()
-        elif ROLE_AHRAI_TOHEN in user.role_ids:
-            return apprentice_query.all()
+    def fetch_apprentices_by_user_role(user: User, user_id: str) -> List[Apprentice]:
+        query = db.session.query(Apprentice)
+        if ROLE_IDS["MELAVE"] in user.role_ids:
+            return query.filter(Apprentice.accompany_id == user_id).all()
+        elif ROLE_IDS["RAKAZ_MOSAD"] in user.role_ids:
+            return query.filter(Apprentice.institution_id == user.institution_id).all()
+        elif ROLE_IDS["RAKAZ_ESHKOL"] in user.role_ids:
+            return query.filter(Apprentice.cluster_id == user.cluster_id).all()
+        elif ROLE_IDS["AHRAI_TOHEN"] in user.role_ids:
+            return query.all()
         return []
 
 
 class RelatedDataRepository:
     @staticmethod
-    def fetch_related_data(apprentices: List[Apprentice]) -> Dict[str, Any]:
+    def fetch_related_data(apprentices: List[Apprentice], users: List[User]) -> Dict[str, Any]:
         apprentice_ids = []
         accompany_ids = []
-        city_ids = []
+        city_ids = set()
         base_ids = []
+
         for apprentice in apprentices:
             apprentice_ids.append(apprentice.id)
             accompany_ids.append(apprentice.accompany_id)
-            city_ids.append(apprentice.city_id)
-            base_ids.append(int(apprentice.base_address))
+            if apprentice.city_id:
+                city_ids.add(apprentice.city_id)
+            if apprentice.base_address:
+                base_ids.append(int(apprentice.base_address))
 
-        accompany_users = db.session.query(User.id, User.name, User.last_name).filter(
-            User.id.in_(accompany_ids)).all()
-        cities = db.session.query(City.id, City.name, City.region_id).filter(
-            City.id.in_(city_ids)).all()
-        bases = db.session.query(Base.id).filter(Base.id.in_(base_ids)).all()
-        reports = db.session.query(Report.id, Report.ent_reported).filter(
-            Report.ent_reported.in_(apprentice_ids)).all()
-        tasks = db.session.query(Task.id, Task.event, Task.details, Task.date, Task.subject).filter(
-            Task.subject.in_(map(str, apprentice_ids))).all()
+        for user in users:
+            if user.city_id:
+                city_ids.add(user.city_id)
+
+        # entity = User / Persona
+        all_entity_ids = apprentice_ids + [user.id for user in users]
 
         return {
-            'accompany': {user.id: user for user in accompany_users},
-            'city': {city.id: city for city in cities},
-            'base': {base.id: base.id for base in bases},
-            'report': RelatedDataRepository._organize_data_by_key(reports, 'ent_reported', 'id'),
-            'task': RelatedDataRepository._organize_data_by_key(tasks, 'subject', lambda t: t)
+            'accompany': RelatedDataRepository._fetch_users_by_ids(accompany_ids),
+            'city': RelatedDataRepository._fetch_cities_by_ids(list(city_ids)),
+            'base': RelatedDataRepository._fetch_bases_by_ids(base_ids),
+            'report': RelatedDataRepository._fetch_reports_by_apprentice_ids(apprentice_ids),
+            'task': RelatedDataRepository._fetch_tasks_by_entity_ids(all_entity_ids)
         }
 
     @staticmethod
+    def _fetch_users_by_ids(user_ids: List[str]) -> Dict[str, User]:
+        users = db.session.query(User.id, User.name, User.last_name).filter(
+            User.id.in_(user_ids)).all()
+        return {str(user.id): user for user in users}
+
+    @staticmethod
+    def _fetch_cities_by_ids(city_ids: List[str]) -> Dict[str, City]:
+        cities = db.session.query(City).filter(City.id.in_(city_ids)).all()
+        return {str(city.id): city for city in cities}
+
+    @staticmethod
+    def _fetch_bases_by_ids(base_ids: List[int]) -> Dict[int, Base]:
+        bases = db.session.query(Base.id).filter(Base.id.in_(base_ids)).all()
+        return {base.id: base for base in bases}
+
+    @staticmethod
+    def _fetch_reports_by_apprentice_ids(apprentice_ids: List[str]) -> Dict[str, List[Report]]:
+        reports = db.session.query(Report).filter(
+            Report.ent_reported.in_(apprentice_ids)).all()
+        return RelatedDataRepository._organize_data_by_key(reports, 'ent_reported', lambda report: report.id)
+
+    @staticmethod
+    def _fetch_tasks_by_entity_ids(entity_ids: List[str]) -> Dict[str, List[Task]]:
+        tasks = db.session.query(Task).filter(
+            Task.subject.in_(map(str, entity_ids))).all()
+        return RelatedDataRepository._organize_data_by_key(tasks, 'subject', lambda task: task)
+
+    @staticmethod
     def _organize_data_by_key(items: List[Any], key: str, value_mapper) -> Dict[str, List[Any]]:
-        data_dict = {}
+        organized_data = {}
         for item in items:
-            key_value = getattr(item, key)
-            if key_value not in data_dict:
-                data_dict[key_value] = []
-            data_dict[key_value].append(value_mapper(item))
-        return data_dict
+            key_value = str(getattr(item, key))
+            if key_value not in organized_data:
+                organized_data[key_value] = []
+            organized_data[key_value].append(value_mapper(item))
+        return organized_data
 
 
 class PersonaBuilder:
     def __init__(self, user_id: str):
         self.user_id = user_id
+        self.user = None
         self.apprentices = []
         self.users = []
         self.personas = []
 
     def build_personas(self) -> List[Persona]:
-        user = UserRepository.fetch_user(self.user_id)
-        if not user:
-            raise ValueError(f"User with ID {self.user_id} not found")
-
-        self.apprentices = ApprenticeRepository.fetch_apprentices_by_role(
-            user, self.user_id)
+        self._fetch_user_and_related_data()
         related_data = RelatedDataRepository.fetch_related_data(
-            self.apprentices)
-        self.personas = [self._build_persona(
-            apprentice, related_data) for apprentice in self.apprentices]
-
+            self.apprentices, self.users)
+        self.personas = self._build_personas_from_apprentices(
+            related_data) + self._build_personas_from_users(related_data)
         return self.personas
 
-    def _build_persona(self, apprentice: Apprentice, related_data: Dict[str, Any]) -> Persona:
-        accompany = related_data['accompany'].get(apprentice.accompany_id)
-        city = related_data['city'].get(apprentice.city_id)
-        report_list = related_data['report'].get(apprentice.id, [])
-        event_list = related_data['task'].get(apprentice.id, [])
-        base_id_value = related_data['base'].get(
-            int(apprentice.base_address), 0)
+    def _fetch_user_and_related_data(self):
+        self.user = UserRepository.fetch_user_by_id(self.user_id)
+        if not self.user:
+            raise ValueError(f"User with ID {self.user_id} not found")
 
-        address = Address(
+        self.apprentices = ApprenticeRepository.fetch_apprentices_by_user_role(
+            self.user, self.user_id)
+
+        if ROLE_IDS["RAKAZ_MOSAD"] in self.user.role_ids or ROLE_IDS["RAKAZ_ESHKOL"] in self.user.role_ids:
+            self.users = UserRepository.fetch_users_by_institution_id(
+                self.user.institution_id)
+        elif ROLE_IDS["AHRAI_TOHEN"] in self.user.role_ids:
+            self.users = UserRepository.fetch_all_users()
+
+    def _build_personas_from_apprentices(self, related_data) -> List[Persona]:
+        return [self._build_persona(apprentice, related_data, is_apprentice=True) for apprentice in self.apprentices]
+
+    def _build_personas_from_users(self, related_data) -> List[Persona]:
+        return [self._build_persona(user, related_data, is_apprentice=False) for user in self.users]
+
+    def _build_persona(self, entity: Union[Apprentice, User], related_data: Dict[str, Any], is_apprentice: bool) -> Persona:
+        city = related_data['city'].get(entity.city_id)
+        report_list = related_data['report'].get(str(entity.id), [])
+        event_list = related_data['task'].get(str(entity.id), [])
+
+        address = self._create_address(entity, city)
+
+        if is_apprentice:
+            contacts = self._create_contacts(entity)
+            return Persona(
+                roles=[],
+                horim_status=visit_gap_color(
+                    config.HorimCall_report, entity, 365, 350),
+                personal_meet_status=visit_gap_color(
+                    config.personalMeet_report, entity, 100, 80),
+                call_status=visit_gap_color(
+                    config.call_report, entity, 30, 15),
+                high_school_teacher=entity.high_school_teacher,
+                high_school_teacher_phone=entity.high_school_teacher_phone,
+                high_school_teacher_email=entity.high_school_teacher_email,
+                teacher_grade_a=entity.teacher_grade_a,
+                teacher_grade_a_phone=entity.teacher_grade_a_phone,
+                teacher_grade_a_email=entity.teacher_grade_a_email,
+                teacher_grade_b=entity.teacher_grade_b,
+                teacher_grade_b_phone=entity.teacher_grade_b_phone,
+                teacher_grade_b_email=entity.teacher_grade_b_email,
+                address=address,
+                contacts=contacts,
+                activity_score=len(report_list),
+                reports=[str(report) for report in report_list],
+                events=[self._create_event(event) for event in event_list],
+                id=str(entity.id),
+                th_mentor_name=self._get_accompany_name(
+                    related_data, entity.accompany_id),
+                th_mentor_id=str(entity.accompany_id),
+                military_position_new=str(entity.militaryPositionNew),
+                avatar=self._get_avatar(entity),
+                name=entity.name,
+                last_name=entity.last_name,
+                institution_id=str(entity.institution_id),
+                th_period=str(entity.hadar_plan_session),
+                serve_type=entity.serve_type,
+                marriage_status=str(entity.marriage_status),
+                military_compound_id=str(
+                    related_data['base'].get(int(entity.base_address), 0)),
+                phone=str(entity.id),
+                email=entity.email,
+                teudat_zehut=entity.teudatZehut,
+                birthday=to_iso(entity.birthday) if entity.birthday else "",
+                marriage_date=to_iso(entity.marriage_date),
+                high_school_institution=entity.highSchoolInstitution,
+                army_role=entity.army_role,
+                unit_name=entity.unit_name,
+                matsber=str(entity.spirit_status),
+                military_date_of_discharge=to_iso(entity.release_date),
+                military_date_of_enlistment=to_iso(entity.recruitment_date),
+                military_updated_datetime=to_iso(
+                    entity.militaryupdateddatetime),
+                military_position_old=entity.militaryPositionOld,
+                educational_institution=entity.educationalinstitution,
+                education_faculty=entity.educationfaculty,
+                work_occupation=entity.workoccupation,
+                work_type=entity.worktype,
+                work_place=entity.workplace,
+                work_status=entity.workstatus,
+                paying=entity.paying
+            )
+        else:
+            return Persona(
+                roles=[int(role) for role in entity.role_ids.split(",")],
+                horim_status="",
+                personal_meet_status="",
+                call_status="",
+                high_school_teacher="",
+                high_school_teacher_phone="",
+                high_school_teacher_email="",
+                teacher_grade_a="",
+                teacher_grade_a_phone="",
+                teacher_grade_a_email="",
+                teacher_grade_b="",
+                teacher_grade_b_phone="",
+                teacher_grade_b_email="",
+                address=address,
+                contacts=[],
+                activity_score=len(report_list),
+                reports=[],
+                events=[],
+                id=str(entity.id),
+                th_mentor_name="",
+                th_mentor_id="",
+                military_position_new="",
+                avatar=self._get_avatar(entity),
+                name=entity.name,
+                last_name=entity.last_name,
+                institution_id=str(entity.institution_id),
+                th_period="",
+                serve_type="",
+                marriage_status="",
+                military_compound_id="",
+                phone=str(entity.id),
+                email=entity.email,
+                teudat_zehut=entity.teudatZehut,
+                birthday="",
+                marriage_date="",
+                high_school_institution="",
+                army_role="",
+                unit_name="",
+                matsber="",
+                military_date_of_discharge="",
+                military_date_of_enlistment="",
+                military_updated_datetime="",
+                military_position_old="",
+                educational_institution="",
+                education_faculty="",
+                work_occupation="",
+                work_type="",
+                work_place="",
+                work_status="",
+                paying=""
+            )
+
+    def _create_address(self, entity: Union[Apprentice, User], city: Optional[City]) -> Address:
+        return Address(
             country="IL",
             city=city.name if city else "",
-            city_id=str(apprentice.city_id),
-            street=apprentice.address,
+            city_id=str(entity.city_id),
+            street=entity.address,
             house_number="1",
             apartment="1",
             region=str(city.region_id) if city else "",
             entrance="a",
             floor="1",
             postal_code="12131",
-            lat=32.04282620026557,
-            lng=34.75186193813887
+            latitude=32.04282620026557,
+            longitude=34.75186193813887
         )
 
-        contacts = [
-            Contact(apprentice.contact1_first_name, apprentice.contact1_last_name,
-                    apprentice.contact1_phone, apprentice.contact1_email, apprentice.contact1_relation),
-            Contact(apprentice.contact2_first_name, apprentice.contact2_last_name,
-                    apprentice.contact2_phone, apprentice.contact2_email, apprentice.contact2_relation),
-            Contact(apprentice.contact3_first_name, apprentice.contact3_last_name,
-                    apprentice.contact3_phone, apprentice.contact3_email, apprentice.contact3_relation)
+    def _create_contacts(self, entity: Apprentice) -> List[Contact]:
+        return [
+            Contact(entity.contact1_first_name, entity.contact1_last_name,
+                    entity.contact1_phone, entity.contact1_email, entity.contact1_relation),
+            Contact(entity.contact2_first_name, entity.contact2_last_name,
+                    entity.contact2_phone, entity.contact2_email, entity.contact2_relation),
+            Contact(entity.contact3_first_name, entity.contact3_last_name,
+                    entity.contact3_phone, entity.contact3_email, entity.contact3_relation)
         ]
 
-        return Persona(
-            role=[],
-            horim_status=visit_gap_color(
-                config.HorimCall_report, apprentice, 365, 350),
-            personal_meet_status=visit_gap_color(
-                config.personalMeet_report, apprentice, 100, 80),
-            call_status=visit_gap_color(
-                config.call_report, apprentice, 30, 15),
-            high_school_teacher=apprentice.high_school_teacher,
-            high_school_teacher_phone=apprentice.high_school_teacher_phone,
-            high_school_teacher_email=apprentice.high_school_teacher_email,
-            teacher_grade_a=apprentice.teacher_grade_a,
-            teacher_grade_a_phone=apprentice.teacher_grade_a_phone,
-            teacher_grade_a_email=apprentice.teacher_grade_a_email,
-            teacher_grade_b=apprentice.teacher_grade_b,
-            teacher_grade_b_phone=apprentice.teacher_grade_b_phone,
-            teacher_grade_b_email=apprentice.teacher_grade_b_email,
-            address=address,
-            contacts=contacts,
-            activity_score=len(report_list),
-            reports=[str(report) for report in report_list],
-            events=[{
-                "id": event.id, "subject": event.id, "date": to_iso(event.date),
-                "created_at": to_iso(event.date), "event": event.event,
-                "already_read": False, "description": event.details, "frequency": "never"
-            } for event in event_list],
-            apprentice_id=str(apprentice.id),
-            mentor_name=f"{accompany.name} {
-                accompany.last_name}" if accompany else "",
-            mentor_id=str(apprentice.accompany_id),
-            military_position_new=str(apprentice.militaryPositionNew),
-            avatar=apprentice.photo_path if apprentice.photo_path else 'https://www.gravatar.com/avatar',
-            name=apprentice.name,
-            last_name=apprentice.last_name,
-            institution_id=str(apprentice.institution_id),
-            period=str(apprentice.hadar_plan_session),
-            serve_type=apprentice.serve_type,
-            marriage_status=str(apprentice.marriage_status),
-            military_compound_id=str(base_id_value),
-            phone=str(apprentice.id),
-            email=apprentice.email,
-            teudat_zehut=apprentice.teudatZehut,
-            birthday=to_iso(
-                apprentice.birthday) if apprentice.birthday else "",
-            marriage_date=to_iso(apprentice.marriage_date),
-            high_school_institution=apprentice.highSchoolInstitution,
-            army_role=apprentice.army_role,
-            unit_name=apprentice.unit_name,
-            spirit_status=str(apprentice.spirit_status),
-            military_date_of_discharge=to_iso(apprentice.release_date),
-            military_date_of_enlistment=to_iso(apprentice.recruitment_date),
-            military_updated_datetime=to_iso(
-                apprentice.militaryupdateddatetime),
-            military_position_old=apprentice.militaryPositionOld,
-            educational_institution=apprentice.educationalinstitution,
-            education_faculty=apprentice.educationfaculty,
-            work_occupation=apprentice.workoccupation,
-            work_type=apprentice.worktype,
-            work_place=apprentice.workplace,
-            work_status=apprentice.workstatus,
-            paying=apprentice.paying
-        )
+    def _create_event(self, event: Task) -> Dict[str, Any]:
+        return {
+            "id": event.id,
+            "subject": event.id,
+            "date": to_iso(event.date),
+            "created_at": to_iso(event.date),
+            "event": event.event,
+            "already_read": False,
+            "description": event.details,
+            "frequency": "never"
+        }
+
+    def _get_accompany_name(self, related_data: Dict[str, Any], accompany_id: str) -> str:
+        accompany = related_data['accompany'].get(accompany_id)
+        return f"{accompany.name} {accompany.last_name}" if accompany else ""
+
+    def _get_avatar(self, entity: Union[Apprentice, User]) -> str:
+        return entity.photo_path if entity.photo_path else 'https://www.gravatar.com/avatar'
 
 
-def get_personas(created_by_id: str):
-    """Endpoint to get personas."""
+def get_personas(user_id: str):
     try:
-        builder = PersonaBuilder(created_by_id)
-        personas = builder.build_personas()
+        persona_builder = PersonaBuilder(user_id)
+        personas = persona_builder.build_personas()
         return jsonify([asdict(persona) for persona in personas])
-    except Exception as e:
-        raise e
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception as error:
+        print(error)
+        return jsonify({"error": "Internal Server Error"}), 500

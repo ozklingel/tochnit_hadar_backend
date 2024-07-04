@@ -246,7 +246,7 @@ class PersonaBuilder:
         if is_apprentice:
             contacts = self._create_contacts(entity)
             return Persona(
-                roles=[],
+                roles=[-1],
                 horim_status=visit_gap_color(
                     config.HorimCall_report, entity, 365, 350),
                 personal_meet_status=visit_gap_color(

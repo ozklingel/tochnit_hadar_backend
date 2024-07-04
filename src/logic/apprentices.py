@@ -152,7 +152,8 @@ class ApprenticeBuilder:
             "workType": self.apprentice.worktype,
             "workPlace": self.apprentice.workplace,
             "workStatus": self.apprentice.workstatus,
-            "paying": self.apprentice.paying
+            "paying": self.apprentice.paying,
+            "roles": [-1]
         }
 
 
@@ -216,8 +217,7 @@ def maps_apprentices(user_id):
                     apprentice.accompany_id).last_name) if mentors.get(apprentice.accompany_id) else None,
                 base_id=apprentice.base_address,
                 report_list=report_map.get(apprentice.id, []),
-                event_list=task_map.get(apprentice.id, []),
-                roles=[-1]
+                event_list=task_map.get(apprentice.id, [])
             ).build() for apprentice in apprentices
         ]
 

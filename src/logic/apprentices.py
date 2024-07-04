@@ -80,13 +80,15 @@ class ApprenticeBuilder:
     def build_contacts(self) -> List[Contact]:
         contacts = []
         for i in range(1, 4):
-            first_name = getattr(self.apprentice, f'contact{i}_first_name', None)
+            first_name = getattr(self.apprentice, f'contact{
+                                 i}_first_name', None)
             last_name = getattr(self.apprentice, f'contact{i}_last_name', None)
             phone = getattr(self.apprentice, f'contact{i}_phone', None)
             email = getattr(self.apprentice, f'contact{i}_email', None)
             relation = getattr(self.apprentice, f'contact{i}_relation', None)
             if first_name and last_name:
-                contacts.append(Contact(first_name, last_name, phone, email, relation))
+                contacts.append(
+                    Contact(first_name, last_name, phone, email, relation))
         return contacts
 
     def build_events(self) -> List[Event]:
@@ -161,7 +163,8 @@ def get_user_details(user_id: str):
 def get_apprentices_by_role(user_details):
     query = db.session.query(Apprentice)
     if ROLE_MELAVE in user_details.role_ids:
-        query = query.filter(Apprentice.institution_id == user_details.institution_id)
+        query = query.filter(Apprentice.institution_id ==
+                             user_details.institution_id)
     elif ROLE_RAKAZ_MOSAD in user_details.role_ids:
         query = query.filter(Apprentice.cluster_id == user_details.cluster_id)
     elif ROLE_RAKAZ_ESHOL in user_details.role_ids or ROLE_AHRAI_TOHNIT in user_details.role_ids:
@@ -171,13 +174,19 @@ def get_apprentices_by_role(user_details):
 
     apprentices = query.all()
     apprentice_ids = [str(apprentice.id) for apprentice in apprentices]
-    city_ids = list(set([apprentice.city_id for apprentice in apprentices if apprentice.city_id is not None]))
-    accompany_ids = list(set([apprentice.accompany_id for apprentice in apprentices if apprentice.accompany_id is not None]))
+    city_ids = list(set(
+        [apprentice.city_id for apprentice in apprentices if apprentice.city_id is not None]))
+    accompany_ids = list(set(
+        [apprentice.accompany_id for apprentice in apprentices if apprentice.accompany_id is not None]))
 
-    cities = {city.id: city for city in db.session.query(City).filter(City.id.in_(city_ids)).all()}
-    mentors = {user.id: user for user in db.session.query(User).filter(User.id.in_(accompany_ids)).all()}
-    reports = db.session.query(Report).filter(Report.ent_reported.in_(apprentice_ids)).all()
-    tasks = db.session.query(Task).filter(Task.subject.in_(apprentice_ids)).all()
+    cities = {city.id: city for city in db.session.query(
+        City).filter(City.id.in_(city_ids)).all()}
+    mentors = {user.id: user for user in db.session.query(
+        User).filter(User.id.in_(accompany_ids)).all()}
+    reports = db.session.query(Report).filter(
+        Report.ent_reported.in_(apprentice_ids)).all()
+    tasks = db.session.query(Task).filter(
+        Task.subject.in_(apprentice_ids)).all()
 
     report_map = {}
     for report in reports:
@@ -196,16 +205,19 @@ def maps_apprentices(user_id):
         if not user_details:
             return jsonify({"result": "Wrong id"}), HTTPStatus.BAD_REQUEST
 
-        apprentices, cities, mentors, report_map, task_map = get_apprentices_by_role(user_details)
+        apprentices, cities, mentors, report_map, task_map = get_apprentices_by_role(
+            user_details)
 
         apprentices_data = [
             ApprenticeBuilder(
                 apprentice=apprentice,
                 city=cities.get(apprentice.city_id),
-                mentor_name=(mentors.get(apprentice.accompany_id).name, mentors.get(apprentice.accompany_id).last_name) if mentors.get(apprentice.accompany_id) else None,
+                mentor_name=(mentors.get(apprentice.accompany_id).name, mentors.get(
+                    apprentice.accompany_id).last_name) if mentors.get(apprentice.accompany_id) else None,
                 base_id=apprentice.base_address,
                 report_list=report_map.get(apprentice.id, []),
-                event_list=task_map.get(apprentice.id, [])
+                event_list=task_map.get(apprentice.id, []),
+                roles=[-1]
             ).build() for apprentice in apprentices
         ]
 

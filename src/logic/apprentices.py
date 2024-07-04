@@ -80,8 +80,7 @@ class ApprenticeBuilder:
     def build_contacts(self) -> List[Contact]:
         contacts = []
         for i in range(1, 4):
-            first_name = getattr(self.apprentice, f'contact{
-                                 i}_first_name', None)
+            first_name = getattr(self.apprentice, f'contact{i}_first_name', None)
             last_name = getattr(self.apprentice, f'contact{i}_last_name', None)
             phone = getattr(self.apprentice, f'contact{i}_phone', None)
             email = getattr(self.apprentice, f'contact{i}_email', None)

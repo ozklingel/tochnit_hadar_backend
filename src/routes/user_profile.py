@@ -221,8 +221,8 @@ def add_user_excel():
 
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
 def add_user_manual():
-    if correct_auth() == False:
-        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+    # if correct_auth() == False:
+    #     return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     try:
         first_name = data['first_name']

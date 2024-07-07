@@ -56,75 +56,33 @@ def delete():
     return jsonify({"result": "success"}), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route("/update", methods=['PUT'])
+@userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
-        # Fixed typo in parameter name
-        apprentice_id = request.args.get('apprenticeId')
+        if correct_auth() == False:
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        userId = request.args.get('userId')
         data = request.json
-
-        if not apprentice_id:
-            return jsonify({'result': "apprenticeId is required"}), 400
-
-        updatedEnt = User.query.get(apprentice_id)
-        if not updatedEnt:
-            return jsonify({'result': 'User not found'}), 404
-
-        # Update fields based on the provided payload structure
-        updatedEnt.avatar = data.get('0')
-        updatedEnt.military_compound_id = data.get('1')
-        updatedEnt.military_service_type = data.get('2')
-        updatedEnt.military_position_new = data.get('3')
-        updatedEnt.military_position_old = data.get('4')
-        updatedEnt.military_date_of_enlistment = data.get('5')
-        updatedEnt.military_date_of_discharge = data.get('6')
-        updatedEnt.teudat_zehut = data.get('7')
-
-        # if '8' in data and validate_email(data['8']):
-        #     updatedEnt.email = data['8']
-        if '8' in data:
-            updatedEnt.email = data['8']
-
-        updatedEnt.marital_status = data.get('9')
-        updatedEnt.phone = data.get('10')
-
-        if '11' in data and data['11'] and validate_date(data['11']):
-            updatedEnt.date_of_birth = data['11']
-
-        # Personal relationships
-        for i in range(1, 4):
-            base = (i - 1) * 5 + 12
-            setattr(updatedEnt, f'contact{i}_relationship', data.get(str(base)))
-            setattr(updatedEnt, f'contact{i}_phone', data.get(str(base + 1)))
-            setattr(updatedEnt, f'contact{i}_email', data.get(str(base + 2)))
-            setattr(updatedEnt, f'contact{i}_first_name', data.get(str(base + 3)))
-            setattr(updatedEnt, f'contact{i}_last_name', data.get(str(base + 4)))
-
-        updatedEnt.high_school_institution = data.get('27')
-        updatedEnt.high_school_rav_melamed_name = data.get('28')
-        updatedEnt.high_school_rav_melamed_phone = data.get('29')
-        updatedEnt.high_school_rav_melamed_email = data.get('30')
-
-        updatedEnt.work_status = data.get('31')
-        updatedEnt.work_occupation = data.get('32')
-        updatedEnt.work_place = data.get('33')
-        updatedEnt.work_type = data.get('34')
-
-        updatedEnt.educational_institution = data.get('35')
-        updatedEnt.th_period = data.get('36')
-        updatedEnt.th_rav_melamed_year_a_name = data.get('37')
-        updatedEnt.th_rav_melamed_year_a_phone = data.get('38')
-        updatedEnt.th_rav_melamed_year_b_name = data.get('39')
-        updatedEnt.th_rav_melamed_year_b_phone = data.get('40')
-        updatedEnt.paying = data.get('41')
-        updatedEnt.matsbar_status = data.get('42')
-
+        updatedEnt = User.query.get(userId)
+        for key in data:
+            if key == "birthday":
+                if validate_date(data[key]):
+                    setattr(updatedEnt, key, data[key])
+            elif key == "email" or key == "birthday":
+                if validate_email(data[key]):
+                    setattr(updatedEnt, key, data[key])
+                else:
+                    return jsonify({'result': "email or date -wrong format"}), 401
+            else:
+                setattr(updatedEnt, key, data[key])
+        print(updatedEnt.region_id)
         db.session.commit()
-        return jsonify({'result': 'success'}), 200
-
+        if updatedEnt:
+            # TODO: add contact form to DB
+            return jsonify({'result': 'success'}), HTTPStatus.OK
+        return jsonify({'result': 'no updatedEnt'}), 401
     except Exception as e:
-        print(f"Error: {str(e)}")  # Log the full error
-        return jsonify({'result': f'An error occurred: {str(e)}'}), 500
+        return jsonify({'result': str(e)}), 401
 
 
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])

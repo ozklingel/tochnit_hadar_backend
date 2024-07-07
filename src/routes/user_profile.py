@@ -59,8 +59,8 @@ def delete():
 @userProfile_form_blueprint.route("/update", methods=['PUT'])
 def update():
     try:
-        if not correct_auth():
-            return jsonify({'result': "wrong access token"}), 401
+        # if not correct_auth():
+        #     return jsonify({'result': "wrong access token"}), 401
 
         apprentice_id = request.args.get('apprenticetId')
         data = request.json
@@ -221,8 +221,8 @@ def add_user_excel():
 
 @userProfile_form_blueprint.route("/add_user_manual", methods=['post'])
 def add_user_manual():
-    # if correct_auth() == False:
-    #     return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+    if correct_auth() == False:
+        return jsonify({'result': "wrong access token"}), HTTPStatus.OK
     data = request.json
     try:
         first_name = data['first_name']

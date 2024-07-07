@@ -16,6 +16,8 @@ from src.models.user_model import User
 from src.models.report_model import Report
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
 from src.logic import my_personas
+import json
+
 
 userProfile_form_blueprint = Blueprint(
     'userProfile_form', __name__, url_prefix='/userProfile_form')
@@ -58,7 +60,8 @@ def delete():
 def update():
     try:
         payload = request.get_json()
-        print("Received payload:", payload)
+        with open('payload.txt', 'a') as file:
+            file.write(json.dumps(payload) + '\n')
         if correct_auth() == False:
             return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')

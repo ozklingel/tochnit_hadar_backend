@@ -94,14 +94,11 @@ def update():
         # Personal relationships
         for i in range(1, 4):
             base = (i - 1) * 5 + 12
-            setattr(updatedEnt, f'contact{
-                    i}_relationship', data.get(str(base)))
+            setattr(updatedEnt, f'contact{i}_relationship', data.get(str(base)))
             setattr(updatedEnt, f'contact{i}_phone', data.get(str(base + 1)))
             setattr(updatedEnt, f'contact{i}_email', data.get(str(base + 2)))
-            setattr(updatedEnt, f'contact{
-                    i}_first_name', data.get(str(base + 3)))
-            setattr(updatedEnt, f'contact{
-                    i}_last_name', data.get(str(base + 4)))
+            setattr(updatedEnt, f'contact{i}_first_name', data.get(str(base + 3)))
+            setattr(updatedEnt, f'contact{i}_last_name', data.get(str(base + 4)))
 
         updatedEnt.high_school_institution = data.get('27')
         updatedEnt.high_school_rav_melamed_name = data.get('28')

@@ -59,8 +59,8 @@ def delete():
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
-        # if correct_auth() == False:
-        #     return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        if correct_auth() == False:
+            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')
         data = request.json
         updatedEnt = User.query.get(userId)
@@ -75,14 +75,14 @@ def update():
                     return jsonify({'result': "email or date -wrong format"}), 401
             else:
                 setattr(updatedEnt, key, data[key])
-        print(updatedEnt.region_id)
         db.session.commit()
         if updatedEnt:
             # TODO: add contact form to DB
             return jsonify({'result': 'success'}), HTTPStatus.OK
         return jsonify({'result': 'no updatedEnt'}), 401
     except Exception as e:
-        return jsonify({'result': str(e)}), 401
+        print(e)
+        return jsonify({'result': str(e)}), 500
 
 
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])

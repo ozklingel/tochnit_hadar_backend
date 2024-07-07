@@ -59,8 +59,8 @@ def delete():
 @userProfile_form_blueprint.route("/update", methods=['put'])
 def update():
     try:
-        if correct_auth() == False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
+        # if correct_auth() == False:
+        #     return jsonify({'result': "wrong access token"}), HTTPStatus.OK
         userId = request.args.get('userId')
         data = request.json
         updatedEnt = User.query.get(userId)

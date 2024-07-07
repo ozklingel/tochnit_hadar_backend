@@ -1,137 +1,154 @@
 import re
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from typing import List, Dict, Any
+from dataclasses import dataclass
+from flask import jsonify
 import boto3
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from src.services import db
-from src.models.apprentice_model import Apprentice
-from config import AWS_access_key_id, AWS_secret_access_key
 from sqlalchemy import text
 import logging
 
-# Set up logging
+from src.services import db
+from src.models.apprentice_model import Apprentice
+from config import AWS_access_key_id, AWS_secret_access_key
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-apprentice_profile_form_blueprint = Blueprint(
-    'apprentice_profile_form', __name__)
+
+@dataclass
+class UpdateResult:
+    success: bool
+    warnings: List[str]
+    errors: List[str]
 
 
-def validate_email(email):
-    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(email_regex, email) is not None
+class ApprenticeUpdater:
+    def __init__(self, db_session, front_end_dict: Dict[str, str]):
+        self.db_session = db_session
+        self.front_end_dict = front_end_dict
+        self.s3 = boto3.resource(
+            "s3",
+            aws_access_key_id=AWS_access_key_id,
+            aws_secret_access_key=AWS_secret_access_key,
+        )
 
+    def update(self, apprentice_id: str, data: Dict[str, Any]) -> UpdateResult:
+        updated_ent = Apprentice.query.get(apprentice_id)
+        if not updated_ent:
+            return UpdateResult(False, [], ["Apprentice not found"])
 
-def validate_date(date_string):
-    try:
-        datetime.strptime(date_string, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
+        warnings = []
+        errors = []
 
+        for key, value in data.items():
+            try:
+                db_key = self.front_end_dict.get(key, key)
+                self._update_field(updated_ent, key, db_key,
+                                   value, warnings, errors)
+            except Exception as e:
+                errors.append(f"Error updating {key}: {str(e)}")
 
-def parse_address(address_string):
-    try:
+        if errors:
+            return UpdateResult(False, warnings, errors)
+
+        try:
+            logger.debug(f"base_address value before commit: {updated_ent.base_address}")
+            self.db_session.commit()
+        except IntegrityError as e:
+            self.db_session.rollback()
+            logger.error(f"Integrity error during commit: {str(e)}")
+            return UpdateResult(False, warnings, [f"Database integrity error: {str(e)}"])
+
+        return UpdateResult(True, warnings, [])
+
+    def _update_field(self, updated_ent: Apprentice, key: str, db_key: str, value: Any, warnings: List[str], errors: List[str]) -> None:
+        if key == "militaryCompoundId":
+            self._update_military_compound_id(updated_ent, value, warnings)
+        elif key == "avatar":
+            self._update_avatar(updated_ent, value)
+        elif key == "email":
+            self._update_email(updated_ent, db_key, value, errors)
+        elif key in ["birthday", "militaryDateOfEnlistment", "militaryDateOfDischarge", "marriage_date"]:
+            self._update_date(updated_ent, db_key, value, errors)
+        elif key == "address":
+            self._update_address(updated_ent, value)
+        else:
+            setattr(updated_ent, db_key, value)
+
+    def _update_military_compound_id(self, updated_ent: Apprentice, value: Any, warnings: List[str]) -> None:
+        logger.info(f"Attempting to set militaryCompoundId to: {value}")
+        exists = self.db_session.execute(
+            text("SELECT 1 FROM base WHERE id = :id"), {"id": value}).scalar()
+        if exists:
+            setattr(updated_ent, 'base_address', value)
+        else:
+            setattr(updated_ent, 'base_address', None)
+            warnings.append(f"militaryCompoundId {value} does not exist in base table. Set to None.")
+
+    def _update_avatar(self, updated_ent: Apprentice, new_avatar: str) -> None:
+        if updated_ent.photo_path != "https://www.gravatar.com/avatar":
+            self.s3.Object("th01-s3", updated_ent.photo_path).delete()
+        updated_ent.photo_path = new_avatar
+
+    def _update_email(self, updated_ent: Apprentice, db_key: str, value: str, errors: List[str]) -> None:
+        if self._validate_email(value):
+            setattr(updated_ent, db_key, value)
+        else:
+            errors.append(f"Invalid email format: {value}")
+
+    def _update_date(self, updated_ent: Apprentice, db_key: str, value: str, errors: List[str]) -> None:
+        if self._validate_date(value[:10]):
+            setattr(updated_ent, db_key, value)
+        else:
+            errors.append(f"Invalid date format for {db_key}: {value}")
+
+    def _update_address(self, updated_ent: Apprentice, value: str) -> None:
+        address_data = self._parse_address(value)
+        for addr_key, addr_value in address_data.items():
+            if hasattr(updated_ent, addr_key):
+                setattr(updated_ent, addr_key, addr_value)
+
+    @staticmethod
+    def _validate_email(email: str) -> bool:
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(email_regex, email) is not None
+
+    @staticmethod
+    def _validate_date(date_string: str) -> bool:
+        try:
+            datetime.strptime(date_string, '%Y-%m-%d')
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _parse_address(address_string: str) -> Dict[str, Any]:
         address_parts = address_string.split(', ')
         return {
             "address": address_parts[0] if len(address_parts) > 0 else "",
             "city_id": int(address_parts[1]) if len(address_parts) > 1 and address_parts[1].isdigit() else None,
         }
-    except Exception as e:
-        logger.error(f"Error parsing address: {str(e)}")
-        raise ValueError(f"Invalid address format: {address_string}")
-
-
-def handle_avatar(updated_ent, new_avatar):
-    try:
-        s3 = boto3.resource(
-            "s3",
-            aws_access_key_id=AWS_access_key_id,
-            aws_secret_access_key=AWS_secret_access_key,
-        )
-        if updated_ent.photo_path != "https://www.gravatar.com/avatar":
-            s3.Object("th01-s3", updated_ent.photo_path).delete()
-        updated_ent.photo_path = new_avatar
-    except Exception as e:
-        logger.error(f"Error handling avatar: {str(e)}")
-        raise RuntimeError(f"Failed to update avatar: {str(e)}")
-
 
 def update(request):
     try:
         apprentice_id = request.args.get("apprenticetId")
         if not apprentice_id:
             return jsonify({"error": "Missing apprenticetId parameter"}), 400
-        
+
         data = request.json
         if not data:
-            return jsonify({"error": "No data provided for update"}), 400
+            return jsonify({"error": "xNo data provided for update"}), 400
 
-        updated_ent = Apprentice.query.get(apprentice_id)
-        if not updated_ent:
-            return jsonify({"error": "Apprentice not found"}), 404
+        updater = ApprenticeUpdater(db.session, front_end_dict)
+        result = updater.update(apprentice_id, data)
 
-        update_warnings = []
-        update_errors = []
-
-        for key, value in data.items():
-            try:
-                db_key = front_end_dict.get(key, key)
-
-                if key == "militaryCompoundId":
-                    logger.info(f"Attempting to set militaryCompoundId to: {value}")
-                    exists = db.session.execute(text("SELECT 1 FROM base WHERE id = :id"),
-                        {"id": value}
-                    ).scalar()
-                    if exists:
-                        if hasattr(updated_ent, 'base_address'):
-                            setattr(updated_ent, 'base_address', value)
-                        else:
-                            update_warnings.append(f"base_address field not found in Apprentice model. militaryCompoundId: {value} not set.")
-                    else:
-                        if hasattr(updated_ent, 'base_address'):
-                            setattr(updated_ent, 'base_address', None)
-                            update_warnings.append(f"militaryCompoundId {value} does not exist in base table. Set to None.")
-                        else:
-                            update_warnings.append(f"base_address field not found in Apprentice model. militaryCompoundId: {value} not set.")
-                elif key == "avatar":
-                    handle_avatar(updated_ent, value)
-                elif key == "email":
-                    if validate_email(value):
-                        setattr(updated_ent, db_key, value)
-                    else:
-                        update_errors.append(f"Invalid email format: {value}")
-                elif key in ["birthday", "militaryDateOfEnlistment", "militaryDateOfDischarge", "marriage_date"]:
-                    if validate_date(value[:10]):
-                        setattr(updated_ent, db_key, value)
-                    else:
-                        update_errors.append(f"Invalid date format for {key}: {value}")
-                elif key == "address":
-                    address_data = parse_address(value)
-                    for addr_key, addr_value in address_data.items():
-                        if hasattr(updated_ent, addr_key):
-                            setattr(updated_ent, addr_key, addr_value)
-                elif key.startswith(("contact1_", "contact2_", "contact3_", "highSchoolRavMelamed_", "thRavMelamedYearA_", "thRavMelamedYearB_")):
-                    setattr(updated_ent, key, value)
-                else:
-                    setattr(updated_ent, db_key, value)
-            except Exception as e:
-                update_errors.append(f"Error updating {key}: {str(e)}")
-
-        if update_errors:
-            return jsonify({"error": "Update failed", "details": update_errors}), 400
-
-        try:
-            logger.debug(f"base_address value before commit: {updated_ent.base_address}")
-            db.session.commit()
-        except IntegrityError as e:
-            db.session.rollback()
-            logger.error(f"Integrity error during commit: {str(e)}")
-            return jsonify({"error": "Database integrity error", "details": str(e)}), 400
+        if not result.success:
+            return jsonify({"error": "Update failed", "details": result.errors}), 400
 
         response = {"result": "success"}
-        if update_warnings:
-            response["warnings"] = update_warnings
+        if result.warnings:
+            response["warnings"] = result.warnings
 
         return jsonify(response), 200
 
@@ -145,8 +162,6 @@ def update(request):
         return jsonify({"error": "Unexpected error", "details": str(e)}), 500
 
 
-# The front_end_dict remains unchanged
-# Ensure this is defined somewhere in your code
 front_end_dict = {
     "address": "address",
     "cluster_id": "cluster_id",

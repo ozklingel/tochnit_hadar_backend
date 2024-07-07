@@ -17,6 +17,7 @@ from src.models.user_model import User
 from src.models.report_model import Report
 from src.routes.set_entity_details_form_routes import validate_email, validate_date
 from src.logic.apprentices import maps_apprentices as maps
+from src.logic import update_apprentice
 
 apprentice_profile_form_blueprint = Blueprint(
     "apprentice_Profile_form", __name__, url_prefix="/apprentice_Profile_form"
@@ -51,40 +52,8 @@ def delete():
 
 @apprentice_profile_form_blueprint.route("/update", methods=["put"])
 def update():
-    try:
+    return update_apprentice.update(request=request)
 
-        # get tasksAndEvents
-        apprenticetId = request.args.get("apprenticetId")
-        data = request.json
-        updatedEnt = Apprentice.query.get(apprenticetId)
-
-        for key in data:
-            if key == "avatar":
-                s3 = boto3.resource(
-                    "s3",
-                    aws_access_key_id=AWS_access_key_id,
-                    aws_secret_access_key=AWS_secret_access_key,
-                )
-                s3.Object("th01-s3", data[key]).delete()
-            if key == "email":
-                if validate_email(data[key]):
-                    setattr(updatedEnt, key, data[key])
-                else:
-                    return jsonify({"result": "email -wrong format"}), 401
-            elif key == "birthday":
-                if validate_date(data[key][:-9]):
-                    setattr(updatedEnt, key, data[key])
-                else:
-                    return jsonify({"result": "email or date -wrong format"}), 401
-            else:
-                setattr(updatedEnt, front_end_dict[key], data[key])
-        db.session.commit()
-        if updatedEnt:
-            # TODO: add contact form to DB
-            return jsonify({"result": "success"}), HTTPStatus.OK
-        return jsonify({"result": "error"}), 401
-    except Exception as e:
-        return jsonify({"result": str(e)}), 401
 
 
 @apprentice_profile_form_blueprint.route("/add_apprentice_manual", methods=["post"])

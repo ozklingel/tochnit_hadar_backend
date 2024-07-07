@@ -56,36 +56,82 @@ def delete():
     return jsonify({"result": "success"}), HTTPStatus.OK
 
 
-@userProfile_form_blueprint.route("/update", methods=['put'])
+@userProfile_form_blueprint.route("/update", methods=['PUT'])
 def update():
     try:
-        payload = request.get_json()
-        with open('payload.txt', 'a') as file:
-            file.write(json.dumps(payload) + '\n')
-        if correct_auth() == False:
-            return jsonify({'result': "wrong access token"}), HTTPStatus.OK
-        userId = request.args.get('userId')
+        if not correct_auth():
+            return jsonify({'result': "wrong access token"}), 401
+
+        apprentice_id = request.args.get('apprenticetId')
         data = request.json
-        updatedEnt = User.query.get(userId)
-        for key in data:
-            if key == "birthday":
-                if validate_date(data[key]):
-                    setattr(updatedEnt, key, data[key])
-            elif key == "email" or key == "birthday":
-                if validate_email(data[key]):
-                    setattr(updatedEnt, key, data[key])
-                else:
-                    return jsonify({'result': "email or date -wrong format"}), 401
-            else:
-                setattr(updatedEnt, key, data[key])
-        print(updatedEnt.region_id)
+
+        if not apprentice_id:
+            return jsonify({'result': "apprenticetId is required"}), 400
+
+        updatedEnt = User.query.get(apprentice_id)
+        if not updatedEnt:
+            return jsonify({'result': 'User not found'}), 404
+
+        # Update fields based on the Flutter application structure
+        updatedEnt.avatar = data.get('avatar')
+
+        # Military info
+        updatedEnt.military_compound_id = data.get('militaryCompoundId')
+        updatedEnt.military_service_type = data.get('militaryUnit')
+        updatedEnt.military_position_new = data.get('militaryPositionNew')
+        updatedEnt.military_position_old = data.get('militaryPositionOld')
+        updatedEnt.military_date_of_enlistment = data.get(
+            'militaryDateOfEnlistment')
+        updatedEnt.military_date_of_discharge = data.get(
+            'militaryDateOfDischarge')
+
+        # Personal general info
+        updatedEnt.teudat_zehut = data.get('teudatZehut')
+        if 'email' in data and validate_email(data['email']):
+            updatedEnt.email = data['email']
+        updatedEnt.marital_status = data.get('marriage_status')
+        updatedEnt.phone = data.get('phone')
+
+        # Personal dates
+        if 'birthday' in data and validate_date(data['birthday']):
+            updatedEnt.date_of_birth = data['birthday']
+
+        # Personal relationships
+        for i in range(1, 4):
+            setattr(updatedEnt, f'contact{i}_relationship', data.get(f'contact{i}_relation'))
+            setattr(updatedEnt, f'contact{i}_phone', data.get(f'contact{i}_phone'))
+            setattr(updatedEnt, f'contact{i}_email', data.get(f'contact{i}_email'))
+            setattr(updatedEnt, f'contact{i}_first_name', data.get(f'contact{i}_first_name'))
+            setattr(updatedEnt, f'contact{i}_last_name', data.get(f'contact{i}_last_name'))
+
+        # Personal high school
+        updatedEnt.high_school_institution = data.get('highSchoolInstitution')
+        updatedEnt.high_school_rav_melamed_name = data.get('highSchoolRavMelamed_name')
+        updatedEnt.high_school_rav_melamed_phone = data.get('highSchoolRavMelamed_phone')
+        updatedEnt.high_school_rav_melamed_email = data.get('highSchoolRavMelamed_email')
+
+        # Personal work
+        updatedEnt.work_status = data.get('workStatus')
+        updatedEnt.work_occupation = data.get('workOccupation')
+        updatedEnt.work_place = data.get('workPlace')
+        updatedEnt.work_type = data.get('workType')
+
+        # Tohnit hadar
+        updatedEnt.educational_institution = data.get('educationalInstitution')
+        updatedEnt.th_period = data.get('thPeriod')
+        updatedEnt.th_rav_melamed_year_a_name = data.get('thRavMelamedYearA_name')
+        updatedEnt.th_rav_melamed_year_a_phone = data.get('thRavMelamedYearA_phone')
+        updatedEnt.th_rav_melamed_year_b_name = data.get('thRavMelamedYearB_name')
+        updatedEnt.th_rav_melamed_year_b_phone = data.get('thRavMelamedYearB_phone')
+        updatedEnt.paying = data.get('paying')
+        updatedEnt.matsbar_status = data.get('matsber')
+
         db.session.commit()
-        if updatedEnt:
-            # TODO: add contact form to DB
-            return jsonify({'result': 'success'}), HTTPStatus.OK
-        return jsonify({'result': 'no updatedEnt'}), 401
+        return jsonify({'result': 'success'}), 200
+
     except Exception as e:
-        return jsonify({'result': str(e)}), 401
+        print(f"Error: {str(e)}")  # Log the full error
+        return jsonify({'result': 'An error occurred'}), 500
 
 
 @userProfile_form_blueprint.route('/getProfileAtributes', methods=['GET'])

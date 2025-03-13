@@ -28,66 +28,67 @@ def send_json_request(data: Dict):
         response = send_json_request({"sms": {"user": {"username": "user123"}, "source": "source1",
                                             "destinations": {"phone": [{"$": {"id": ""}, "_": "9876543210"}]},
                                             "message": "Hello, this is a test message."}})
-        """
+    """
     headers = get_header_for_send_sms()
     response = requests.post(config.SendMessages.Sms.url, json=data, headers=headers)
     response_json = response.json()
-    if ("status" not in response_json or response_json["status"] != 0 or
-            "message" not in response_json or response_json['message'] != 'SMS will be sent'):
-        print(config.SendMessages.Sms.problem_sms_wasnt_sent + " ,response_json:\n" + str(response_json))
+    if (
+        "status" not in response_json
+        or response_json["status"] != 0
+        or "message" not in response_json
+        or response_json["message"] != "SMS will be sent"
+    ):
+     
         return response_json
     return None
 
 
 def get_header_for_send_sms():
     token = config.SendMessages.Sms.token
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}'
-    }
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
     return headers
 
 
 def get_data_filled(source: str, recipients: List[str], message: str):
     """
-   Creates a dictionary containing filled data for sending SMS messages.
+    Creates a dictionary containing filled data for sending SMS messages.
 
-   Parameters:
-       source (str): The source identifier from which the message will be sent.
-       recipients (List[str]): A list of phone numbers representing the recipients of the SMS messages.
-       message (str): The message content to be sent to the recipients.
+    Parameters:
+        source (str): The source identifier from which the message will be sent.
+        recipients (List[str]): A list of phone numbers representing the recipients of the SMS messages.
+        message (str): The message content to be sent to the recipients.
 
-   Returns:
-       dict: A dictionary containing filled data for sending SMS messages. The structure of the dictionary is as follows:
-           {
-               "sms": {
-                   "user": {
-                       "username": <username>,
-                   },
-                   "source": <source>,
-                   "destinations": {
-                       "phone": [
-                           {
-                               "$": {
-                                   "id": ""
-                               },
-                               "_": <recipient_phone_number>
-                           },
-                           ...
-                       ]
-                   },
-                   "message": <message_content>,
-               }
-           }
+    Returns:
+        dict: A dictionary containing filled data for sending SMS messages. The structure of the dictionary is as follows:
+            {
+                "sms": {
+                    "user": {
+                        "username": <username>,
+                    },
+                    "source": <source>,
+                    "destinations": {
+                        "phone": [
+                            {
+                                "$": {
+                                    "id": ""
+                                },
+                                "_": <recipient_phone_number>
+                            },
+                            ...
+                        ]
+                    },
+                    "message": <message_content>,
+                }
+            }
 
-   Note:
-       - The function uses get_username() to retrieve the username for the SMS user.
-       - The "destinations" section of the data dictionary is structured to include multiple recipient phone numbers.
-       - Each recipient phone number is added as a dictionary with an empty "id" field and the phone number under "_".
+    Note:
+        - The function uses get_username() to retrieve the username for the SMS user.
+        - The "destinations" section of the data dictionary is structured to include multiple recipient phone numbers.
+        - Each recipient phone number is added as a dictionary with an empty "id" field and the phone number under "_".
 
-   Example usage:
-       data = get_data_filled("source1", ["9876543210", "8765432109"], "Hello, this is a test message.")
-   """
+    Example usage:
+        data = get_data_filled("source1", ["9876543210", "8765432109"], "Hello, this is a test message.")
+    """
     data = {
         "sms": {
             "user": {
@@ -95,15 +96,10 @@ def get_data_filled(source: str, recipients: List[str], message: str):
             },
             "source": "0" + source,
             "destinations": {
-                "phone":
-                    [
-                        {
-                            "$": {
-                                "id": ""
-                            },
-                            "_": str("0" + recipient)
-                        }
-                        for recipient in recipients]
+                "phone": [
+                    {"$": {"id": ""}, "_": str("0" + recipient)}
+                    for recipient in recipients
+                ]
             },
             "message": message,
         }

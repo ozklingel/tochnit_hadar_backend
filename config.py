@@ -1,87 +1,44 @@
-SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:TH@localhost/t_h'#db/postgres
-SECRET_KEY = 'test'
-AWS_secret_access_key="+r/OQQDQg8LUC4uALmaVTy7VDbGGHODZKRfw9NML"
-AWS_access_key_id="AKIAZ27KJ4ZSWO3I7VFD"
+import os
+from dotenv import load_dotenv
 
+load_dotenv(dotenv_path="/home/ubuntu/flaskapp/.env")
+load_dotenv()
 
+SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+print ("SQLALCHEMY_DATABASE_URI",SQLALCHEMY_DATABASE_URI)  #
+SECRET_KEY = os.getenv("SECRET_KEY")# #
+AWS_secret_access_key =os.getenv("AWS_secret_access_key")  
+AWS_access_key_id =os.getenv("AWS_access_key_id") 
+BUCKET = os.getenv("BUCKET") 
+BUCKET_PATH=os.getenv("BUCKET_PATH") 
+TH_PNG=os.getenv("TH_PNG")
+GREENAPI_FILE=os.getenv("GREENAPI_FILE")
+GREENAPI_NO_FILE=os.getenv("GREENAPI_NO_FILE")
+GREENAPI_INSTANCE=os.getenv("GREENAPI_INSTANCE")
+GREENAPI_TOKEN=os.getenv("GREENAPI_TOKEN")
 
-call_report="שיחה טלפונית"
-zoom_report="פגישה מקוונת"
-fiveMess_report="5 הודעות"
-failCall_report="נסיון כושל"
-personalMeet_report="פגישה פיזית"
-groupMeet_report="מפגש קבוצתי"
-basis_report="ביקור בבסיס"
-HorimCall_report="שיחת הורים"
-
-matzbar_report ="ישיבת מצב”ר"#3 חודשים
-hazanatMachzor_report="הזנת מחזור"
-mahzorMeeting_report="מפגש מחזור"
-mahzorShabat_report="שבת מחזור"
-doForBogrim_report="עשיה לטובת בוגרים"
-professional_report="כנס מלווים מקצועי חודשי"#2 חודשים
-MelavimMeeting_report="ישיבה מוסדית"#1 חודשים
-
-MOsadEshcolMeeting_report="ישיבת חודשית עם רכז"
-tochnitMeeting_report="ישיבת מלוים ורכזים"
-cenes_report="כנס מלווים שנתי"
-
-mosad_reports=[MelavimMeeting_report,matzbar_report,hazanatMachzor_report,doForBogrim_report,professional_report]
-eshcol_reports=[MOsadEshcolMeeting_report,tochnitMeeting_report,cenes_report]
-reports_as_call=[call_report,zoom_report,fiveMess_report]
-report_as_meet=[personalMeet_report,groupMeet_report,basis_report]
-report_as_DoForBogrim=[mahzorShabat_report,mahzorMeeting_report,doForBogrim_report]
-all_reports=[mahzorShabat_report,mahzorMeeting_report,tochnitMeeting_report,MOsadEshcolMeeting_report,MelavimMeeting_report,
-             doForBogrim_report,hazanatMachzor_report,matzbar_report,cenes_report,professional_report,HorimCall_report
-             ,basis_report,groupMeet_report,personalMeet_report,failCall_report,fiveMess_report]
-#דוחות
-mosad_racaz_meeting="mosad_racaz_meeting"
-horim_meeting="horim_meeting"
-cenes_presence="cenes_presence"
-proffesionalMeet_presence="proffesionalMeet_presence"
-forgotenApprentice_cnt="forgotenApprentice_cnt"
-visitmeets_melave_avg="visitmeets_melave_avg"
-visitcalls_melave_avg="visitcalls_melave_avg"
-apprenticeMeeting_gap="apprenticeMeeting_gap"
-apprenticeCall_gap="apprenticeCall_gap"
-matzbarMeeting_gap="matzbarMeeting_gap"
-melave_Score="melave_Score"
-forgotenApprentice_list= "דוח דו שבועי-חניכים נשכחים"
-melave_Score_list=  "דוח  חודשי- ציון מלווים"
 class SendMessages:
     class Whatsapp:
         joni_text: str = "text"
         joni_to: str = "to"
         messagePrefix: str = "הודעה מאת: "
-        webhook: str = "https://tohnithadar-a7d1e-default-rtdb.firebaseio.com//joni/send.json"
+        webhook: str = os.getenv("WEB_HOOK")
 
     class Sms:
-        error_message_019: str = "unverified source number - you can verify this number with verify_phone request"
+        error_message_019: str = (
+            "unverified source number - you can verify this number with verify_phone request"
+        )
         at_least_one_error: str = "At least one error cause"
         message_add_to_019: str = "numbers to add to 019 api: "
-        problem_sms_wasnt_sent: str = "problem, message wasn't sent, please handle this problem"
-        url: str = 'https://019sms.co.il/api'
+        problem_sms_wasnt_sent: str = (
+            "problem, message wasn't sent, please handle this problem"
+        )
+        url: str = "https://019sms.co.il/api"
         url_test: str = "https://019sms.co.il/api/test"
-        username: str = "lirangrovas"
+        username: str = os.getenv("SMS_USER_NAME")
 
-        token: str = (
-            'eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJmaXJzdF9rZXkiOiI2MjI5MiIsInNlY29uZF9rZXkiOiIzNTM2NDc4IiwiaXNzdWVkQ'
-            'XQiOiIxNS0wMi0yMDI0IDEyOjQwOjE3IiwidHRsIjo2MzA3MjAwMH0.1DoH8hc3aS3xI-FdT7hc_E0fBW05rtlcuPdsYfGGoUw')
-        token_expiration_date: '14/02/2026 12:40:17'
-Ivry_month={"ניסן":"1",
-   "אייר": "2",
-   "סיוון": "3",
-  "תמוז":  "4",
-  "אב": "5",
-   "אלול": "6",
-   "תשרי": "7",
-   "חשוון": "8",
-   "כסליו": "9",
-    "טבת": "10",
-    "שבט": "11",
-   "אדר א ": "12",
-"אדר": "12",
-    "אדר ב":"13"}
+        token: str = os.getenv("SMS_TOKEN")
+        token_expiration_date: "14/02/2026 12:40:17" # type: ignore
 
 
-Authorization_is_On=False
+Authorization_is_On = False

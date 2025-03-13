@@ -10,7 +10,6 @@ BIRTHDAY_COL = "birthday"
 INSTITUTION_ID_COL = "institution_id"
 
 ### Contact Forms Table ###
-CONTACT_FORMS_TBL = "contact_forms"
 SUBJECT_COL = "subject"
 CONTENT_COL = "content"
 CREATED_AT_COL = "created_at"
@@ -86,7 +85,6 @@ TEACHER_GRADE_A_EMAIL_COL = "teacher_grade_a_email"
 TEACHER_GRADE_B_EMAIL_COL = "teacher_grade_b_email"
 
 ### Visits Table ###
-VISITS_TBL = "visits"
 APPRENTICE_ID_COL = "apprentice_id"
 VISIT_DATE_COL = "visit_date"
 USER_ID_COL = "user_id"
